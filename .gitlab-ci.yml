@@ -1,7 +1,38 @@
+stages:
+  - build
+  - deploy
+
 build:
   stage: build
   image: registry.esss.lu.se/ics-docker/maven:openjdk-8
   tags:
     - docker
   script:
-    - mvn --batch-mode clean deploy -Dserver.id=distribution-repository -Dserver.username=${ARTIFACTORY_USERNAME} -Dserver.password=${ARTIFACTORY_PASSWORD} -Ddistribution.repository.snapshot=${ARTIFACTORY_URL}/libs-snapshot-local -Ddistribution.repository.release=${ARTIFACTORY_URL}/libs-release-local
+    - >
+      mvn --batch-mode clean deploy
+      -Dserver.id=distribution-repository
+      -Dserver.username=${ARTIFACTORY_USERNAME}
+      -Dserver.password=${ARTIFACTORY_PASSWORD}
+      -Ddistribution.repository.snapshot=${ARTIFACTORY_URL}/libs-snapshot-local
+      -Ddistribution.repository.release=${ARTIFACTORY_URL}/libs-release-local
+  only:
+    - branches@ics-software/jmasar-service
+
+deploy-staging:
+  stage: deploy
+  image: registry.esss.lu.se/ics-docker/tower-cli:3.3
+  tags:
+    - docker
+  script:
+    - version=$(get_pom_version)
+    - >
+      tower-cli job launch
+      -h torn.tn.esss.lu.se
+      -t ${TOWER_OAUTH_TOKEN}
+      -J deploy-jmasar-staging
+      -e "jmasar_version=${version}" --monitor
+  environment:
+    name: staging
+    url: http://jmasar-test.esss.lu.se/swagger-ui.html
+  only:
+    - branches@ics-software/jmasar-service
