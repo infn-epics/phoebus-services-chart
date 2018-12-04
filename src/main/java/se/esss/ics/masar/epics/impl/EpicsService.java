@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,35 +17,74 @@
  */
 package se.esss.ics.masar.epics.impl;
 
-import org.epics.pvaClient.PvaClient;
-import org.epics.pvaClient.PvaClientGetData;
-import org.epics.pvdata.pv.PVStructure;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import org.epics.gpclient.GPClient;
+import org.epics.vtype.VType;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.task.TaskExecutor;
 
 import se.esss.ics.masar.epics.IEpicsService;
-import se.esss.ics.masar.epics.exception.PVReadException;
-import se.esss.ics.masar.epics.util.SnapshotPvFactory;
+import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.SnapshotPv;
+import se.esss.ics.masar.model.SnapshotItem;
 
 public class EpicsService implements IEpicsService {
 
 	@Autowired
-	private PvaClient pvaClient;
+	private TaskExecutor taskExecutor;
 
 	@Override
-	public <T> SnapshotPv<T> getPv(ConfigPv configPv) throws PVReadException {
+	public List<SnapshotItem> readPvs(Config config) {
 
-		PvaClientGetData pvaClientGetData;
-		try {
-			
-			pvaClientGetData = pvaClient.channel(configPv.getPvName(), configPv.getProvider().toString(), 3.0).get().getData();
-			PVStructure myPVStructure = pvaClientGetData.getPVStructure();
-			return SnapshotPvFactory.createSnapshotPv(configPv, myPVStructure);
-		} catch (Exception e1) {
-			LoggerFactory.getLogger(EpicsService.class).error(e1.getMessage());
-			return SnapshotPv.<T>builder().fetchStatus(false).configPv(configPv).build();
-		}		
+		CompletionService<SnapshotItem> ecs = new ExecutorCompletionService<>(taskExecutor);
+
+		for (ConfigPv configPv : config.getConfigPvList()) {
+			ecs.submit(new SnapshotPvCallable(configPv));
+		}
+
+		List<SnapshotItem> snapshotPvs = new ArrayList<>();
+		for (int i = 0; i < config.getConfigPvList().size(); ++i) {
+			try {
+				SnapshotItem item = ecs.take().get();
+				if (item != null) {
+					snapshotPvs.add(item);
+				}
+			} catch (Exception e) {
+				LoggerFactory.getLogger(EpicsService.class)
+						.error(String.format("Encountered exception when collecting PVs: %s", e.getMessage()));
+			}
+		}
+				
+		return snapshotPvs;
+	}
+	
+
+	private class SnapshotPvCallable implements Callable<SnapshotItem> {
+
+		private ConfigPv configPv;
+
+		public SnapshotPvCallable(ConfigPv configPv) {
+			this.configPv = configPv;
+		}
+
+		@Override
+		public SnapshotItem call() {
+			Future<VType> value = GPClient.readOnce(configPv.getProvider().toString() + "://" + configPv.getPvName());
+
+			try {
+				VType vType = value.get(5L, TimeUnit.SECONDS);
+				return SnapshotItem.builder().configPvId(configPv.getId()).fetchStatus(true).value(vType).build();
+			} catch (Exception ex) {
+				return SnapshotItem.builder().configPvId(configPv.getId()).fetchStatus(false).build();
+			}
+		}
 	}
 }

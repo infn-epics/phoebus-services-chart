@@ -1,3 +1,21 @@
+/**
+ * Copyright (C) 2018 European Spallation Source ERIC.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 package se.esss.ics.masar.web.controllers;
 
 import static org.mockito.Mockito.doThrow;
@@ -9,9 +27,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
+import org.epics.vtype.Alarm;
+import org.epics.vtype.AlarmSeverity;
+import org.epics.vtype.AlarmStatus;
+import org.epics.vtype.Display;
+import org.epics.vtype.Time;
+import org.epics.vtype.VDouble;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +59,7 @@ import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
+import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
 import se.esss.ics.masar.web.config.ControllersTestConfig;
@@ -74,10 +99,13 @@ public class ConfigurationControllerTest {
 	private static final String JSON = "application/json;charset=UTF-8";
 
 	@Before
-	@SuppressWarnings("rawtypes")
 	public void setUp() {
+		
+		Time time = Time.of(Instant.ofEpochSecond(1000, 7000));
+		Alarm alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
+		Display display = Display.none();
 
-		ConfigPv configPv = ConfigPv.builder().groupname("groupname").pvName("pvName").readonly(true).tags("tags")
+		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
 				.build();
 
 		configFromClient = Config.builder().id(10).active(true).configPvList(Arrays.asList(configPv))
@@ -88,11 +116,16 @@ public class ConfigurationControllerTest {
 
 	
 		folderFromClient = Folder.builder().name("SomeFolder").id(11).parentId(0).build();
+	
+		SnapshotItem item1 = SnapshotItem.builder()
+				.fetchStatus(true)
+				.configPvId(config1.getId())
+				.value(VDouble.of(7.7, alarm, time, display))
+				.build();
 
-		SnapshotPv snapshotPv = SnapshotPv.builder().dtype(1).fetchStatus(true).severity(0).status(1).time(1000L)
-				.timens(777).value(new Double(7.7)).build();
-
-		snapshot = Snapshot.builder().approve(true).comment("comment").snapshotPvList(Arrays.asList(snapshotPv))
+		snapshot = Snapshot.builder().approve(true).comment("comment")
+				.name("name")
+				.snapshotItems(Arrays.asList(item1))
 				.build();
 
 		when(services.createNewConfiguration(configFromClient)).thenReturn(config1);

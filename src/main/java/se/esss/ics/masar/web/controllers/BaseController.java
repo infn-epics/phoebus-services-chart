@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +29,12 @@ import org.springframework.web.bind.annotation.RestController;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
 import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
 
+/**
+ * Base controller that should be extended to make sure exceptions are handled
+ * properly, i.e. make the service return suitable HTTP status codes.
+ * @author georgweiss
+ * Created 23 Nov 2018
+ */
 @RestController
 public abstract class BaseController {
 	

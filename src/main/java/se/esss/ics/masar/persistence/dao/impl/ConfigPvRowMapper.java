@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,10 +34,7 @@ public class ConfigPvRowMapper implements RowMapper<ConfigPv> {
 		return
 				ConfigPv.builder()
 				.id(resultSet.getInt("id"))
-				.groupname(resultSet.getString("groupName"))
 				.pvName(resultSet.getString("name"))
-				.readonly(resultSet.getBoolean("readonly"))
-				.tags(resultSet.getString("tags"))
 				.provider(Provider.valueOf(provider))
 				.build();
 	}

@@ -71,9 +71,9 @@ CREATE TABLE IF NOT EXISTS snapshot_pv (
   dtype INTEGER NOT NULL,
   severity INTEGER NOT NULL,
   status INTEGER NOT NULL,
-  time BIGINT NOT NULL,
-  timens INTEGER NOT NULL,
+  time BIGINT,
+  timens INTEGER,
   clazz TEXT NOT NULL,
-  value TEXT NOT NULL DEFAULT '0',
+  value TEXT,
   fetch_status BOOLEAN
 );

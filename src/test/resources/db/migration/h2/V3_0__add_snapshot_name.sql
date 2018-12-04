@@ -1,1 +1,1 @@
-ALTER TABLE snapshot  ADD name TEXT NOT NULL;
+ALTER TABLE snapshot  ADD name TEXT;

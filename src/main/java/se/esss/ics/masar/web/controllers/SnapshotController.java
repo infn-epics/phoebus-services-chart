@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -28,8 +28,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiOperation;
+import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
+import se.esss.ics.masar.model.internal.SnapshotPv;
 import se.esss.ics.masar.services.IServices;
 
 @RestController
@@ -44,7 +45,14 @@ public class SnapshotController extends BaseController {
 	 *
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified configuration id does not exist.
 	 * 
-	 * Note that a snapshot will be created even if all PVs listed in the configuration are off-line. 
+	 * Note that a snapshot will be created even if all PVs listed in the configuration are off-line. Further,
+	 * the list of {@link SnapshotPv}s will contain one element for each {@link ConfigPv} in the
+	 * configuration. The fetchStatus {@link SnapshotPv} field can be used to determine if the
+	 * PV has been successfully read.
+	 * 
+	 * Also note the synchronous behavior of this service; all PVs are read asynchronously, but the
+	 * service does not return until all PVs have been read (or timed out).
+	 * 
 	 * @param configId The configuration id.
 	 * @return A {@link Snapshot} object containing the PV values wrapped in a list of {@link SnapshotPv}s.
 	 */
@@ -92,19 +100,22 @@ public class SnapshotController extends BaseController {
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the user name or comment are null or of zero length.
 	 *  
 	 * @param snapshotId The id of the snapshot
+	 * @param snapshotName Name of the snapshot
 	 * @param userName Mandatory user name.
 	 * @param comment Mandatory comment.
 	 * @return The committed {@link Snapshot}.
 	 */
-	@ApiOperation(value = "Commit a snapshot, i.e. update with user name and comment.")
+	@ApiOperation(value = "Commit a snapshot, i.e. update with snapshot name, user name and comment.")
 	@PostMapping("/snapshot/{snapshotId}")
-	public Snapshot commitSnapshot(@PathVariable int snapshotId, @RequestParam(required = true) String userName,
+	public Snapshot commitSnapshot(@PathVariable int snapshotId, 
+			@RequestParam(required = true) String snapshotName,
+			@RequestParam(required = true) String userName,
 			@RequestParam(required = true) String comment) {
 		
-		if(userName.length() == 0 || comment.length() == 0) {
-			throw new IllegalArgumentException("User name and comment must be of non-zero length");
+		if(snapshotName.length() == 0 || userName.length() == 0 || comment.length() == 0) {
+			throw new IllegalArgumentException("Snapshot name, username and comment must be of non-zero length");
 		}
 
-		return services.commitSnapshot(snapshotId, userName, comment);
+		return services.commitSnapshot(snapshotId, snapshotName, userName, comment);
 	}
 }

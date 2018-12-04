@@ -1,9 +1,26 @@
+/**
+ * Copyright (C) 2018 European Spallation Source ERIC.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 package se.esss.ics.masar.services.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -20,20 +37,15 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import se.esss.ics.masar.epics.IEpicsService;
-import se.esss.ics.masar.epics.exception.PVReadException;
 import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
 import se.esss.ics.masar.persistence.dao.SnapshotDAO;
 import se.esss.ics.masar.services.IServices;
@@ -52,9 +64,6 @@ public class ServicesTest {
 	
 	@Autowired
 	private SnapshotDAO snapshotDAO;
-	
-	@Autowired
-	private IEpicsService epicsServices;
 		
 	private Config configFromClient;
 	
@@ -67,10 +76,7 @@ public class ServicesTest {
 	public void setUp() throws Exception{
 		
 		ConfigPv configPv = ConfigPv.builder()
-				.groupname("groupname")
 				.pvName("pvName")
-				.readonly(true)
-				.tags("tags")
 				.build();
 		
 		configFromClient = Config.builder()
@@ -126,6 +132,13 @@ public class ServicesTest {
 		Config config = services.getConfiguration(1);
 		assertEquals(1, config.getId());
 	}
+	
+	@Test(expected = NodeNotFoundException.class)
+	public void testGetNonExistingConfiguration() {
+		
+		when(configDAO.getConfiguration(1)).thenReturn(null);
+		services.getConfiguration(1);
+	}
 
 	
 	@Test
@@ -140,64 +153,7 @@ public class ServicesTest {
 		services.takeSnapshot(2);
 	}
 	
-	@Test
-	public void testTakeSnapshotPvReadFailure() throws Exception{
-		
-		ConfigPv configPv1 = ConfigPv.builder()
-				.groupname("groupname")
-				.pvName("pvName1")
-				.readonly(true)
-				.tags("tags")
-				.build();
-		
-		ConfigPv configPv2 = ConfigPv.builder()
-				.groupname("groupname")
-				.pvName("fail")
-				.readonly(true)
-				.tags("tags")
-				.build();
-		
-		Config config2 = Config.builder()
-				.active(true)
-				.configPvList(Arrays.asList(configPv1, configPv2))
-				.description("description")
-				.system("system")
-				.build();
-		
-		when(configDAO.getConfiguration(3)).thenReturn(config2);
-		
-		when(epicsServices.getPv(any(ConfigPv.class))).thenAnswer(new Answer<SnapshotPv>() {
-			
-			@Override
-			public SnapshotPv answer(InvocationOnMock invocationOnMock) throws Exception{
-				ConfigPv configPv = (ConfigPv)invocationOnMock.getArguments()[0];
-				if("fail".equals(configPv.getPvName())) {
-					throw new PVReadException("PV Read Failure");
-				}
-				else {
-					return mock(SnapshotPv.class);
-				}
-				
-			}
-		});
-		
-		
-		when(configDAO.savePreliminarySnapshot(any(Snapshot.class))).thenAnswer(new Answer<Snapshot>() {
-			
-			@Override
-			public Snapshot answer(InvocationOnMock invocationOnMock) {
-				return (Snapshot)invocationOnMock.getArguments()[0];
-			}
-		});
-		
-		Snapshot snapshot1 = services.takeSnapshot(3);
-		
-		// Only one SnapshotPv in result due to one of them failing on PV read.
-		assertEquals(1, snapshot1.getSnapshotPvList().size());
-		
-		reset(snapshotDAO);
-	}
-	
+
 	@Test
 	public void testDeleteSnapshot() {
 		
@@ -211,9 +167,9 @@ public class ServicesTest {
 	@Test
 	public void testCommitSnapshot() {
 		
-		services.commitSnapshot(anyInt(), anyString(), anyString());
+		services.commitSnapshot(anyInt(), anyString(), anyString(), anyString());
 		
-		verify(snapshotDAO, times(1)).commitSnapshot(anyInt(), anyString(), anyString());
+		verify(snapshotDAO, times(1)).commitSnapshot(anyInt(), anyString(), anyString(), anyString());
 		verify(snapshotDAO, atLeast(1)).getSnapshot(anyInt(), anyBoolean());
 		
 		reset(snapshotDAO);
@@ -279,6 +235,14 @@ public class ServicesTest {
 		reset(configDAO);
 	}
 	
+	@Test
+	public void testGetFolder() {
+			
+		when(configDAO.getFolder(77)).thenReturn(Folder.builder().id(77).build());
+		assertNotNull(services.getFolder(77));
+
+	}
+	
 	
 	@Test(expected = NodeNotFoundException.class)
 	public void testGetNonExsitingFolder() {
@@ -334,6 +298,13 @@ public class ServicesTest {
 		long timeNanoSeconds = 1538037556314456383L;
 		
 		System.out.println(new Date(timeNanoSeconds / 1000000));
+	}
+	
+	@Test
+	public void testUpdateConfiguration() {
+		when(configDAO.updateConfiguration(config1)).thenReturn(config1);
+		
+		assertNotNull(services.updateConfiguration(config1));
 	}
 	
 }

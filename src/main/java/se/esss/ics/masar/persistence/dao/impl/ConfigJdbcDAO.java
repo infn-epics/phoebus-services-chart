@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -25,32 +25,21 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.NodeType;
-import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
 
 public class ConfigJdbcDAO implements ConfigDAO {
-
-	@Autowired
-	private SnapshotDAO snapshotDAO;
 
 	@Autowired
 	private SimpleJdbcInsert configurationInsert;
@@ -62,22 +51,12 @@ public class ConfigJdbcDAO implements ConfigDAO {
 	private SimpleJdbcInsert configurationEntryRelationInsert;
 
 	@Autowired
-	private SimpleJdbcInsert snapshotInsert;
-
-	@Autowired
-	private SimpleJdbcInsert snapshotPvInsert;
-
-	@Autowired
-	private ObjectMapper objectMapper;
-
-	@Autowired
 	private SimpleJdbcInsert nodeInsert;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
-	private Logger logger = LoggerFactory.getLogger(ConfigJdbcDAO.class);
-
+	
 	@Transactional
 	@Override
 	public Folder createFolder(final Folder folder) {
@@ -259,9 +238,6 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		} else {
 			Map<String, Object> params = new HashMap<>(4);
 			params.put("name", configPv.getPvName());
-			params.put("readonly", configPv.isReadonly());
-			params.put("tags", configPv.getTags());
-			params.put("groupName", configPv.getGroupname());
 			params.put("provider", configPv.getProvider().toString());
 
 			configPvId = configurationEntryInsert.executeAndReturnKey(params).intValue();
@@ -331,43 +307,6 @@ public class ConfigJdbcDAO implements ConfigDAO {
 	}
 
 	@Override
-	public Snapshot savePreliminarySnapshot(Snapshot snapshot) {
-
-		Map<String, Object> snapshotParams = new HashMap<>();
-		snapshotParams.put("config_id", snapshot.getConfigId());
-		snapshotParams.put("created", Timestamp.from(Instant.now()));
-		snapshotParams.put("name", snapshot.getName());
-
-		int snapshotId = snapshotInsert.executeAndReturnKey(snapshotParams).intValue();
-
-		Map<String, Object> params = new HashMap<>(6);
-		params.put("snapshot_id", snapshotId);
-
-		for (SnapshotPv<?> snapshotPv : snapshot.getSnapshotPvList()) {
-			params.put("config_pv_id", snapshotPv.getConfigPv().getId());
-			params.put("fetch_status", snapshotPv.isFetchStatus());
-			if (snapshotPv.isFetchStatus()) {
-				params.put("dtype", snapshotPv.getDtype());
-				params.put("severity", snapshotPv.getSeverity());
-				params.put("status", snapshotPv.getStatus());
-				params.put("time", snapshotPv.getTime());
-				params.put("timens", snapshotPv.getTimens());
-				params.put("clazz", snapshotPv.getValue().getClass().getCanonicalName());
-				try {
-					params.put("value", objectMapper.writeValueAsString(snapshotPv.getValue()));
-				} catch (JsonProcessingException e) {
-					logger.error(e.getMessage());
-				}
-			}
-
-			snapshotPvInsert.execute(params);
-		}
-
-		return snapshotDAO.getSnapshot(snapshotId, false);
-
-	}
-
-	@Override
 	@Transactional
 	public Folder moveNode(int nodeId, int targetNodeId) {
 
@@ -417,32 +356,41 @@ public class ConfigJdbcDAO implements ConfigDAO {
 
 	@Override
 	@Transactional
-	public Config updateConfiguration(Config config) {
+	public Config updateConfiguration(Config updatedConfig) {
 		
-		Node node = getNode(config.getId());
+		Node node = getNode(updatedConfig.getId());
 		
 		if(node == null) {
-			throw new NodeNotFoundException(String.format("Config with id=%d not found", config.getId()));
+			throw new NodeNotFoundException(String.format("Config with id=%d not found", updatedConfig.getId()));
 		}
 		else if(!node.getNodeType().equals(NodeType.CONFIGURATION)) {
-			throw new IllegalArgumentException(String.format("Node with id=%d is not a configuration", config.getId()));
+			throw new IllegalArgumentException(String.format("Node with id=%d is not a configuration", updatedConfig.getId()));
 		}
 
 		Config existingConfig = (Config) node;
 
 		Collection<ConfigPv> pvsToRemove = CollectionUtils.removeAll(existingConfig.getConfigPvList(),
-				config.getConfigPvList());
-		CollectionUtils.removeAll(config.getConfigPvList(), existingConfig.getConfigPvList());
-
+				updatedConfig.getConfigPvList());
 		Collection<Integer> pvIdsToRemove = CollectionUtils.collect(pvsToRemove, ConfigPv::getId);
+		
+		// Remove PVs from relation table
+		pvIdsToRemove.stream().forEach(id -> jdbcTemplate.update("delete from config_pv_relation where config_id=? and config_pv_id=?", 
+				existingConfig.getId(), id));
 
+		// Check if any of the PVs is orphaned
 		deleteOrphanedPVs(pvIdsToRemove);
+		
+		Collection<ConfigPv> pvsToAdd = 
+				CollectionUtils.removeAll(updatedConfig.getConfigPvList(), existingConfig.getConfigPvList());
+		
+		// Add new PVs 
+		pvsToAdd.stream().forEach(configPv -> saveConfigPv(existingConfig.getId(), configPv));
 
-		jdbcTemplate.update("update config set description=?, _system=? where node_id=?", config.getDescription(),
-				config.getSystem(), config.getId());
-		jdbcTemplate.update("update node set name=? where id=?", config.getName(), config.getId());
+		jdbcTemplate.update("update config set description=?, _system=? where node_id=?", updatedConfig.getDescription(),
+				updatedConfig.getSystem(), updatedConfig.getId());
+		jdbcTemplate.update("update node set name=? where id=?", updatedConfig.getName(), updatedConfig.getId());
 
-		return getConfiguration(config.getId());
+		return getConfiguration(updatedConfig.getId());
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,10 +21,13 @@ import java.util.List;
 
 import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.Snapshot;
+import se.esss.ics.masar.model.SnapshotItem;
 
 public interface SnapshotDAO {
 
 		
+	public Snapshot createPreliminarySnapshot(int configId);
+	
 	/**
 	 * Get snapshots for the specified configuration id.
 	 * @param configId The database id of the configuration see {@link Config#getId()}
@@ -45,16 +48,27 @@ public interface SnapshotDAO {
 	/**
 	 * "Saves" the snapshot by adding a user id and non-null comment. 
 	 * @param snapshotId The database id of the snapshot, see {@link Snapshot#getId()}.
-	 * @param userName The user identity.
-	 * @param comment A non-null comment.
+	 * @param snapshotName Non-null user identity.
+	 * @param userName Non-null user identity.
+	 * @param comment Non-null comment.
 	 */
-	public void commitSnapshot(int snapshotId, String userName, String comment);
+	public void commitSnapshot(int snapshotId, String snapshotName, String userName, String comment);
 	
 	/**
 	 * Deletes a snapshot and all associated data.
 	 * @param snapshotId The database id of the snapshot, see {@link Snapshot#getId()}.
 	 */
 	public void deleteSnapshot(int snapshotId);
+	
+	/**
+	 * Saves a snapshot to the database as a preliminary snapshot, i.e. without user
+	 * id and comment.
+	 * 
+	 * @param config The {@link Config} associated with the snapshot.
+	 * @param snapshotItems The {@link SnapshotItem}s holding the data read from the PVs
+	 * @return The database id of the new snapshot.
+	 */
+	public Snapshot savePreliminarySnapshot(Config config, List<SnapshotItem> snapshotItems);
 	
 	
 }

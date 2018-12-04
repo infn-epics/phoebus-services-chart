@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,21 +17,26 @@
  */
 package se.esss.ics.masar.persistence.dao.impl;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
+import se.esss.ics.masar.model.SnapshotItem;
+import se.esss.ics.masar.model.internal.SnapshotPv;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
 import se.esss.ics.masar.persistence.dao.SnapshotDAO;
+import se.esss.ics.masar.persistence.dao.SnapshotDataConverter;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
 import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
 
@@ -42,9 +47,12 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private SimpleJdbcInsert snapshotInsert;
 
 	@Autowired
-	private ObjectMapper objectMapper;
+	private SimpleJdbcInsert snapshotPvInsert;
 	
 	@Autowired
 	private ConfigDAO configDAO;
@@ -52,7 +60,7 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 	private static final int NO_USER = -1;
 
 	@Override
-	public void commitSnapshot(int snapshotId, String userName, String comment) {
+	public void commitSnapshot(int snapshotId, String snapshotName, String userName, String comment) {
 		
 		Snapshot snapshot = getSnapshot(snapshotId, false);
 		
@@ -65,8 +73,7 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 			userId = userNameInsert.executeAndReturnKey(Collections.singletonMap("name", userName)).intValue();
 		}
 		
-
-		jdbcTemplate.update("update snapshot set username_id=?, comment=? where id=?", userId, comment, snapshotId);
+		jdbcTemplate.update("update snapshot set name=?, username_id=?, comment=? where id=?", snapshotName, userId, comment, snapshotId);
 	}
 
 	private int getUserNameId(String userName) {
@@ -109,11 +116,12 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 			return null;
 		}
 
-		List<SnapshotPv<?>> snapshotValues = jdbcTemplate.query(
+		List<SnapshotPv> snapshotPVs = jdbcTemplate.query(
 				"select * from snapshot_pv join config_pv on snapshot_pv.config_pv_id=config_pv.id where snapshot_id=?",
-				new Object[] { snapshotId }, new SnapshotPvRowMapper(objectMapper));
+				new Object[] { snapshotId }, new SnapshotPvRowMapper());
 
-		snapshot.setSnapshotPvList(snapshotValues);
+		snapshot.setSnapshotItems(snapshotPVs.stream().map(snapshotPv -> 
+			SnapshotDataConverter.fromSnapshotPv(snapshotPv)).collect(Collectors.toList()));
 
 		return snapshot;
 	}
@@ -122,4 +130,50 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 	public void deleteSnapshot(int snapshotId) {
 		jdbcTemplate.update("delete from snapshot where id=?", snapshotId);
 	}
+	
+	@Override
+	public Snapshot savePreliminarySnapshot(Config config, List<SnapshotItem> snapshotItems) {
+
+		Map<String, Object> snapshotParams = new HashMap<>();
+		snapshotParams.put("config_id", config.getId());
+		snapshotParams.put("created", Timestamp.from(Instant.now()));
+		
+		int snapshotId = snapshotInsert.executeAndReturnKey(snapshotParams).intValue();
+
+		Map<String, Object> params = new HashMap<>(6);
+		params.put("snapshot_id", snapshotId);
+
+		for (SnapshotItem snapshotItem : snapshotItems) {
+			params.put("config_pv_id", snapshotItem.getConfigPvId());
+			params.put("fetch_status", snapshotItem.isFetchStatus());
+			if (snapshotItem.isFetchStatus()) {
+				SnapshotPv snapshotPv = SnapshotDataConverter.fromVType(snapshotItem.getValue());
+				params.put("severity", snapshotPv.getAlarmSeverity().toString());
+				params.put("status", snapshotPv.getAlarmStatus().toString());
+				params.put("time", snapshotPv.getTime());
+				params.put("timens", snapshotPv.getTimens());
+				params.put("sizes", snapshotPv.getSizes());
+				params.put("data_type", snapshotPv.getDataType().toString());
+				params.put("value", snapshotPv.getValue());
+			}
+
+			snapshotPvInsert.execute(params);
+		}
+
+		return getSnapshot(snapshotId, false);
+
+	}
+	
+	@Override
+	public Snapshot createPreliminarySnapshot(int configId) {
+		
+		Map<String, Object> snapshotParams = new HashMap<>();
+		snapshotParams.put("config_id", configId);
+		snapshotParams.put("created", Timestamp.from(Instant.now()));
+		
+		int snapshotId = snapshotInsert.executeAndReturnKey(snapshotParams).intValue();
+		
+		return getSnapshot(snapshotId, false);
+	}
+
 }

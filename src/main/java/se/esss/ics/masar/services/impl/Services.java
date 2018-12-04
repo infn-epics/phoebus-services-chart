@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,22 +17,17 @@
  */
 package se.esss.ics.masar.services.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import se.esss.ics.masar.epics.IEpicsService;
-import se.esss.ics.masar.epics.exception.PVReadException;
 import se.esss.ics.masar.model.Config;
-import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
+import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
 import se.esss.ics.masar.persistence.dao.SnapshotDAO;
 import se.esss.ics.masar.services.IServices;
@@ -52,8 +47,7 @@ public class Services implements IServices{
 	@Autowired
 	private IEpicsService epicsService;
 	
-	private Logger logger = LoggerFactory.getLogger(Services.class.getName());
-	
+		
 	@Override
 	@Transactional
 	public Config createNewConfiguration(Config config) {
@@ -85,28 +79,15 @@ public class Services implements IServices{
 			throw new IllegalArgumentException("Configuration with id=" + nodeId + " does not exist.");
 		}
 		
-		List<SnapshotPv<?>> snapshotPvs = new ArrayList<>();
+		List<SnapshotItem> snapshotItems = epicsService.readPvs(config);
 		
-		for(ConfigPv configPv : config.getConfigPvList()) {
-			try {
-				snapshotPvs.add(epicsService.getPv(configPv));
-			} catch (PVReadException e) {
-				logger.error(e.getMessage());
-			}
-		}
-		
-		Snapshot snapshot = Snapshot.builder()
-				.configId(nodeId)
-				.snapshotPvList(snapshotPvs)
-				.build();
-		
-		return configDAO.savePreliminarySnapshot(snapshot);
+		return snapshotDAO.savePreliminarySnapshot(config, snapshotItems);
 	
 	}
 		
 	@Override
-	public Snapshot commitSnapshot(int snapshotId, String userName, String comment) {
-		snapshotDAO.commitSnapshot(snapshotId, userName, comment);
+	public Snapshot commitSnapshot(int snapshotId, String snapshotName, String userName, String comment) {
+		snapshotDAO.commitSnapshot(snapshotId, snapshotName, userName, comment);
 		
 		return snapshotDAO.getSnapshot(snapshotId, true);
 	}

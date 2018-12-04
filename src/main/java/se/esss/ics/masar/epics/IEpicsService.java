@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -17,11 +17,12 @@
  */
 package se.esss.ics.masar.epics;
 
-import se.esss.ics.masar.epics.exception.PVReadException;
-import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.SnapshotPv;
+import java.util.List;
+
+import se.esss.ics.masar.model.Config;
+import se.esss.ics.masar.model.SnapshotItem;
 
 public interface IEpicsService {
-
-	public <T> SnapshotPv<T> getPv(ConfigPv configPv) throws PVReadException;
+	
+	public List<SnapshotItem> readPvs(Config config);
 }

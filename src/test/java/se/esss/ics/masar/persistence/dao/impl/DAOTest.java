@@ -1,3 +1,21 @@
+/**
+ * Copyright (C) 2018 European Spallation Source ERIC.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
 package se.esss.ics.masar.persistence.dao.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -6,12 +24,21 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.epics.vtype.Alarm;
+import org.epics.vtype.AlarmSeverity;
+import org.epics.vtype.AlarmStatus;
+import org.epics.vtype.Display;
+import org.epics.vtype.Time;
+import org.epics.vtype.VDouble;
+import org.epics.vtype.VInt;
 import org.flywaydb.test.FlywayTestExecutionListener;
 import org.flywaydb.test.annotation.FlywayTest;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +54,15 @@ import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
+import se.esss.ics.masar.model.Provider;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotPv;
+import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.persistence.config.PersistenceConfiguration;
 import se.esss.ics.masar.persistence.config.PersistenceTestConfig;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
 import se.esss.ics.masar.persistence.dao.SnapshotDAO;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
+import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @EnableConfigurationProperties
@@ -47,12 +76,24 @@ public class DAOTest {
 
 	@Autowired
 	private SnapshotDAO snapshotDAO;
+	
+	private Alarm alarm;
+	private Time time;
+	private Display display;
+
+	@Before
+	public void init() {
+		time = Time.of(Instant.ofEpochSecond(1000, 7000));
+		alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
+		display = Display.none();
+	}
+
 
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testCreateConfigNoParentFound() {
 
-		ConfigPv configPv = ConfigPv.builder().groupname("groupname").pvName("pvName").readonly(true).tags("tags")
+		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
 				.build();
 
 		Config config = Config.builder().active(true).configPvList(Arrays.asList(configPv)).description("description")
@@ -132,7 +173,7 @@ public class DAOTest {
 	public void testNewFolderParentIsConfiguration() {
 
 		
-		ConfigPv configPv = ConfigPv.builder().groupname("groupname").pvName("pvName").tags("tags").build();
+		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
 		Config config = Config.builder().active(true).description("description").system("system").parentId(Node.ROOT_NODE_ID)
 				.name("My config").configPvList(Arrays.asList(configPv)).build();
@@ -150,7 +191,7 @@ public class DAOTest {
 	public void testNewConfig() {
 
 		
-		ConfigPv configPv = ConfigPv.builder().groupname("groupname").pvName("pvName").tags("tags").build();
+		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
 		Config config = Config.builder().active(true).description("description").system("system").parentId(Node.ROOT_NODE_ID)
 				.name("My config").configPvList(Arrays.asList(configPv)).build();
@@ -207,7 +248,7 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteConfigurationAndPvs() {
 
-		ConfigPv configPv = ConfigPv.builder().groupname("group").readonly(true).tags("tags").pvName("pvName").build();
+		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
 		Config config = Config.builder().active(true).description("description").system("system")
 				.configPvList(Arrays.asList(configPv)).build();
@@ -265,9 +306,9 @@ public class DAOTest {
 
 		Node parentNode = configDAO.getFolder(Node.ROOT_NODE_ID);
 
-		ConfigPv configPv1 = ConfigPv.builder().groupname("group").readonly(true).tags("tags").pvName("pvName").build();
+		ConfigPv configPv1 = ConfigPv.builder().pvName("pvName").build();
 
-		ConfigPv configPv2 = ConfigPv.builder().groupname("group").readonly(true).tags("tags").pvName("pvName2")
+		ConfigPv configPv2 = ConfigPv.builder().pvName("pvName2")
 				.build();
 
 		Config config1 = Config.builder().active(true).description("description").system("system")
@@ -319,46 +360,49 @@ public class DAOTest {
 				.configPvList(Arrays.asList(ConfigPv.builder().pvName("whatever").build())).build();
 
 		config = configDAO.createConfiguration(config);
-
-		SnapshotPv<Integer> snapshotPv = SnapshotPv.<Integer>builder().dtype(1).fetchStatus(true).severity(2).status(3)
-				.time(1000L).timens(20000).value(10)
-				.configPv(ConfigPv.builder().pvName("whatever").id(config.getConfigPvList().get(0).getId()).build())
+		
+		SnapshotItem item1 = SnapshotItem.builder()
+				.configPvId(config.getId())
+				.fetchStatus(true)
+				.value(VDouble.of(7.7, alarm, time, display))
 				.build();
 
-		Snapshot snapshot = Snapshot.builder().approve(true).configId(config.getId())
-				.name("name").snapshotPvList(Arrays.asList(snapshotPv)).build();
-
-		Snapshot newSnapshot = configDAO.savePreliminarySnapshot(snapshot);
-
-		assertEquals(10, newSnapshot.getSnapshotPvList().get(0).getValue());
+		Snapshot newSnapshot = snapshotDAO.savePreliminarySnapshot(config, Arrays.asList(item1));
+		assertEquals(7.7, ((VDouble)newSnapshot.getSnapshotItems().get(0).getValue()).getValue().doubleValue(), 0.01);
 
 		Snapshot fullSnapshot = snapshotDAO.getSnapshot(newSnapshot.getId(), true);
-
 		assertNull(fullSnapshot);
 
 		List<Snapshot> snapshots = snapshotDAO.getSnapshots(config.getId());
-
 		assertTrue(snapshots.isEmpty());
 
-		snapshotDAO.commitSnapshot(newSnapshot.getId(), "user", "comment");
+		snapshotDAO.commitSnapshot(newSnapshot.getId(), "snapshot name", "user", "comment");
 
 		fullSnapshot = snapshotDAO.getSnapshot(newSnapshot.getId(), true);
-
-		assertEquals(1, fullSnapshot.getSnapshotPvList().size());
+		assertEquals(1, fullSnapshot.getSnapshotItems().size());
 
 		snapshots = snapshotDAO.getSnapshots(config.getId());
-
 		assertEquals(1, snapshots.size());
 
 		snapshotDAO.deleteSnapshot(newSnapshot.getId());
 
 		snapshots = snapshotDAO.getSnapshots(config.getId());
-
 		assertTrue(snapshots.isEmpty());
+		
+		item1 = SnapshotItem.builder()
+				.configPvId(config.getId())
+				.fetchStatus(false)
+				.build();
+		
+		newSnapshot = snapshotDAO.savePreliminarySnapshot(config, Arrays.asList(item1));
+		
+		snapshotDAO.commitSnapshot(newSnapshot.getId(), "snapshot name", "user", "comment");
 
-		newSnapshot = configDAO.savePreliminarySnapshot(snapshot);
-
-		snapshotDAO.commitSnapshot(newSnapshot.getId(), "user", "comment");
+	}
+	
+	@Test(expected = SnapshotNotFoundException.class)
+	public void testCommitNonExistingSnapshot() {
+		snapshotDAO.commitSnapshot(-1, "", "", "");
 	}
 
 	@Test(expected = NodeNotFoundException.class)
@@ -496,20 +540,23 @@ public class DAOTest {
 		config = configDAO.createConfiguration(config);
 		
 		Date lastModified = config.getLastModified();
+		
+		SnapshotItem item1 = SnapshotItem.builder()
+				.configPvId(config.getId())
+				.fetchStatus(true)
+				.value(VDouble.of(7.7, alarm, time, display))
+				.build();
+		
+		SnapshotItem item2 = SnapshotItem.builder()
+				.configPvId(config.getId())
+				.fetchStatus(true)
+				.value(VInt.of(7, alarm, time, display))
+				.build();
 
-		SnapshotPv<Integer> snapshotPv1 = SnapshotPv.<Integer>builder().dtype(1).fetchStatus(true).severity(2).status(3)
-				.time(1000L).timens(20000).value(10).configPv(config.getConfigPvList().get(0)).build();
+		Snapshot snapshot = snapshotDAO.savePreliminarySnapshot(config, Arrays.asList(item1, item2));
 
-		SnapshotPv<Integer> snapshotPv2 = SnapshotPv.<Integer>builder().dtype(1).fetchStatus(true).severity(2).status(3)
-				.time(1000L).timens(20000).value(20).configPv(config.getConfigPvList().get(1)).build();
-
-		Snapshot snapshot = Snapshot.builder().approve(true).configId(config.getId())
-				.name("name").snapshotPvList(Arrays.asList(snapshotPv1, snapshotPv2)).build();
-
-		snapshot = configDAO.savePreliminarySnapshot(snapshot);
-
-		assertEquals(10, snapshot.getSnapshotPvList().get(0).getValue());
-		assertEquals(20, snapshot.getSnapshotPvList().get(1).getValue());
+		assertEquals(7.7, ((VDouble)snapshot.getSnapshotItems().get(0).getValue()).getValue().doubleValue(), 0.01);
+		assertEquals(7, ((VInt)snapshot.getSnapshotItems().get(1).getValue()).getValue().intValue());
 
 		Snapshot fullSnapshot = snapshotDAO.getSnapshot(snapshot.getId(), true);
 
@@ -519,12 +566,12 @@ public class DAOTest {
 
 		assertTrue(snapshots.isEmpty());
 
-		snapshotDAO.commitSnapshot(snapshot.getId(), "user", "comment");
+		snapshotDAO.commitSnapshot(snapshot.getId(), "snapshot name", "user", "comment");
 
 		fullSnapshot = snapshotDAO.getSnapshot(snapshot.getId(), true);
 
 		assertNotNull(fullSnapshot);
-		assertEquals(2, fullSnapshot.getSnapshotPvList().size());
+		assertEquals(2, fullSnapshot.getSnapshotItems().size());
 
 		Config updatedConfig = Config.builder().id(config.getId()).active(true).name("My updated config")
 				.parentId(folder1.getId()).description("Updated description").system("Updated system")
@@ -537,6 +584,20 @@ public class DAOTest {
 		
 		// Verify that last modified time has been updated
 		assertTrue(updatedConfig.getLastModified().getTime() > lastModified.getTime());
+		
+		// Verify the list of PVs
+		assertEquals(1, updatedConfig.getConfigPvList().size());
+		
+		ConfigPv configPv3 = ConfigPv.builder().pvName("configPv3").build();
+		
+		updatedConfig = Config.builder().id(config.getId()).active(true).name("My updated config")
+				.parentId(folder1.getId()).description("Updated description").system("Updated system")
+				.configPvList(Arrays.asList(configPv1, configPv2, configPv3)).build();
+		
+		updatedConfig = configDAO.updateConfiguration(updatedConfig);
+		
+		// Verify the list of PVs
+		assertEquals(3, updatedConfig.getConfigPvList().size());
 
 	}
 	
@@ -655,6 +716,25 @@ public class DAOTest {
 		folder1 = configDAO.getFolder(folder1.getId());
 		
 		assertTrue(folder1.getLastModified().getTime() > lastModified.getTime());
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testCreatePriliminarySnapshot() {
+		Config config = configDAO.createConfiguration(Config.builder()
+				.description("description")
+				.name("Config1")
+				.parentId(Node.ROOT_NODE_ID)
+				.configPvList(Arrays.asList(ConfigPv.builder()
+						.pvName("pvName")
+						.provider(Provider.ca)
+						.build()))
+				.build());
+		
+		Snapshot snapshot = snapshotDAO.createPreliminarySnapshot(config.getId());
+		
+		assertEquals(config.getId(), snapshot.getConfigId());
+		assertTrue(snapshot.getId() != 0);
 	}
 
 }

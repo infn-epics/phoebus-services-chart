@@ -20,6 +20,8 @@ package se.esss.ics.masar.epics.config;
 import org.epics.pvaClient.PvaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 public class EpicsConfiguration {
@@ -27,5 +29,10 @@ public class EpicsConfiguration {
 	@Bean
 	public PvaClient pvaClient() {
 		return PvaClient.get("pva ca");
+	}
+	
+	@Bean
+	public TaskExecutor taskExecutor() {
+		return new SyncTaskExecutor();
 	}
 }

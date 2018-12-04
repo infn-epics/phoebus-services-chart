@@ -3,10 +3,9 @@ package se.esss.ics.masar.persistence.dao;
 import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
-import se.esss.ics.masar.model.Snapshot;
 
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -42,17 +41,6 @@ public interface ConfigDAO {
 	 */
 	public Config getConfiguration(int nodeId);
 	
-	
-	/**
-	 * Saves a snapshot to the database as a preliminary snapshot, i.e. without user
-	 * id and comment.
-	 * 
-	 * @param snapshot
-	 *            The {@link Snapshot} object to save together with the data read
-	 *            from the PVs
-	 * @return The database id of the new snapshot.
-	 */
-	public Snapshot savePreliminarySnapshot(Snapshot snapshot);
 
 	/**
 	 * Deletes a {@link Node}, folder or configuration. If the node is a folder, 

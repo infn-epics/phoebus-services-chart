@@ -1,5 +1,5 @@
 /** 
- * Copyright (C) ${year} European Spallation Source ERIC.
+ * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,7 +36,7 @@ public interface IServices {
 			
 	public Snapshot takeSnapshot(int configId);
 	
-	public Snapshot commitSnapshot(int snapshotId, String userName, String comment);
+	public Snapshot commitSnapshot(int snapshotId, String snapshotName, String userName, String comment);
 	
 	public List<Snapshot> getSnapshots(int configId);
 	

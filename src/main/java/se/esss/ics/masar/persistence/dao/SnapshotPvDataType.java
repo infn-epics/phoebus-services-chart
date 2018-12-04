@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
@@ -16,20 +16,23 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-package se.esss.ics.masar.persistence.h2;
+package se.esss.ics.masar.persistence.dao;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Instant;
-
-import org.h2.tools.TriggerAdapter;
-
-public class H2Trigger extends TriggerAdapter {
-
-	@Override
-	public void fire(Connection conn, ResultSet oldRow, ResultSet newRow) throws SQLException {
-		newRow.updateTimestamp("last_modified", Timestamp.from(Instant.now()));
-	}
+/**
+ * @author georgweiss
+ * Created 28 Nov 2018
+ */
+public enum SnapshotPvDataType {
+	
+	BYTE,
+	UBYTE,
+	SHORT,
+	USHORT,
+	INTEGER,
+	UINTEGER,
+	LONG,
+	ULONG,
+	FLOAT,
+	DOUBLE,
+	STRING;
 }
