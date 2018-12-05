@@ -18,15 +18,8 @@
 
 package se.esss.ics.masar.epics.config;
 
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import java.util.concurrent.ExecutorService;
 
-import org.epics.pvaClient.PvaClient;
-import org.epics.pvaClient.PvaClientChannel;
-import org.epics.pvaClient.PvaClientGet;
-import org.epics.pvaClient.PvaClientGetData;
 import org.epics.pvaccess.PVFactory;
 import org.epics.pvdata.factory.BasePVInt;
 import org.epics.pvdata.factory.BasePVLong;
@@ -36,50 +29,14 @@ import org.epics.pvdata.pv.PVStructure;
 import org.epics.pvdata.pv.Scalar;
 import org.epics.pvdata.pv.ScalarType;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.SyncTaskExecutor;
-import org.springframework.core.task.TaskExecutor;
 
 import se.esss.ics.masar.epics.IEpicsService;
 import se.esss.ics.masar.epics.impl.EpicsService;
 
 @Configuration
 public class EpicsServiceTestConfig {
-	
-	
-
-	@Bean
-	public PvaClient pvaClient() {
-		PvaClient pvaClient = Mockito.mock(PvaClient.class);
-		
-		PvaClientChannel pvaClientChannel = mock(PvaClientChannel.class);
-		PvaClientGetData pvaClientGetData = mock(PvaClientGetData.class);
-		PvaClientGet pvaClientGet = mock(PvaClientGet.class);
-		
-		
-		when(pvaClientGetData.getPVStructure()).thenReturn(getDefaultPVStructure());
-		when(pvaClientGet.getData()).thenReturn(pvaClientGetData);
-		when(pvaClientChannel.get()).thenReturn(pvaClientGet);
-		
-		when(pvaClient.channel(anyString(), anyString(), anyDouble())).thenReturn(pvaClientChannel);
-		when(pvaClient.channel(anyString(), anyString(), anyDouble())).thenAnswer(new Answer<PvaClientChannel>() {
-			
-			@Override
-			public PvaClientChannel answer(InvocationOnMock invocation) {
-				String channelName = invocation.getArgument(0);
-				if("channelName".equals(channelName) || channelName.startsWith("multi")) {
-					return pvaClientChannel;
-				}
-				else {
-					throw new RuntimeException("Unable to read channel " + channelName);
-				}
-			}
-		});
-		return pvaClient;
-	}
 	
 	@Bean
 	public IEpicsService epicsService() {
@@ -138,7 +95,7 @@ public class EpicsServiceTestConfig {
 	}
 	
 	@Bean
-	public TaskExecutor taskExecutor() {
-		return new SyncTaskExecutor();
+	public ExecutorService executorPool() {
+		return Mockito.mock(ExecutorService.class);
 	}
 }

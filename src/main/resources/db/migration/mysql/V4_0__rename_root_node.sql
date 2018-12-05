@@ -1,1 +1,1 @@
-ALTER TABLE snapshot ADD name varchar(50);
+UPDATE node set name='Root folder' where id=0;

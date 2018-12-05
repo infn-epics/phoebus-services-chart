@@ -20,7 +20,8 @@ package se.esss.ics.masar.epics.config;
 
 import static org.junit.Assert.assertNotNull;
 
-import org.epics.pvaClient.PvaClient;
+import java.util.concurrent.ExecutorService;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,10 +34,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 public class EpicsConfigurationTest {
 	
 	@Autowired
-	private PvaClient pvaClient;
+	private ExecutorService executorPool;
 	
 	@Test
 	public void testPvaClient() {
-		assertNotNull(pvaClient);
+		assertNotNull(executorPool);
 	}
 }

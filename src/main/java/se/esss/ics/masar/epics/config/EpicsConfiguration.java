@@ -17,22 +17,25 @@
  */
 package se.esss.ics.masar.epics.config;
 
-import org.epics.pvaClient.PvaClient;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.SyncTaskExecutor;
-import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 public class EpicsConfiguration {
-	
+
+	/**
+	 * Returns an execution thread pool of size 20. Should maybe be configurable
+	 * from command line?
+	 * 
+	 * @return An {@link ExecutorService} to which {@link Callable}s can be
+	 *         submitted for threaded execution.
+	 */
 	@Bean
-	public PvaClient pvaClient() {
-		return PvaClient.get("pva ca");
-	}
-	
-	@Bean
-	public TaskExecutor taskExecutor() {
-		return new SyncTaskExecutor();
+	public ExecutorService executorPool() {
+		return Executors.newFixedThreadPool(20);
 	}
 }
