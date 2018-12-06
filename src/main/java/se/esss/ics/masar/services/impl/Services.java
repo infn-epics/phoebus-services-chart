@@ -19,6 +19,8 @@ package se.esss.ics.masar.services.impl;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +49,8 @@ public class Services implements IServices{
 	@Autowired
 	private IEpicsService epicsService;
 	
+	private Logger logger = LoggerFactory.getLogger(Services.class);
+	
 		
 	@Override
 	@Transactional
@@ -56,7 +60,9 @@ public class Services implements IServices{
 		if(parentFolder == null) {
 			throw new IllegalArgumentException("Parent folder for configuration does not exist");
 		}
-		return configDAO.createConfiguration(config);
+		Config newConfig = configDAO.createConfiguration(config);
+		logger.info(String.format("Created new configuration: %s", newConfig.toString()));
+		return newConfig;
 	}
 	
 	@Override
@@ -79,9 +85,12 @@ public class Services implements IServices{
 			throw new IllegalArgumentException("Configuration with id=" + nodeId + " does not exist.");
 		}
 		
+		long start = System.currentTimeMillis();
 		List<SnapshotItem> snapshotItems = epicsService.readPvs(config);
 		
-		return snapshotDAO.savePreliminarySnapshot(config, snapshotItems);
+		Snapshot snapshot = snapshotDAO.savePreliminarySnapshot(config, snapshotItems);
+		logger.info(String.format("Took new preliminary snapshot: %s, time elapsed: %d ms", snapshot.toString(), (System.currentTimeMillis() - start)));
+		return snapshot;
 	
 	}
 		
@@ -89,16 +98,20 @@ public class Services implements IServices{
 	public Snapshot commitSnapshot(int snapshotId, String snapshotName, String userName, String comment) {
 		snapshotDAO.commitSnapshot(snapshotId, snapshotName, userName, comment);
 		
-		return snapshotDAO.getSnapshot(snapshotId, true);
+		Snapshot snapshot = snapshotDAO.getSnapshot(snapshotId, true);
+		logger.info(String.format("Committed snapshot: %s", snapshot.toString()));
+		return snapshot;
 	}
 	
 	@Override
 	public void deleteSnapshot(int snapshotId) {
+		logger.info(String.format("Deleting snapshot id=%d", snapshotId));
 		snapshotDAO.deleteSnapshot(snapshotId);
 	}
 	
 	@Override
 	public List<Snapshot> getSnapshots(int configId){
+		logger.info(String.format("Obtaining snapshot for config id=%d", configId));
 		return snapshotDAO.getSnapshots(configId);
 	}
 	
@@ -108,6 +121,7 @@ public class Services implements IServices{
 		if(snapshot == null) {
 			throw new SnapshotNotFoundException("Snapshot with id=" + snapshotId  + " not found.");
 		}
+		logger.info(String.format("Retrieved snapshot id=%d", snapshotId));
 		return snapshot;
 	}
 	
@@ -119,7 +133,9 @@ public class Services implements IServices{
 			throw new IllegalArgumentException("Cannot create new folder as parent folder does not exist.");
 		}
 	
-		return configDAO.createFolder(folder);
+		Folder newFolder = configDAO.createFolder(folder);
+		logger.info(String.format("Created new folder: %s", folder.toString()));
+		return newFolder;
 	}
 	
 	@Override
@@ -128,6 +144,7 @@ public class Services implements IServices{
 		if(folder == null) {
 			throw new NodeNotFoundException(String.format("Folder with id=%d does not exist", nodeId));
 		}
+		logger.info(String.format("Retrieved folder id=%d", nodeId));
 		return folder;
 	}
 	
@@ -135,24 +152,27 @@ public class Services implements IServices{
 	@Override
 	@Transactional
 	public Folder moveNode(int nodeId, int targetNodeId) {
+		logger.info(String.format("Moving node id %d to raget node id%d", nodeId, targetNodeId));
 		return configDAO.moveNode(nodeId, targetNodeId);
 	}
 	
 	@Override
 	@Transactional
 	public void deleteNode(int nodeId) {
+		logger.info(String.format("Deleting node id=%d", nodeId));
 		configDAO.deleteNode(nodeId);
 	}
 	
 	@Override
 	@Transactional
 	public Config updateConfiguration(Config config) {
-	
+		logger.info(String.format("Updating configuration id: %d", config.getId()));
 		return configDAO.updateConfiguration(config);
 	}
 	
 	@Override
 	public Node renameNode(int nodeId, String name) {
+		logger.info(String.format("Renaming node id: %d to %s", nodeId, name));
 		return configDAO.renameNode(nodeId, name);
 	}
 }

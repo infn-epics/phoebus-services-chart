@@ -19,7 +19,6 @@
 package se.esss.ics.masar.epics.impl;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import se.esss.ics.masar.epics.config.EpicsServiceTestConfig;
 import se.esss.ics.masar.epics.exception.PVReadException;
 import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.SnapshotItem;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextHierarchy({ @ContextConfiguration(classes = { EpicsServiceTestConfig.class }) })
@@ -53,9 +51,7 @@ public class EpicsServiceTest {
 		
 		Config config = Config.builder().configPvList(Arrays.asList(configPv)).build();
 		
-		List<SnapshotItem> snapshotItems = epicsService.readPvs(config);
-
-		//assertEquals(7, ((Integer)snapshotItems.getSnapshotPvList().get(0).getValue()).intValue());
+		epicsService.readPvs(config);
 
 	}
 
@@ -67,9 +63,8 @@ public class EpicsServiceTest {
 		
 		Config config = Config.builder().configPvList(Arrays.asList(configPv)).build();
 		
-		List<SnapshotItem> snapshotItems = epicsService.readPvs(config);
+		epicsService.readPvs(config);
 
-		//assertFalse(snapshot.getSnapshotPvList().get(0).isFetchStatus());
 	}
 	
 	@Test
@@ -89,9 +84,8 @@ public class EpicsServiceTest {
 		
 		Config config = Config.builder().configPvList(Arrays.asList(configPv1, configPv2, configPv3)).build();
 		
-		List<SnapshotItem> snapshotItems = epicsService.readPvs(config);
+		epicsService.readPvs(config);
 		
-		//assertEquals(3, snapshot.getSnapshotPvList().size());
 		
 	}
 }

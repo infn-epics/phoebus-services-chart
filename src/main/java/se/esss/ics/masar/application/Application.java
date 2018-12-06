@@ -17,6 +17,7 @@
  */
 package se.esss.ics.masar.application;
 
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -26,6 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class Application {
 
     public static void main(String[] args) {
+    	LoggerFactory.getLogger(Application.class).info("EPICS_CA_ADDR_LIST=\"" + System.getenv("EPICS_CA_ADDR_LIST") + "\"");
         SpringApplication.run(Application.class, args);
     }
 }

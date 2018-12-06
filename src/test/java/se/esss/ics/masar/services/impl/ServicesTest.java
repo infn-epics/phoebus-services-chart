@@ -32,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 
 import org.junit.Before;
@@ -46,6 +47,7 @@ import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Snapshot;
+import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
 import se.esss.ics.masar.persistence.dao.SnapshotDAO;
 import se.esss.ics.masar.services.IServices;
@@ -144,6 +146,8 @@ public class ServicesTest {
 	@Test
 	public void testTakeSnapshot() {
 		when(configDAO.getConfiguration(1)).thenReturn(configFromClient);
+		when(snapshotDAO.savePreliminarySnapshot(configFromClient, Collections.emptyList()))
+			.thenReturn(Snapshot.builder().id(777).build());
 		services.takeSnapshot(1);
 	}
 	
@@ -167,6 +171,7 @@ public class ServicesTest {
 	@Test
 	public void testCommitSnapshot() {
 		
+		when(snapshotDAO.getSnapshot(anyInt(), anyBoolean())).thenReturn(Snapshot.builder().id(777).build());
 		services.commitSnapshot(anyInt(), anyString(), anyString(), anyString());
 		
 		verify(snapshotDAO, times(1)).commitSnapshot(anyInt(), anyString(), anyString(), anyString());
