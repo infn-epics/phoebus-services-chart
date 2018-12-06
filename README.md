@@ -67,3 +67,5 @@ parameters (environment variables) must be specified on the command line:
 
 * -Dspring.datasource.password=<DB password>
 
+* -Dspring.datasource.jdbcUrl=<JDBC URL e.g. jdbc:postgresql://localhost:5432/masar>
+
