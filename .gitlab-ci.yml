@@ -17,8 +17,9 @@ build:
       -Ddistribution.repository.release=${ARTIFACTORY_URL}/libs-release-local
   only:
     - branches@ics-software/jmasar-service
-    
+
 pages:
+  stage: build
   script:
     - sphinx-build -M html docs docs/_build
     - mv docs/_build/html public
