@@ -13,3 +13,6 @@
 
 # Files created by H2 database
 db/*
+
+# Folder "public" is for Gitlab build chain
+public/*
