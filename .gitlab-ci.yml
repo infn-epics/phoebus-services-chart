@@ -21,8 +21,7 @@ build:
 pages:
   stage: build
   script:
-    - sphinx-build -M html docs docs/_build
-    - mv docs/_build/html public
+    - mv apidocs public
   artifacts:
     paths:
       - public
