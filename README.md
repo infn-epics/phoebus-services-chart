@@ -1,3 +1,7 @@
+CAVEAT: in the following the name MASAR is used for reasons of legacy. It is slightly misleading
+as it suggest that the service supports restore operations (the R in MASAR). Please
+not that the jmasar service does NOT provide a restore API.
+
 The jmasar-service implements the MAchine Save And Restore service as a collection
 of REST endpoints. These can be used by clients to create and manage configurations and
 snapshots. 
