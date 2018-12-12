@@ -62,7 +62,6 @@ public class ConfigJdbcDAO implements ConfigDAO {
 	public Folder createFolder(final Folder folder) {
 
 		int newNodeId = newNode(folder);
-
 		return getFolder(newNodeId);
 	}
 
@@ -120,7 +119,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		Node parentNode = getNode(node.getParentId());
 		
 		if (parentNode == null) {
-			throw new IllegalArgumentException("Cannot create new node as parent node does not exist.");
+			throw new IllegalArgumentException(String.format("Cannot create new node as parent id=%d does not exist.", node.getId()));
 		}
 		
 		if(!parentNode.getNodeType().equals(NodeType.FOLDER)) {
@@ -211,8 +210,6 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		Map<String, Object> params = new HashMap<>(4);
 		params.put("node_id", newNodeId);
 		params.put("description", config.getDescription());
-		params.put("_system", config.getSystem());
-		params.put("active", config.isActive());
 		params.put("last_modified", Timestamp.from(Instant.now()));
 
 		configurationInsert.execute(params);
@@ -386,8 +383,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		// Add new PVs 
 		pvsToAdd.stream().forEach(configPv -> saveConfigPv(existingConfig.getId(), configPv));
 
-		jdbcTemplate.update("update config set description=?, _system=? where node_id=?", updatedConfig.getDescription(),
-				updatedConfig.getSystem(), updatedConfig.getId());
+		jdbcTemplate.update("update config set description=? where node_id=?", updatedConfig.getDescription(), updatedConfig.getId());
 		jdbcTemplate.update("update node set name=? where id=?", updatedConfig.getName(), updatedConfig.getId());
 
 		return getConfiguration(updatedConfig.getId());

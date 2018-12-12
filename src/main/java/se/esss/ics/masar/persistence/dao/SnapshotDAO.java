@@ -39,11 +39,11 @@ public interface SnapshotDAO {
 	/**
 	 * Get a snapshot.
 	 * @param snapshotId The database id of the snapshot, see {@link Snapshot#getId()}.
-	 * @param commitedOnly If <code>true</code>, the snapshot must be a committed one.
+	 * @param committedOnly If <code>true</code>, the snapshot must be a committed one.
 	 * @return A {@link Snapshot} object. <code>null</code> is returned if there is no snapshot corresponding to the specified
 	 * snapshot id, or if <code>committedOnly=true</code> and for a snapshot with matching id that has not been committed.
 	 */
-	public Snapshot getSnapshot(int snapshotId, boolean commitedOnly);
+	public Snapshot getSnapshot(int snapshotId, boolean committedOnly);
 	
 	/**
 	 * "Saves" the snapshot by adding a user id and non-null comment. 

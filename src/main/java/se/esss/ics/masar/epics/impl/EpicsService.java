@@ -18,7 +18,6 @@
 package se.esss.ics.masar.epics.impl;
 
 import java.util.ArrayList;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorCompletionService;
@@ -28,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.epics.gpclient.GPClient;
 import org.epics.vtype.VType;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,10 +41,12 @@ public class EpicsService implements IEpicsService {
 	@Autowired
 	private ExecutorService executorPool;
 	
+	private static final Logger LOGGER = LoggerFactory.getLogger(EpicsService.class);
+	
 	@Override
 	public List<SnapshotItem> readPvs(Config config) {
 		
-		LoggerFactory.getLogger(EpicsService.class).info(String.format("Reading %d PVs for configuration id=%d", config.getConfigPvList().size(), config.getId()));
+		LOGGER.info(String.format("Reading %d PVs for configuration id=%d", config.getConfigPvList().size(), config.getId()));
 		ExecutorCompletionService<SnapshotItem> ecs = new ExecutorCompletionService<>(executorPool);
 		for (ConfigPv configPv : config.getConfigPvList()) {
 			ecs.submit(new SnapshotPvCallable(configPv));
@@ -58,8 +60,7 @@ public class EpicsService implements IEpicsService {
 					snapshotPvs.add(item);
 				}
 			} catch (Exception e) {
-				LoggerFactory.getLogger(EpicsService.class)
-						.error(String.format("Encountered exception when collecting PVs: %s", e.getMessage()));
+				LOGGER.error(String.format("Encountered exception when collecting PVs: %s", e.getMessage()));
 			}
 		}
 				
@@ -77,12 +78,15 @@ public class EpicsService implements IEpicsService {
 
 		@Override
 		public SnapshotItem call() {
-			Future<VType> value = GPClient.readOnce(configPv.getProvider().toString() + "://" + configPv.getPvName());
+			
+			String pvName = configPv.getPvName();
+			Future<VType> value = GPClient.readOnce(configPv.getProvider().toString() + "://" + pvName);
 
 			try {
 				VType vType = value.get(5L, TimeUnit.SECONDS);
 				return SnapshotItem.builder().configPvId(configPv.getId()).fetchStatus(true).value(vType).build();
 			} catch (Exception ex) {
+				LOGGER.error(String.format("Read of PV %s has timed out", pvName));
 				return SnapshotItem.builder().configPvId(configPv.getId()).fetchStatus(false).build();
 			}
 		}

@@ -95,7 +95,7 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 		}
 		
 		return jdbcTemplate.query(
-				"select snapshot.id, config_id, username_id, created, comment, approve, snapshot.name from snapshot join "
+				"select snapshot.id, config_id, username.name as username, created, comment, snapshot.name as snapshotname from snapshot join "
 						+ "username on snapshot.username_id=username.id where snapshot.config_id=?",
 				new Object[] { configId }, new SnapshotRowMapper());
 	}
@@ -105,12 +105,10 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 
 		Snapshot snapshot;
 		try {
-			snapshot = committedOnly ? jdbcTemplate.queryForObject(
-					"select snapshot.id, config_id, username_id, created, comment, approve, snapshot.name from snapshot join username on snapshot.username_id=username.id where snapshot.id=?",
-					new Object[] { snapshotId }, new SnapshotRowMapper())
-					: jdbcTemplate.queryForObject(
-							"select snapshot.id, config_id, username_id, created, NULL as comment, approve, NULL as name from snapshot where snapshot.id=?",
-							new Object[] { snapshotId }, new SnapshotRowMapper());
+			String sql = committedOnly ? "select snapshot.id, config_id, username.name as username, created, comment, snapshot.name as snapshotname from snapshot join username on snapshot.username_id=username.id where snapshot.id=?" :
+				"select id, config_id, created, NULL as username, NULL as snapshotname, NULL as comment from snapshot  where id=?";
+			snapshot = jdbcTemplate.queryForObject(sql,
+						new Object[] { snapshotId }, new SnapshotRowMapper());
 		} catch (DataAccessException e) {
 			// No committed snapshot corresponding to snapshotId found
 			return null;
@@ -175,5 +173,4 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 		
 		return getSnapshot(snapshotId, false);
 	}
-
 }

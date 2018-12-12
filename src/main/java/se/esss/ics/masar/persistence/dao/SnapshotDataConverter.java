@@ -99,21 +99,18 @@ public class SnapshotDataConverter {
 	protected static final String SCALAR_AS_JSON = "[1]";
 	
 	public static SnapshotItem fromSnapshotPv(SnapshotPv snapshotPv) {
+		SnapshotItem snapshotItem = SnapshotItem.builder()
+				.configPvId(snapshotPv.getConfigPv().getId())
+				.snapshotId(snapshotPv.getSnapshotId())
+				.fetchStatus(false)
+				.pvName(snapshotPv.getConfigPv().getPvName())
+				.build();
+	
 		if(snapshotPv.isFetchStatus()) {
-			return SnapshotItem.builder()
-					.configPvId(snapshotPv.getConfigPv().getId())
-					.fetchStatus(snapshotPv.isFetchStatus())
-					.snapshotId(snapshotPv.getSnapshotId())
-					.value(toVType(snapshotPv))
-					.build();
+			snapshotItem.setValue(toVType(snapshotPv));
 		}
-		else {
-			return SnapshotItem.builder()
-					.configPvId(snapshotPv.getConfigPv().getId())
-					.snapshotId(snapshotPv.getSnapshotId())
-					.fetchStatus(false)
-					.build();
-		}
+	
+		return snapshotItem;
 		
 	}
 

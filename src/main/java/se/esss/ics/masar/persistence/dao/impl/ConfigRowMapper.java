@@ -30,8 +30,6 @@ public class ConfigRowMapper implements RowMapper<Config> {
 	public Config mapRow(ResultSet resultSet, int rowIndex) throws SQLException {
 		
 		return Config.builder()
-				.system(resultSet.getString("_system"))
-				.active(resultSet.getBoolean("active"))
 				.description(resultSet.getString("description"))
 				.id(resultSet.getInt("id"))
 				.name(resultSet.getString("name"))

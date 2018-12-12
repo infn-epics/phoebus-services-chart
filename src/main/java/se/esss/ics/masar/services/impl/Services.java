@@ -98,7 +98,7 @@ public class Services implements IServices{
 	public Snapshot commitSnapshot(int snapshotId, String snapshotName, String userName, String comment) {
 		snapshotDAO.commitSnapshot(snapshotId, snapshotName, userName, comment);
 		
-		Snapshot snapshot = snapshotDAO.getSnapshot(snapshotId, true);
+		Snapshot snapshot = snapshotDAO.getSnapshot(snapshotId, false);
 		logger.info(String.format("Committed snapshot: %s", snapshot.toString()));
 		return snapshot;
 	}
@@ -130,7 +130,7 @@ public class Services implements IServices{
 		
 		Folder parentFolder = configDAO.getFolder(folder.getParentId());
 		if(parentFolder == null) {
-			throw new IllegalArgumentException("Cannot create new folder as parent folder does not exist.");
+			throw new IllegalArgumentException(String.format("Cannot create new folder as parent folder with id=%d does not exist.", folder.getParentId()));
 		}
 	
 		Folder newFolder = configDAO.createFolder(folder);

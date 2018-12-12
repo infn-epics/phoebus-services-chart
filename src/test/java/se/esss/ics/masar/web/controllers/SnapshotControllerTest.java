@@ -91,11 +91,11 @@ public class SnapshotControllerTest {
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
 				.build();
 
-		configFromClient = Config.builder().active(true).configPvList(Arrays.asList(configPv))
-				.description("description").system("system").build();
+		configFromClient = Config.builder().configPvList(Arrays.asList(configPv))
+				.description("description").build();
 
-		config1 = Config.builder().active(true).configPvList(Arrays.asList(configPv))
-				.description("description").system("system").build();
+		config1 = Config.builder().configPvList(Arrays.asList(configPv))
+				.description("description").build();
 		config1.setId(1);
 		
 		SnapshotItem item1 = SnapshotItem.builder()
@@ -104,7 +104,7 @@ public class SnapshotControllerTest {
 				.value(VDouble.of(7.7, alarm, time, display))
 				.build();
 
-		snapshot = Snapshot.builder().approve(true).comment("comment").name("name")
+		snapshot = Snapshot.builder().comment("comment").name("name")
 				.snapshotItems(Arrays.asList(item1)).id(7).build();
 
 		when(services.createNewConfiguration(configFromClient)).thenReturn(config1);

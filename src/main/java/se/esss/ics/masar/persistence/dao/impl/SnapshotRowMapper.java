@@ -30,13 +30,12 @@ public class SnapshotRowMapper implements RowMapper<Snapshot> {
 	public Snapshot mapRow(ResultSet resultSet, int rowIndex) throws SQLException {
 			
 		return Snapshot.builder()
-				.approve(resultSet.getBoolean("approve"))
 				.configId(resultSet.getInt("config_id"))
 				.created(resultSet.getTimestamp("created"))
 				.id(resultSet.getInt("id"))
-				.userName(resultSet.getString("name"))
+				.userName(resultSet.getString("username"))
 				.comment(resultSet.getString("comment"))
-				.name(resultSet.getString("name"))
+				.name(resultSet.getString("snapshotname"))
 				.build();
 	}
 }

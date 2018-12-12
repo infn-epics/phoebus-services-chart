@@ -108,11 +108,11 @@ public class ConfigurationControllerTest {
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
 				.build();
 
-		configFromClient = Config.builder().id(10).active(true).configPvList(Arrays.asList(configPv))
-				.description("description").system("system").build();
+		configFromClient = Config.builder().id(10).configPvList(Arrays.asList(configPv))
+				.description("description").build();
 
-		config1 = Config.builder().active(true).configPvList(Arrays.asList(configPv)).description("description")
-				.system("system").build();
+		config1 = Config.builder().configPvList(Arrays.asList(configPv)).description("description")
+				.build();
 
 	
 		folderFromClient = Folder.builder().name("SomeFolder").id(11).parentId(0).build();
@@ -123,7 +123,7 @@ public class ConfigurationControllerTest {
 				.value(VDouble.of(7.7, alarm, time, display))
 				.build();
 
-		snapshot = Snapshot.builder().approve(true).comment("comment")
+		snapshot = Snapshot.builder().comment("comment")
 				.name("name")
 				.snapshotItems(Arrays.asList(item1))
 				.build();
@@ -155,6 +155,17 @@ public class ConfigurationControllerTest {
 		String s = result.getResponse().getContentAsString();
 		// Make sure response contains expected data
 		objectMapper.readValue(s, Folder.class);
+	}
+	
+	@Test
+	public void testCreateFolderParentIdDoesNotExist() throws Exception {
+		
+		when(services.createFolder(folderFromClient)).thenThrow(new IllegalArgumentException("Parent folder does not exist"));
+
+		MockHttpServletRequestBuilder request = put("/folder").contentType(JSON)
+				.content(objectMapper.writeValueAsString(folderFromClient));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
 
 	@Test

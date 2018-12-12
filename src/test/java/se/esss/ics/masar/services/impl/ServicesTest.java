@@ -47,7 +47,6 @@ import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.persistence.dao.ConfigDAO;
 import se.esss.ics.masar.persistence.dao.SnapshotDAO;
 import se.esss.ics.masar.services.IServices;
@@ -82,10 +81,8 @@ public class ServicesTest {
 				.build();
 		
 		configFromClient = Config.builder()
-				.active(true)
 				.configPvList(Arrays.asList(configPv))
 				.description("description")
-				.system("system")
 				.build();
 		
 		configFromClient.setId(1);
@@ -93,19 +90,15 @@ public class ServicesTest {
 		
 		
 		config1 = Config.builder()
-				.active(true)
 				.configPvList(Arrays.asList(configPv))
 				.description("description")
-				.system("system")
 				.build();
 		
 		config1.setId(1);
 		
 		configWithParent = Config.builder()
-				.active(true)
 				.configPvList(Arrays.asList(configPv))
 				.description("description")
-				.system("system")
 				.parentId(1)
 				.build();
 		
@@ -172,6 +165,7 @@ public class ServicesTest {
 	public void testCommitSnapshot() {
 		
 		when(snapshotDAO.getSnapshot(anyInt(), anyBoolean())).thenReturn(Snapshot.builder().id(777).build());
+		
 		services.commitSnapshot(anyInt(), anyString(), anyString(), anyString());
 		
 		verify(snapshotDAO, times(1)).commitSnapshot(anyInt(), anyString(), anyString(), anyString());

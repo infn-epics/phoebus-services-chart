@@ -96,8 +96,8 @@ public class DAOTest {
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
 				.build();
 
-		Config config = Config.builder().active(true).configPvList(Arrays.asList(configPv)).description("description")
-				.system("system").build();
+		Config config = Config.builder().configPvList(Arrays.asList(configPv)).description("description")
+			.build();
 
 		config.setParentId(2);
 		// The parent node does not exist in the database, so this throws an exception
@@ -175,12 +175,22 @@ public class DAOTest {
 		
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
-		Config config = Config.builder().active(true).description("description").system("system").parentId(Node.ROOT_NODE_ID)
+		Config config = Config.builder().description("description").parentId(Node.ROOT_NODE_ID)
 				.name("My config").configPvList(Arrays.asList(configPv)).build();
 
 		Config newConfig = configDAO.createConfiguration(config);
 		
 		Folder folder1 = Folder.builder().name("Folder 1").parentId(newConfig.getId()).build();
+		
+		configDAO.createFolder(folder1);
+
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	@FlywayTest(invokeCleanDB = true)
+	public void testNewFolderParentDoesNotExist() {
+		
+		Folder folder1 = Folder.builder().name("Folder 1").parentId(Integer.MAX_VALUE).build();
 		
 		configDAO.createFolder(folder1);
 
@@ -193,7 +203,7 @@ public class DAOTest {
 		
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
-		Config config = Config.builder().active(true).description("description").system("system").parentId(Node.ROOT_NODE_ID)
+		Config config = Config.builder().description("description").parentId(Node.ROOT_NODE_ID)
 				.name("My config").configPvList(Arrays.asList(configPv)).build();
 
 		Config newConfig = configDAO.createConfiguration(config);
@@ -202,7 +212,7 @@ public class DAOTest {
 
 		int configPvId = newConfig.getConfigPvList().get(0).getId();
 
-		config = Config.builder().active(true).description("description").system("system").parentId(Node.ROOT_NODE_ID)
+		config = Config.builder().description("description").parentId(Node.ROOT_NODE_ID)
 				.name("My config 2").configPvList(Arrays.asList(configPv)).build();
 
 		newConfig = configDAO.createConfiguration(config);
@@ -216,10 +226,11 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewConfigNoConfigPvs() {
 
-		Config config = Config.builder().active(true).description("description").system("system").build();
-
-		config.setParent(Node.ROOT_NODE_ID);
-		config.setName("My config");
+		Config config = Config.builder()
+				.description("description")
+				.parentId(Node.ROOT_NODE_ID)
+				.name("My config")
+				.build();
 
 		Config newConfig = configDAO.createConfiguration(config);
 
@@ -230,7 +241,7 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteConfiguration() {
 
-		Config config = Config.builder().active(true).description("description").system("system").build();
+		Config config = Config.builder().description("description").build();
 
 		config.setParentId(Node.ROOT_NODE_ID);
 		config.setName("My config");
@@ -250,7 +261,7 @@ public class DAOTest {
 
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
-		Config config = Config.builder().active(true).description("description").system("system")
+		Config config = Config.builder().description("description")
 				.configPvList(Arrays.asList(configPv)).build();
 
 		config.setParentId(Node.ROOT_NODE_ID);
@@ -311,7 +322,7 @@ public class DAOTest {
 		ConfigPv configPv2 = ConfigPv.builder().pvName("pvName2")
 				.build();
 
-		Config config1 = Config.builder().active(true).description("description").system("system")
+		Config config1 = Config.builder().description("description")
 				.configPvList(Arrays.asList(configPv1, configPv2)).build();
 
 		config1.setParentId(parentNode.getId());
@@ -319,7 +330,7 @@ public class DAOTest {
 
 		config1 = configDAO.createConfiguration(config1);
 
-		Config config2 = Config.builder().active(true).description("description").system("system")
+		Config config2 = Config.builder().description("description")
 				.configPvList(Arrays.asList(configPv2)).build();
 
 		config2.setParentId(parentNode.getId());
@@ -341,8 +352,8 @@ public class DAOTest {
 
 		Folder parentNode = configDAO.getFolder(Node.ROOT_NODE_ID);
 
-		Config config = Config.builder().active(true).name("My config 3").parentId(parentNode.getId()).description("description")
-				.system("system").build();
+		Config config = Config.builder().name("My config 3").parentId(parentNode.getId()).description("description")
+				.build();
 
 		Config newConfig = configDAO.createConfiguration(config);
 
@@ -355,8 +366,8 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testSaveSnapshot() {
 
-		Config config = Config.builder().active(true).name("My config 3").parentId(Node.ROOT_NODE_ID)
-				.description("description").system("system")
+		Config config = Config.builder().name("My config 3").parentId(Node.ROOT_NODE_ID)
+				.description("description")
 				.configPvList(Arrays.asList(ConfigPv.builder().pvName("whatever").build())).build();
 
 		config = configDAO.createConfiguration(config);
@@ -533,9 +544,9 @@ public class DAOTest {
 		ConfigPv configPv1 = ConfigPv.builder().pvName("configPv1").build();
 		ConfigPv configPv2 = ConfigPv.builder().pvName("configPv2").build();
 
-		Config config = Config.builder().active(true).name("My config").parentId(folder1.getId()).description("description")
+		Config config = Config.builder().name("My config").parentId(folder1.getId()).description("description")
 				.name("name")
-				.system("system").configPvList(Arrays.asList(configPv1, configPv2)).build();
+				.configPvList(Arrays.asList(configPv1, configPv2)).build();
 
 		config = configDAO.createConfiguration(config);
 		
@@ -568,13 +579,13 @@ public class DAOTest {
 
 		snapshotDAO.commitSnapshot(snapshot.getId(), "snapshot name", "user", "comment");
 
-		fullSnapshot = snapshotDAO.getSnapshot(snapshot.getId(), true);
+		fullSnapshot = snapshotDAO.getSnapshot(snapshot.getId(), false);
 
 		assertNotNull(fullSnapshot);
 		assertEquals(2, fullSnapshot.getSnapshotItems().size());
 
-		Config updatedConfig = Config.builder().id(config.getId()).active(true).name("My updated config")
-				.parentId(folder1.getId()).description("Updated description").system("Updated system")
+		Config updatedConfig = Config.builder().id(config.getId()).name("My updated config")
+				.parentId(folder1.getId()).description("Updated description")
 				.configPvList(Arrays.asList(configPv1)).build();
 		
 
@@ -590,8 +601,8 @@ public class DAOTest {
 		
 		ConfigPv configPv3 = ConfigPv.builder().pvName("configPv3").build();
 		
-		updatedConfig = Config.builder().id(config.getId()).active(true).name("My updated config")
-				.parentId(folder1.getId()).description("Updated description").system("Updated system")
+		updatedConfig = Config.builder().id(config.getId()).name("My updated config")
+				.parentId(folder1.getId()).description("Updated description")
 				.configPvList(Arrays.asList(configPv1, configPv2, configPv3)).build();
 		
 		updatedConfig = configDAO.updateConfiguration(updatedConfig);
@@ -644,8 +655,8 @@ public class DAOTest {
 
 		ConfigPv configPv1 = ConfigPv.builder().pvName("configPv1").build();
 
-		Config config = Config.builder().active(true).name("My config").parentId(folder1.getId()).description("description")
-				.system("system").configPvList(Arrays.asList(configPv1)).build();
+		Config config = Config.builder().name("My config").parentId(folder1.getId()).description("description")
+				.configPvList(Arrays.asList(configPv1)).build();
 
 		config = configDAO.createConfiguration(config);
 
