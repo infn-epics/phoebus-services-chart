@@ -58,7 +58,9 @@ public class Services implements IServices{
 		
 		Folder parentFolder = configDAO.getFolder(config.getParentId());
 		if(parentFolder == null) {
-			throw new IllegalArgumentException("Parent folder for configuration does not exist");
+			String message = "Parent folder for configuration does not exist";
+			logger.error(message);
+			throw new IllegalArgumentException(message);
 		}
 		Config newConfig = configDAO.createConfiguration(config);
 		logger.info(String.format("Created new configuration: %s", newConfig.toString()));
@@ -70,7 +72,9 @@ public class Services implements IServices{
 		
 		Config config = configDAO.getConfiguration(nodeId);
 		if(config == null) {
-			throw new NodeNotFoundException(String.format("Configuration with id=%d not found", nodeId));
+			String message = String.format("Configuration with id=%d not found", nodeId);
+			logger.error(message);
+			throw new NodeNotFoundException(message);
 		}
 		return config;
 	}
@@ -82,7 +86,9 @@ public class Services implements IServices{
 		Config config = configDAO.getConfiguration(nodeId);
 		
 		if(config == null) {
-			throw new IllegalArgumentException("Configuration with id=" + nodeId + " does not exist.");
+			String message = String.format("Snapshot with id=%d not found", nodeId);
+			logger.error(message);
+			throw new IllegalArgumentException(message);
 		}
 		
 		long start = System.currentTimeMillis();
@@ -119,7 +125,9 @@ public class Services implements IServices{
 	public Snapshot getSnapshot(int snapshotId){
 		Snapshot snapshot = snapshotDAO.getSnapshot(snapshotId, true);
 		if(snapshot == null) {
-			throw new SnapshotNotFoundException("Snapshot with id=" + snapshotId  + " not found.");
+			String message = String.format("Snapshot with id=%d not found", snapshotId);
+			logger.error(message);
+			throw new SnapshotNotFoundException(message);
 		}
 		logger.info(String.format("Retrieved snapshot id=%d", snapshotId));
 		return snapshot;
@@ -130,7 +138,9 @@ public class Services implements IServices{
 		
 		Folder parentFolder = configDAO.getFolder(folder.getParentId());
 		if(parentFolder == null) {
-			throw new IllegalArgumentException(String.format("Cannot create new folder as parent folder with id=%d does not exist.", folder.getParentId()));
+			String message = String.format("Cannot create new folder as parent folder with id=%d does not exist.", folder.getParentId());
+			logger.error(message);
+			throw new IllegalArgumentException(message);
 		}
 	
 		Folder newFolder = configDAO.createFolder(folder);
@@ -142,7 +152,9 @@ public class Services implements IServices{
 	public Folder getFolder(int nodeId) {
 		Folder folder = configDAO.getFolder(nodeId);
 		if(folder == null) {
-			throw new NodeNotFoundException(String.format("Folder with id=%d does not exist", nodeId));
+			String message = String.format("Folder with id=%d does not exist", nodeId);
+			logger.error(message);
+			throw new NodeNotFoundException(message);
 		}
 		logger.info(String.format("Retrieved folder id=%d", nodeId));
 		return folder;

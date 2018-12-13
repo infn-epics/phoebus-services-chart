@@ -284,7 +284,7 @@ public class SnapshotDataConverter {
 	protected static SnapshotPvDataType getDataType(VType vType) {
 		if(vType instanceof VNumber) {
 			VNumber vNumber = (VNumber)vType;
-			Class clazz = vNumber.getValue().getClass();
+			Class<?> clazz = vNumber.getValue().getClass();
 			if(clazz.equals(Byte.class)) {
 				return SnapshotPvDataType.BYTE;
 			}
@@ -320,7 +320,7 @@ public class SnapshotDataConverter {
 		else if(vType instanceof VNumberArray) {
 			VNumberArray vNumberArray = (VNumberArray)vType;
 			
-			Class clazz = vNumberArray.getData().getClass();
+			Class<?> clazz = vNumberArray.getData().getClass();
 			if(clazz.equals(ArrayByte.class) || clazz.getSuperclass().equals(ListByte.class)) {
 				return SnapshotPvDataType.BYTE;
 			}

@@ -17,6 +17,7 @@
  */
 package se.esss.ics.masar.web.controllers;
 
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -71,7 +72,7 @@ public abstract class BaseController {
 	
 	/**
 	 * Intercepts {@link NodeNotFoundException} and triggers a {@link HttpStatus#NOT_FOUND}.
-	 * @param req The servlet request
+	 * @param req The {@link HttpServlet} request
 	 * @param exception The exception to intercept
 	 * @return A {@link ResponseEntity} carrying the underlying exception message.
 	 */
@@ -83,6 +84,6 @@ public abstract class BaseController {
 	}
 	
 	private void log(Throwable throwable) {
-		logger.error("Intercepted {}", throwable.getClass().getName(), throwable);
+		logger.debug("Intercepted {}", throwable.getClass().getName(), throwable);
 	}
 }

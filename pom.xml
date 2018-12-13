@@ -11,9 +11,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
-	<groupId>se.esss.ics.masar</groupId>
+	<groupId>se.esss.ics.jmasar</groupId>
 	<artifactId>jmasar-service</artifactId>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.3</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>se.esss.ics.jmasar</groupId>
 			<artifactId>jmasar-model</artifactId>
-			<version>1.0.3-SNAPSHOT</version>
+			<version>1.0.3</version>
 		</dependency>
 
 		<dependency>
