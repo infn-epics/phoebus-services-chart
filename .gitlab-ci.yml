@@ -18,13 +18,6 @@ build:
   only:
     - branches@ics-software/jmasar-service
 
-pages:
-  stage: build
-  script:
-    - mv apidocs public
-  artifacts:
-    paths:
-      - public
 
 deploy-staging:
   stage: deploy
