@@ -102,7 +102,7 @@ public class SnapshotDataConverter {
 		SnapshotItem snapshotItem = SnapshotItem.builder()
 				.configPvId(snapshotPv.getConfigPv().getId())
 				.snapshotId(snapshotPv.getSnapshotId())
-				.fetchStatus(false)
+				.fetchStatus(snapshotPv.isFetchStatus())
 				.pvName(snapshotPv.getConfigPv().getPvName())
 				.build();
 	

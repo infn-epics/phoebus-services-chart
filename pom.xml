@@ -13,7 +13,7 @@
 
 	<groupId>se.esss.ics.jmasar</groupId>
 	<artifactId>jmasar-service</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>se.esss.ics.jmasar</groupId>
 			<artifactId>jmasar-model</artifactId>
-			<version>1.0.3</version>
+			<version>1.0.4-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
