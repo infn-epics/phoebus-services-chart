@@ -275,9 +275,9 @@ public class ServicesTest {
 	@Test
 	public void testMoveNode() {
 			
-		services.moveNode(1, 2);
+		services.moveNode(1, 2, "username");
 		
-		verify(configDAO, atLeast(1)).moveNode(1, 2);
+		verify(configDAO, atLeast(1)).moveNode(1, 2, "username");
 		
 		reset(configDAO);
 	}
@@ -285,9 +285,9 @@ public class ServicesTest {
 	@Test
 	public void testRenameNode() {
 			
-		services.renameNode(1, "whatever");
+		services.renameNode(1, "whatever", "username");
 		
-		verify(configDAO, atLeast(1)).renameNode(1, "whatever");
+		verify(configDAO, atLeast(1)).renameNode(1, "whatever", "username");
 		
 		reset(configDAO);
 	}

@@ -78,13 +78,6 @@ public class PersistenceConfiguration {
 	}
 
 	@Bean
-	public SimpleJdbcInsert userNameInsert() {
-		DataSource dataSource = dataSource();
-
-		return new SimpleJdbcInsert(dataSource).withTableName("userName").usingGeneratedKeyColumns("id");
-	}
-
-	@Bean
 	public JdbcTemplate jdbcTemplate() {
 		DataSource dataSource = dataSource();
 		return new JdbcTemplate(dataSource);

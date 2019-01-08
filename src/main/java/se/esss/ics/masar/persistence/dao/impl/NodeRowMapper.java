@@ -37,7 +37,7 @@ public class NodeRowMapper implements RowMapper<Node>{
 		node.setLastModified(resultSet.getTimestamp("last_modified"));
 		node.setNodeType(NodeType.valueOf(resultSet.getString("type")));
 		node.setId(resultSet.getInt("id"));
-		
+		node.setUserName(resultSet.getString("username"));
 		return node;
 	}
 }

@@ -108,14 +108,14 @@ public class ConfigurationControllerTest {
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
 				.build();
 
-		configFromClient = Config.builder().id(10).configPvList(Arrays.asList(configPv))
+		configFromClient = Config.builder().id(10).configPvList(Arrays.asList(configPv)).userName("myusername")
 				.description("description").build();
 
-		config1 = Config.builder().configPvList(Arrays.asList(configPv)).description("description")
+		config1 = Config.builder().configPvList(Arrays.asList(configPv)).description("description").userName("myusername")
 				.build();
 
 	
-		folderFromClient = Folder.builder().name("SomeFolder").id(11).parentId(0).build();
+		folderFromClient = Folder.builder().name("SomeFolder").userName("myusername").id(11).parentId(0).build();
 	
 		SnapshotItem item1 = SnapshotItem.builder()
 				.fetchStatus(true)
@@ -158,6 +158,17 @@ public class ConfigurationControllerTest {
 	}
 	
 	@Test
+	public void testCreateFolderNoUsername() throws Exception {
+		
+		Folder folder = Folder.builder().name("SomeFolder").id(11).parentId(0).build();
+
+		MockHttpServletRequestBuilder request = put("/folder").contentType(JSON)
+				.content(objectMapper.writeValueAsString(folder));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+	
+	@Test
 	public void testCreateFolderParentIdDoesNotExist() throws Exception {
 		
 		when(services.createFolder(folderFromClient)).thenThrow(new IllegalArgumentException("Parent folder does not exist"));
@@ -179,6 +190,18 @@ public class ConfigurationControllerTest {
 
 		// Make sure response contains expected data
 		objectMapper.readValue(result.getResponse().getContentAsString(), Config.class);
+	}
+	
+	@Test
+	public void testCreateConfigNoUsername() throws Exception {
+		
+		Config config = Config.builder().id(10)
+		.description("description").build();
+
+		MockHttpServletRequestBuilder request = put("/config").contentType(JSON)
+				.content(objectMapper.writeValueAsString(config));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
 
 	@Test
@@ -293,9 +316,9 @@ public class ConfigurationControllerTest {
 
 	@Test
 	public void testMoveNode() throws Exception {
-		when(services.moveNode(1, 2)).thenReturn(Folder.builder().id(2).build());
+		when(services.moveNode(1, 2, "username")).thenReturn(Folder.builder().id(2).build());
 
-		MockHttpServletRequestBuilder request = post("/node/1").param("to", "2");
+		MockHttpServletRequestBuilder request = post("/node/1").param("to", "2").param("username", "username");
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
@@ -305,9 +328,16 @@ public class ConfigurationControllerTest {
 	}
 	
 	@Test
+	public void testMoveNodeNoUsername() throws Exception {
+		MockHttpServletRequestBuilder request = post("/node/1").param("to", "2");
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+	
+	@Test
 	public void testUpdateConfig() throws Exception {
 		
-		Config config = Config.builder().id(0).build();
+		Config config = Config.builder().userName("myusername").id(0).build();
 		
 		when(services.updateConfiguration(Mockito.any(Config.class))).thenReturn(config);
 
@@ -332,8 +362,16 @@ public class ConfigurationControllerTest {
 	}
 	
 	@Test
-	public void testRenameNodeIllegalArgument() throws Exception{
-		when(services.renameNode(1, "whatever")).thenThrow(IllegalArgumentException.class);
+	public void testRenameNodeIllegalArgument1() throws Exception{
+		when(services.renameNode(1, "whatever", "username")).thenThrow(IllegalArgumentException.class);
+		
+		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever&username=username");
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	public void testRenameNodeIllegalArgument2() throws Exception{
 		
 		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever");
 
@@ -354,9 +392,9 @@ public class ConfigurationControllerTest {
 		Node node = new Node();
 		node.setName("foo");
 		
-		when(services.renameNode(1, "whatever")).thenReturn(node);
+		when(services.renameNode(1, "whatever", "username")).thenReturn(node);
 		
-		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever");
+		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever&username=username");
 		
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();

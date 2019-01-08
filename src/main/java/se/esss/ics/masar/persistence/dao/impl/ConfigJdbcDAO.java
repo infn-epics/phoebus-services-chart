@@ -20,6 +20,7 @@ package se.esss.ics.masar.persistence.dao.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,6 @@ public class ConfigJdbcDAO implements ConfigDAO {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
 	
 	@Transactional
 	@Override
@@ -141,6 +141,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		params.put("created", now);
 		params.put("last_modified", now);
 		params.put("name", node.getName());
+		params.put("username", node.getUserName());
 
 		int newNodeId = nodeInsert.executeAndReturnKey(params).intValue();
 
@@ -175,7 +176,8 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		if (node.getNodeType().equals(NodeType.CONFIGURATION)) {
 
 			Config config = jdbcTemplate.queryForObject(
-					"select n.*, c.* from node as n join config as c on n.id=c.node_id where" + " n.id=? and n.type=?",
+					"select n.*, c.* from node as n join config as c on n.id=c.node_id " +
+							"where n.id=? and n.type=?",
 					new Object[] { nodeId, NodeType.CONFIGURATION.toString() }, new ConfigRowMapper());
 
 			config.setConfigPvList(getConfigPvs(config.getId()));
@@ -190,7 +192,11 @@ public class ConfigJdbcDAO implements ConfigDAO {
 			if(parentNode == null) {
 				throw new NodeNotFoundException(String.format("Parent of existing folder with id=%d not found. THIS SHOULD NOT HAPPEN!", nodeId));
 			}
-			return Folder.builder().created(node.getCreated()).lastModified(node.getLastModified()).id(node.getId())
+			return Folder.builder().
+					created(node.getCreated())
+					.lastModified(node.getLastModified())
+					.id(node.getId())
+					.userName(node.getUserName())
 					.childNodes(getChildNodes(node.getId())).parentId(parentNode.getId()).name(node.getName()).build();
 		}
 	}
@@ -305,7 +311,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 
 	@Override
 	@Transactional
-	public Folder moveNode(int nodeId, int targetNodeId) {
+	public Folder moveNode(int nodeId, int targetNodeId, String userName) {
 
 		Node sourceNode = getNode(nodeId);
 		
@@ -336,7 +342,10 @@ public class ConfigJdbcDAO implements ConfigDAO {
 				+ "where supertree.descendant=? and subtree.ancestor=?", targetNodeId, nodeId);
 
 		// Update the last modified date of the source and target folder.
-		jdbcTemplate.update("update node set last_modified=? where id=? or id=?", Timestamp.from(Instant.now()), targetNodeId,
+		jdbcTemplate.update("update node set last_modified=?, username=? where id=? or id=?", 
+				Timestamp.from(Instant.now()), 
+				userName,
+				targetNodeId,
 				parentNodeId);
 
 		return getFolder(targetNodeId);
@@ -391,7 +400,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 
 	@Override
 	@Transactional
-	public Node renameNode(int nodeId, String name) {
+	public Node renameNode(int nodeId, String name, String userName) {
 
 		if (nodeId == Node.ROOT_NODE_ID) {
 			throw new IllegalArgumentException("Cannot change name of root folder");
@@ -414,7 +423,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 					"Cannot change name of node as an existing node with same name and type exists.");
 		}
 
-		jdbcTemplate.update("update node set name=? where id=?", name, nodeId);
+		jdbcTemplate.update("update node set name=?, username=? where id=?", name, userName, nodeId);
 
 		return getNode(nodeId);
 	}

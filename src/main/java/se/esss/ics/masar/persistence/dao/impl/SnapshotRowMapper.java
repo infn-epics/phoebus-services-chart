@@ -35,7 +35,7 @@ public class SnapshotRowMapper implements RowMapper<Snapshot> {
 				.id(resultSet.getInt("id"))
 				.userName(resultSet.getString("username"))
 				.comment(resultSet.getString("comment"))
-				.name(resultSet.getString("snapshotname"))
+				.name(resultSet.getString("name"))
 				.build();
 	}
 }

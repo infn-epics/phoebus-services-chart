@@ -35,6 +35,7 @@ public class ConfigRowMapper implements RowMapper<Config> {
 				.name(resultSet.getString("name"))
 				.created(resultSet.getTimestamp("created"))
 				.lastModified(resultSet.getTimestamp("last_modified"))
+				.userName(resultSet.getString("username"))
 				.build();
 		
 		

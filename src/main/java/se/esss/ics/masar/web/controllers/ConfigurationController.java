@@ -63,6 +63,9 @@ public class ConfigurationController extends BaseController {
 	@ApiOperation(value = "Create a new folder", consumes = JSON, produces = JSON)
 	@PutMapping("/folder")
 	public Folder createFolder(@RequestBody final Folder folder) {
+		if(folder.getUserName() == null || folder.getUserName().isEmpty()) {
+			throw new IllegalArgumentException("User name must be non-null and of non-zero length");
+		}
 		return services.createFolder(folder);
 	}
 
@@ -112,6 +115,9 @@ public class ConfigurationController extends BaseController {
 	@ApiOperation(value = "Create a new configuration", consumes = JSON)
 	@PutMapping("/config")
 	public Config saveConfiguration(@RequestBody final Config configuration) {
+		if(configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
+			throw new IllegalArgumentException("User name must be non-null and of non-zero length");
+		}
 		return services.createNewConfiguration(configuration);
 	}
 
@@ -138,16 +144,19 @@ public class ConfigurationController extends BaseController {
 	 * 
 	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified node id does not exist.
 	 * 
-	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is a configuration node.
+	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is a configuration node, or if a user name has not
+	 * been specified in the config data.
 	 * 
-	 * @param config
-	 *            The configuration object holding updated data (name, PV list etc).
+	 * @param configuration The configuration object holding updated data (name, PV list etc).
 	 * @return The updated configuration.
 	 */
 	@ApiOperation(value = "Update configuration (e.g. modify PV list or rename configuration)", consumes = JSON, produces = JSON)
 	@PostMapping("/config")
-	public Config updateConfiguration(@RequestBody Config config) {
-		return services.updateConfiguration(config);
+	public Config updateConfiguration(@RequestBody Config configuration) {
+		if(configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
+			throw new IllegalArgumentException("User name must be non-null and of non-zero length");
+		}
+		return services.updateConfiguration(configuration);
 	}
 
 	/**
@@ -196,12 +205,15 @@ public class ConfigurationController extends BaseController {
 	 * 
 	 * @param nodeId The id of the source node
 	 * @param to The new parent (target) node id
+	 * @param userName The (account) name of the user performing the operation.
 	 * @return A {@link Folder} object representing the parent (target) folder.
 	 */
 	@ApiOperation(value = "Moves a node (and the sub-tree in case of a folder node) to another parent folder.", produces = JSON)
 	@PostMapping("/node/{nodeId}")
-	public Folder moveNode(@PathVariable int nodeId, @RequestParam(value = "to", required = true) int to) {
-		return services.moveNode(nodeId, to);
+	public Folder moveNode(@PathVariable int nodeId, 
+			@RequestParam(value = "to", required = true) int to, 
+			@RequestParam(value = "username", required = true) String userName) {
+		return services.moveNode(nodeId, to, userName);
 	}
 
 	/**
@@ -212,11 +224,14 @@ public class ConfigurationController extends BaseController {
 	 * 
 	 * @param nodeId Node id of the node to rename. Must be non-zero.
 	 * @param name The new name of the node.
+	 * @param userName The (account) name of the user performing the operation.
 	 * @return A {@link Node} object representing the renamed node.
 	 */
 	@ApiOperation(value = "Renames a Node. The parent directory must not contain a node with same name and type.", produces = JSON)
 	@PostMapping("/node/{nodeId}/rename")
-	public Node renameNode(@PathVariable int nodeId, @RequestParam(value = "name", required = true) String name) {
-		return services.renameNode(nodeId, name);
+	public Node renameNode(@PathVariable int nodeId, 
+			@RequestParam(value = "name", required = true) String name,
+			@RequestParam(value = "username", required = true) String userName) {
+		return services.renameNode(nodeId, name, userName);
 	}
 }

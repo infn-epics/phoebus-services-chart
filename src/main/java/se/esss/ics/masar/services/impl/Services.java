@@ -105,7 +105,7 @@ public class Services implements IServices{
 		snapshotDAO.commitSnapshot(snapshotId, snapshotName, userName, comment);
 		
 		Snapshot snapshot = snapshotDAO.getSnapshot(snapshotId, false);
-		logger.info(String.format("Committed snapshot: %s", snapshot.toString()));
+		logger.info(String.format("Committed snapshot: %s, id=%d", snapshotName, snapshotId));
 		return snapshot;
 	}
 	
@@ -163,9 +163,9 @@ public class Services implements IServices{
 	
 	@Override
 	@Transactional
-	public Folder moveNode(int nodeId, int targetNodeId) {
+	public Folder moveNode(int nodeId, int targetNodeId, String userName) {
 		logger.info(String.format("Moving node id %d to raget node id%d", nodeId, targetNodeId));
-		return configDAO.moveNode(nodeId, targetNodeId);
+		return configDAO.moveNode(nodeId, targetNodeId, userName);
 	}
 	
 	@Override
@@ -183,8 +183,8 @@ public class Services implements IServices{
 	}
 	
 	@Override
-	public Node renameNode(int nodeId, String name) {
+	public Node renameNode(int nodeId, String name, String userName) {
 		logger.info(String.format("Renaming node id: %d to %s", nodeId, name));
-		return configDAO.renameNode(nodeId, name);
+		return configDAO.renameNode(nodeId, name, userName);
 	}
 }

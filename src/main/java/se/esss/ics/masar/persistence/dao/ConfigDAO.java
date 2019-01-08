@@ -23,6 +23,8 @@ import se.esss.ics.masar.model.Node;
  */
 public interface ConfigDAO {
 	
+	public static final int NO_USER = -1;
+	
 	public Folder createFolder(Folder node);
 
 	public Config createConfiguration(Config config);
@@ -52,7 +54,14 @@ public interface ConfigDAO {
 	 */
 	public void deleteNode(int nodeId);
 
-	public Folder moveNode(int nodeId, int targetNodeId);
+	/**
+	 * Moves a node (folder or config) to a new parent node.
+	 * @param nodeId The node to move
+	 * @param targetNodeId The new parent node
+	 * @param userName The (account) name of the user performing the operation.
+	 * @return The created {@link Folder} object.
+	 */
+	public Folder moveNode(int nodeId, int targetNodeId, String userName);
 
 	/**
 	 * Updates an existing configuration, e.g. changes its name or list of PVs.
@@ -65,7 +74,9 @@ public interface ConfigDAO {
 	 * Renames an existing node.
 	 * @param nodeId The node id of the node subject to change. The root folder's name cannot be changed.
 	 * @param name The new name of the node. The name and node type must be unique in the parent folder.
+	 * @param userName The (account) name of the user performing the operation.
 	 * @return The updated {@link Node} object.
 	 */
-	public Node renameNode(int nodeId, String name);
+	public Node renameNode(int nodeId, String name, String userName);
+
 }

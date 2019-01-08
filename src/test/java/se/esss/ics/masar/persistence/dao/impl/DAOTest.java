@@ -23,7 +23,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
+import java.sql.ResultSet;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
@@ -113,6 +115,7 @@ public class DAOTest {
 		Date lastModified = root.getLastModified();
 	
 		Folder folder = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID)
+				.userName("username")
 				.build();
 
 		Node newNode = configDAO.createFolder(folder);
@@ -203,8 +206,12 @@ public class DAOTest {
 		
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
-		Config config = Config.builder().description("description").parentId(Node.ROOT_NODE_ID)
-				.name("My config").configPvList(Arrays.asList(configPv)).build();
+		Config config = Config.builder()
+				.description("description")
+				.parentId(Node.ROOT_NODE_ID)
+				.name("My config")
+				.userName("username")
+				.configPvList(Arrays.asList(configPv)).build();
 
 		Config newConfig = configDAO.createConfiguration(config);
 
@@ -432,7 +439,7 @@ public class DAOTest {
 
 		Folder folder1 = configDAO.createFolder(folderFromClient);
 
-		configDAO.moveNode(-1, folder1.getId());
+		configDAO.moveNode(-1, folder1.getId(), "username");
 	}
 	
 	
@@ -445,7 +452,7 @@ public class DAOTest {
 
 		Folder folder1 = configDAO.createFolder(folderFromClient);
 
-		configDAO.moveNode(folder1.getId(), -1);
+		configDAO.moveNode(folder1.getId(), -1, "username");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -464,7 +471,7 @@ public class DAOTest {
 
 		configDAO.createConfiguration(Config.builder().name("Config").description("Desc").parentId(folder2.getId()).build());
 
-		configDAO.moveNode(folder2.getId(), root.getId());
+		configDAO.moveNode(folder2.getId(), root.getId(), "username");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -480,7 +487,7 @@ public class DAOTest {
 		Config config2 = configDAO
 				.createConfiguration(Config.builder().name("Config").description("Desc").parentId(folder1.getId()).build());
 
-		configDAO.moveNode(config2.getId(), root.getId());
+		configDAO.moveNode(config2.getId(), root.getId(), "username");
 
 	}
 
@@ -499,7 +506,7 @@ public class DAOTest {
 		// Root node has one child node
 		assertEquals(1, root.getChildNodes().size());
 
-		Folder folder2 = Folder.builder().name("SomeFolder2").parentId(folder1.getId()).build();
+		Folder folder2 = Folder.builder().name("SomeFolder2").parentId(folder1.getId()).userName("dummy").build();
 
 		folder2 = configDAO.createFolder(folder2);
 
@@ -513,7 +520,7 @@ public class DAOTest {
 		Date lastModifiedOfSource = folder1.getLastModified();
 		Date lastModifiedOfTarget = root.getLastModified();
 
-		folder2 = configDAO.moveNode(folder2.getId(), Node.ROOT_NODE_ID);
+		folder2 = configDAO.moveNode(folder2.getId(), Node.ROOT_NODE_ID, "username");
 
 		root = configDAO.getFolder(Node.ROOT_NODE_ID);
 		folder1 = configDAO.getFolder(folder1.getId());
@@ -523,6 +530,9 @@ public class DAOTest {
 
 		// After move the source's last_modified should have been updated
 		assertTrue(folder1.getLastModified().getTime() > lastModifiedOfSource.getTime());
+		
+		// After the move, the target's username should have been updated
+		assertEquals("username", folder1.getUserName());
 
 		root = configDAO.getFolder(Node.ROOT_NODE_ID);
 
@@ -683,7 +693,7 @@ public class DAOTest {
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testRenameRootFolder() {
-		configDAO.renameNode(Node.ROOT_NODE_ID, null);
+		configDAO.renameNode(Node.ROOT_NODE_ID, null, "username");
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
@@ -694,7 +704,7 @@ public class DAOTest {
 		
 		Folder folder2 = configDAO.createFolder(Folder.builder().name("Folder2").parentId(Node.ROOT_NODE_ID).build());
 		
-		configDAO.renameNode(folder2.getId(), "Folder1");
+		configDAO.renameNode(folder2.getId(), "Folder1", "username");
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
@@ -707,7 +717,7 @@ public class DAOTest {
 		Config config2 = configDAO.createConfiguration(Config.builder().
 				description("description").name("Config2").parentId(Node.ROOT_NODE_ID).build());
 		
-		configDAO.renameNode(config2.getId(), "Config1");
+		configDAO.renameNode(config2.getId(), "Config1", "username");
 	}
 	
 	@Test
@@ -715,6 +725,7 @@ public class DAOTest {
 	public void testRenameFolder(){
 			
 		Folder folder1 = configDAO.createFolder(Folder.builder()
+				.userName("dummy")
 				.name("Folder1").parentId(Node.ROOT_NODE_ID).build());
 		
 		Date lastModified = folder1.getLastModified();
@@ -722,11 +733,13 @@ public class DAOTest {
 		configDAO.createConfiguration(Config.builder().description("whatever")
 				.name("Config1").parentId(Node.ROOT_NODE_ID).build());
 		
-		configDAO.renameNode(folder1.getId(), "NewName");
+		configDAO.renameNode(folder1.getId(), "NewName", "username");
 		
 		folder1 = configDAO.getFolder(folder1.getId());
 		
 		assertTrue(folder1.getLastModified().getTime() > lastModified.getTime());
+		assertEquals("username", folder1.getUserName());
+		
 	}
 	
 	@Test
@@ -747,5 +760,4 @@ public class DAOTest {
 		assertEquals(config.getId(), snapshot.getConfigId());
 		assertTrue(snapshot.getId() != 0);
 	}
-
 }

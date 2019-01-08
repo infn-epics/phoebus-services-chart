@@ -59,9 +59,6 @@ public class PersistenceConfigurationTest {
 	private SimpleJdbcInsert snapshotPvInsert;
 	
 	@Autowired
-	private SimpleJdbcInsert userNameInsert;
-	
-	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
 	@Autowired
@@ -81,8 +78,6 @@ public class PersistenceConfigurationTest {
 		assertEquals("snapshot", snapshotInsert.getTableName());
 		assertNotNull(snapshotPvInsert);
 		assertEquals("snapshot_pv", snapshotPvInsert.getTableName());
-		assertNotNull(userNameInsert);
-		assertEquals("userName", userNameInsert.getTableName());
 		assertNotNull(jdbcTemplate);
 		assertNotNull(objectMapper);
 	}

@@ -19,7 +19,6 @@ package se.esss.ics.masar.persistence.dao.impl;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,9 +42,6 @@ import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
 public class SnapshotJdbcDAO implements SnapshotDAO {
 
 	@Autowired
-	private SimpleJdbcInsert userNameInsert;
-
-	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
 	@Autowired
@@ -57,7 +53,7 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 	@Autowired
 	private ConfigDAO configDAO;
 
-	private static final int NO_USER = -1;
+	
 
 	@Override
 	public void commitSnapshot(int snapshotId, String snapshotName, String userName, String comment) {
@@ -67,22 +63,8 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 		if(snapshot == null) {
 			throw new SnapshotNotFoundException(String.format("Snapshot with id=%d not found", snapshotId));
 		}
-
-		int userId = getUserNameId(userName);
-		if (userId == NO_USER) {
-			userId = userNameInsert.executeAndReturnKey(Collections.singletonMap("name", userName)).intValue();
-		}
 		
-		jdbcTemplate.update("update snapshot set name=?, username_id=?, comment=? where id=?", snapshotName, userId, comment, snapshotId);
-	}
-
-	private int getUserNameId(String userName) {
-		try {
-			return jdbcTemplate.queryForObject("select id from userName where name=?", new Object[] { userName },
-					Integer.class);
-		} catch (DataAccessException e) {
-			return NO_USER;
-		}
+		jdbcTemplate.update("update snapshot set name=?, username=?, comment=? where id=?", snapshotName, userName, comment, snapshotId);
 	}
 
 	@Override
@@ -95,8 +77,7 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 		}
 		
 		return jdbcTemplate.query(
-				"select snapshot.id, config_id, username.name as username, created, comment, snapshot.name as snapshotname from snapshot join "
-						+ "username on snapshot.username_id=username.id where snapshot.config_id=?",
+				"select * from snapshot where config_id=? and comment is not null",
 				new Object[] { configId }, new SnapshotRowMapper());
 	}
 
@@ -105,8 +86,8 @@ public class SnapshotJdbcDAO implements SnapshotDAO {
 
 		Snapshot snapshot;
 		try {
-			String sql = committedOnly ? "select snapshot.id, config_id, username.name as username, created, comment, snapshot.name as snapshotname from snapshot join username on snapshot.username_id=username.id where snapshot.id=?" :
-				"select id, config_id, created, NULL as username, NULL as snapshotname, NULL as comment from snapshot  where id=?";
+			String sql = committedOnly ? "select * from snapshot where id=? and comment is not null" :
+				"select id, config_id, created, NULL as username, NULL as name, NULL as comment from snapshot  where id=?";
 			snapshot = jdbcTemplate.queryForObject(sql,
 						new Object[] { snapshotId }, new SnapshotRowMapper());
 		} catch (DataAccessException e) {

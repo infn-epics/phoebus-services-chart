@@ -44,12 +44,12 @@ public interface IServices {
 		
 	public void deleteSnapshot(int snapshotId);
 	
-	public Folder moveNode(int nodeId, int targetNodeId);
+	public Folder moveNode(int nodeId, int targetNodeId, String userName);
 	
 	public void deleteNode(int nodeId);
 	
 	public Config updateConfiguration(Config config);
 	
-	public Node renameNode(int nodeId, String name);
+	public Node renameNode(int nodeId, String name, String userName);
 
 }
