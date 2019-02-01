@@ -11,9 +11,11 @@ a way to restore/write PV values. However, it provides an API to retrieve PV val
 that have been persisted in a snapshot at some point in time. It is then up to the client application 
 to perform the restore operation.
 
-The service depends on the jmasar-model artifact (separate git repository). 
+The service depends on the jmasar-model artifact 
+(https://gitlab.esss.lu.se/ics-software/jmasar-model). 
 Java-based clients should also make use of jmasar-model to facilitate 
-marshalling/unmarshalling of data.
+marshalling/unmarshalling of data. The jmasar model is available from the ESS
+Maven repository (Artifactory).
 
 Features:
 
@@ -22,8 +24,9 @@ Tree node objects are either "folders" or configurations.
 
 * Nodes in the tree can be renamed, moved or deleted. 
 
-* Snapshots are associated with configurations and are not treated as nodes in
-the tree.
+* Snapshots are associated with configurations (aka save sets) and are not treated 
+as nodes in the tree. A client UI (e.g. CS Studio) may however present the
+snapshots as child nodes of a configuration.
 
 * The service is built upon Spring Boot and depends on some persistence 
 implementation. In its current version, persistence is implemented against
