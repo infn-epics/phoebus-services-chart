@@ -18,7 +18,7 @@
 
 package se.esss.ics.masar.persistence.dao.impl;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -493,7 +493,7 @@ public class DAOTest {
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
-	public void testMoveNode()  {
+	public void testMoveNode()  throws Exception{
 
 		Folder root = configDAO.getFolder(Node.ROOT_NODE_ID);
 
@@ -519,8 +519,14 @@ public class DAOTest {
 
 		Date lastModifiedOfSource = folder1.getLastModified();
 		Date lastModifiedOfTarget = root.getLastModified();
+		
+		Date lastModified = folder2.getLastModified();
 
+		Thread.sleep(100);
+		
 		folder2 = configDAO.moveNode(folder2.getId(), Node.ROOT_NODE_ID, "username");
+		
+		assertNotEquals(lastModified, folder2.getLastModified());
 
 		root = configDAO.getFolder(Node.ROOT_NODE_ID);
 		folder1 = configDAO.getFolder(folder1.getId());
@@ -547,7 +553,7 @@ public class DAOTest {
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
-	public void testUpdateConfig() {
+	public void testUpdateConfig() throws Exception{
 
 		Folder folder1 = configDAO.createFolder(Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build());
 
@@ -598,8 +604,12 @@ public class DAOTest {
 				.parentId(folder1.getId()).description("Updated description")
 				.configPvList(Arrays.asList(configPv1)).build();
 		
-
+		lastModified = config.getLastModified();
+		
+		Thread.sleep(100);
 		updatedConfig = configDAO.updateConfiguration(updatedConfig);
+		
+		assertNotEquals(lastModified, updatedConfig.getLastModified());
 
 		assertEquals("My updated config", updatedConfig.getName());
 		

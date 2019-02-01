@@ -103,8 +103,8 @@ public class ConfigurationController extends BaseController {
 
 	
 	/**
-	 * Create a new {@link Config} node. It is recommended that the {@link Config#configPvList} is
-	 * non-empty in order to avoid updates of the configuration at a later stage.
+	 * Create a new {@link Config} node. The list of {@link Config#configPvList} can be empty, 
+	 * if client wishes to create a configuration before adding PVs to it.
 	 * 
 	 * A {@link HttpStatus#BAD_REQUEST} is returned the parent node of the configuration 
 	 * does not exist, or if the parent node is a {@link Config} node.
@@ -112,11 +112,11 @@ public class ConfigurationController extends BaseController {
 	 * @param configuration The {@link Config} object to create/save.
 	 * @return A {@link Config} object.
 	 */
-	@ApiOperation(value = "Create a new configuration", consumes = JSON)
+	@ApiOperation(value = "Create a new configuration, name and user name must be non-null and of non-zero length.", consumes = JSON)
 	@PutMapping("/config")
 	public Config saveConfiguration(@RequestBody final Config configuration) {
-		if(configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
-			throw new IllegalArgumentException("User name must be non-null and of non-zero length");
+		if(configuration.getName() == null || configuration.getName().isEmpty() || configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
+			throw new IllegalArgumentException("Config name and user name must be non-null and of non-zero length");
 		}
 		return services.createNewConfiguration(configuration);
 	}

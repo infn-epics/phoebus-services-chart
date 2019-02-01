@@ -20,7 +20,6 @@ package se.esss.ics.masar.persistence.dao.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -216,7 +215,6 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		Map<String, Object> params = new HashMap<>(4);
 		params.put("node_id", newNodeId);
 		params.put("description", config.getDescription());
-		params.put("last_modified", Timestamp.from(Instant.now()));
 
 		configurationInsert.execute(params);
 
@@ -393,7 +391,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 		pvsToAdd.stream().forEach(configPv -> saveConfigPv(existingConfig.getId(), configPv));
 
 		jdbcTemplate.update("update config set description=? where node_id=?", updatedConfig.getDescription(), updatedConfig.getId());
-		jdbcTemplate.update("update node set name=? where id=?", updatedConfig.getName(), updatedConfig.getId());
+		jdbcTemplate.update("update node set name=?, last_modified=? where id=?", updatedConfig.getName(), Timestamp.from(Instant.now()), updatedConfig.getId());
 
 		return getConfiguration(updatedConfig.getId());
 	}
@@ -423,7 +421,7 @@ public class ConfigJdbcDAO implements ConfigDAO {
 					"Cannot change name of node as an existing node with same name and type exists.");
 		}
 
-		jdbcTemplate.update("update node set name=?, username=? where id=?", name, userName, nodeId);
+		jdbcTemplate.update("update node set name=?, username=?, last_modified=? where id=?", name, userName, Timestamp.from(Instant.now()), nodeId);
 
 		return getNode(nodeId);
 	}

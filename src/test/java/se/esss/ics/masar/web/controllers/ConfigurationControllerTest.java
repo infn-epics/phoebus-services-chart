@@ -109,7 +109,7 @@ public class ConfigurationControllerTest {
 				.build();
 
 		configFromClient = Config.builder().id(10).configPvList(Arrays.asList(configPv)).userName("myusername")
-				.description("description").build();
+				.description("description").name("config name").build();
 
 		config1 = Config.builder().configPvList(Arrays.asList(configPv)).description("description").userName("myusername")
 				.build();
