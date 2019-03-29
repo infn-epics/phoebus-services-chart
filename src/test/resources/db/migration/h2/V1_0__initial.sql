@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS node(
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
@@ -7,7 +6,7 @@ CREATE TABLE IF NOT EXISTS node(
   last_modified TIMESTAMP NOT NULL
 );
 
-CREATE TRIGGER node_updated_trigger
+CREATE TRIGGER IF NOT EXISTS node_updated_trigger
   BEFORE UPDATE
   ON node
   FOR EACH ROW CALL "se.esss.ics.masar.persistence.h2.H2Trigger";

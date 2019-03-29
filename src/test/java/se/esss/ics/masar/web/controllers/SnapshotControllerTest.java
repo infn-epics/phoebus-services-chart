@@ -18,27 +18,20 @@
 
 package se.esss.ics.masar.web.controllers;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 
-import org.epics.vtype.Alarm;
-import org.epics.vtype.AlarmSeverity;
-import org.epics.vtype.AlarmStatus;
-import org.epics.vtype.Display;
-import org.epics.vtype.Time;
-import org.epics.vtype.VDouble;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,11 +41,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.Snapshot;
+import se.esss.ics.masar.model.Node;
+import se.esss.ics.masar.model.NodeType;
 import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
@@ -70,11 +64,9 @@ public class SnapshotControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	private Config configFromClient;
+	private Node config1;
 
-	private Config config1;
-
-	private Snapshot snapshot;
+	private Node snapshot;
 
 
 	private ObjectMapper objectMapper = new ObjectMapper();
@@ -83,82 +75,77 @@ public class SnapshotControllerTest {
 	
 	@Before
 	public void setUp() {
-		
-		Time time = Time.of(Instant.ofEpochSecond(1000, 7000));
-		Alarm alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
-		Display display = Display.none();
 
-		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
+		config1 = Node.builder()
+				.id(1)
+				.nodeType(NodeType.CONFIGURATION)
+				.uniqueId("a")
 				.build();
 
-		configFromClient = Config.builder().configPvList(Arrays.asList(configPv))
-				.description("description").build();
-
-		config1 = Config.builder().configPvList(Arrays.asList(configPv))
-				.description("description").build();
-		config1.setId(1);
-		
-		SnapshotItem item1 = SnapshotItem.builder()
-				.fetchStatus(true)
-				.configPvId(config1.getId())
-				.value(VDouble.of(7.7, alarm, time, display))
+		snapshot = Node.builder()
+				.nodeType(NodeType.SNAPSHOT)
 				.build();
+		
+		snapshot.setId(7);
 
-		snapshot = Snapshot.builder().comment("comment").name("name")
-				.snapshotItems(Arrays.asList(item1)).id(7).build();
-
-		when(services.createNewConfiguration(configFromClient)).thenReturn(config1);
-		when(services.getConfiguration(1)).thenReturn(config1);
-		//when(services.takeSnapshot(1)).thenReturn(snapshot);
 	}
 	
 	@Test
 	public void testTakeSnapshot() throws Exception{
 		
-		when(services.takeSnapshot(1)).thenReturn(snapshot);
+		Mockito.reset(services);
 		
-		MockHttpServletRequestBuilder request = put("/snapshot/1");
+		when(services.takeSnapshot("a")).thenReturn(snapshot);
+		
+		MockHttpServletRequestBuilder request = put("/snapshot/a");
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
 		
-		Snapshot snapshot = objectMapper.readValue(result.getResponse().getContentAsString(),
-				Snapshot.class);
+		objectMapper.readValue(result.getResponse().getContentAsString(),
+				Node.class);
 		
-		assertEquals(7, snapshot.getId());
 	}
 	
 	
 	@Test
 	public void testGetSnapshot() throws Exception{
 		
-		when(services.getSnapshot(7)).thenReturn(snapshot);
+		Mockito.reset(services);
 		
-		MockHttpServletRequestBuilder request = get("/snapshot/7");
+		when(services.getSnapshot("b")).thenReturn(snapshot);
+		
+		MockHttpServletRequestBuilder request = get("/snapshot/b");
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
 		
 		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), Snapshot.class);
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+	}
+	
+	@Test
+	public void testGetConfigForSnapshot() throws Exception{
+		
+		when(services.getParentNode("b")).thenReturn(config1);
+		
+		MockHttpServletRequestBuilder request = get("/node/b/parent");
+
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+		
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
 	}
 	
 	@Test
 	public void testGetNonExistingSnapshot() throws Exception{
 		
-		when(services.getSnapshot(8)).thenThrow(new SnapshotNotFoundException("askdmdsf"));
+		when(services.getSnapshot("c")).thenThrow(new SnapshotNotFoundException("askdmdsf"));
 		
-		MockHttpServletRequestBuilder request = get("/snapshot/8");
+		MockHttpServletRequestBuilder request = get("/snapshot/c");
 
 		mockMvc.perform(request).andExpect(status().isNotFound());
-	}
-	
-	@Test
-	public void testDeleteSnapshot() throws Exception{
-			
-		MockHttpServletRequestBuilder request = delete("/snapshot/9");
-
-		mockMvc.perform(request).andExpect(status().isOk());
 	}
 	
 	@Test
@@ -187,9 +174,9 @@ public class SnapshotControllerTest {
 	
 	@Test
 	public void testNonExistingSnapshot() throws Exception{
-		when(services.getSnapshot(88)).thenThrow(new SnapshotNotFoundException("lasdfk"));
+		when(services.getSnapshot("x")).thenThrow(new SnapshotNotFoundException("lasdfk"));
 
-		MockHttpServletRequestBuilder request = get("/snapshot/88").contentType(JSON);
+		MockHttpServletRequestBuilder request = get("/snapshot/x").contentType(JSON);
 
 		mockMvc.perform(request).andExpect(status().isNotFound());
 	}
@@ -212,13 +199,40 @@ public class SnapshotControllerTest {
 	public void testCommitRequestEmptyComment() throws Exception{
 		MockHttpServletRequestBuilder request = post("/snapshot/9?userName=foo&comment=&snapshotName=name");
 		
-		mockMvc.perform(request).andExpect(status().isBadRequest());
+		mockMvc.perform(request).andExpect(status().isOk());
 	}
 	
 	@Test
 	public void testCommitRequestSnapshotNameComment() throws Exception{
 		MockHttpServletRequestBuilder request = post("/snapshot/9?userName=foo&comment=comment&snapshotName=");
 		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	public void testTagSnapshotAsGolden() throws Exception{
+		MockHttpServletRequestBuilder request = post("/snapshot/someId/golden");
+		
+		mockMvc.perform(request).andExpect(status().isOk());
+	}
+	
+	@Test
+	public void testGetSnapshotItems() throws Exception{
+		
+		SnapshotItem si = SnapshotItem.builder()
+				.configPv(ConfigPv.builder().id(1).pvName("pvName").build())
+				.snapshotId(2)
+				.build();
+		
+		when(services.getSnapshotItems("si")).thenReturn(Arrays.asList(si));
+		
+		MockHttpServletRequestBuilder request = get("/snapshot/si/items");
+			
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+		
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<SnapshotItem>>() {
+		});
 	}
 
 }

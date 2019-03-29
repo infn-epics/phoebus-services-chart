@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import se.esss.ics.masar.epics.IEpicsService;
-import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.SnapshotItem;
 
@@ -44,16 +43,16 @@ public class EpicsService implements IEpicsService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(EpicsService.class);
 	
 	@Override
-	public List<SnapshotItem> readPvs(Config config) {
+	public List<SnapshotItem> readPvs(List<ConfigPv> configPvs) {
 		
-		LOGGER.info(String.format("Reading %d PVs for configuration id=%d", config.getConfigPvList().size(), config.getId()));
+		LOGGER.info(String.format("Reading %d PVs", configPvs.size()));
 		ExecutorCompletionService<SnapshotItem> ecs = new ExecutorCompletionService<>(executorPool);
-		for (ConfigPv configPv : config.getConfigPvList()) {
+		for (ConfigPv configPv : configPvs) {
 			ecs.submit(new SnapshotPvCallable(configPv));
 		}
 
 		List<SnapshotItem> snapshotPvs = new ArrayList<>();
-		for (int i = 0; i < config.getConfigPvList().size(); ++i) {
+		for (int i = 0; i < configPvs.size(); ++i) {
 			try {
 				SnapshotItem item = ecs.take().get();
 				if (item != null) {
@@ -84,10 +83,10 @@ public class EpicsService implements IEpicsService {
 
 			try {
 				VType vType = value.get(5L, TimeUnit.SECONDS);
-				return SnapshotItem.builder().configPvId(configPv.getId()).fetchStatus(true).value(vType).build();
+				return SnapshotItem.builder().configPv(configPv).value(vType).build();
 			} catch (Exception ex) {
 				LOGGER.error(String.format("Read of PV %s has timed out", pvName));
-				return SnapshotItem.builder().configPvId(configPv.getId()).fetchStatus(false).build();
+				return SnapshotItem.builder().configPv(configPv).build();
 			}
 		}
 	}

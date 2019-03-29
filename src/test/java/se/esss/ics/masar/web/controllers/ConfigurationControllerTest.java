@@ -19,6 +19,7 @@
 package se.esss.ics.masar.web.controllers;
 
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -27,20 +28,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
-import org.epics.vtype.Alarm;
-import org.epics.vtype.AlarmSeverity;
-import org.epics.vtype.AlarmStatus;
-import org.epics.vtype.Display;
-import org.epics.vtype.Time;
-import org.epics.vtype.VDouble;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -54,12 +50,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import se.esss.ics.masar.application.swagger.SwaggerConfig;
-import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
-import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.model.SnapshotItem;
+import se.esss.ics.masar.model.NodeType;
+import se.esss.ics.masar.model.Provider;
+import se.esss.ics.masar.model.UpdateConfigHolder;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
 import se.esss.ics.masar.web.config.ControllersTestConfig;
@@ -84,69 +79,63 @@ public class ConfigurationControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
 
-	private Node nodeFromClient;
+	private Node folderFromClient;
 
-	private Config configFromClient;
+	private Node rootNode;
 
-	private Folder folderFromClient;
+	private Node config1;
 
-	private Config config1;
+	private Node snapshot;
 
-	private Snapshot snapshot;
-
+	private List<ConfigPv> configPvList;
+	
 	private ObjectMapper objectMapper = new ObjectMapper();
 
 	private static final String JSON = "application/json;charset=UTF-8";
 
 	@Before
 	public void setUp() {
+
+//		Time time = Time.of(Instant.ofEpochSecond(1000, 7000));
+//		Alarm alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
+//		Display display = Display.none();
+
+		config1 = Node.builder().nodeType(NodeType.CONFIGURATION).uniqueId("a")
+				.userName("myusername").build();
 		
-		Time time = Time.of(Instant.ofEpochSecond(1000, 7000));
-		Alarm alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
-		Display display = Display.none();
+		folderFromClient = Node.builder().name("SomeFolder").userName("myusername").id(11).build();
 
-		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
+		snapshot = Node.builder().nodeType(NodeType.SNAPSHOT).nodeType(NodeType.SNAPSHOT).name("name")
 				.build();
 
-		configFromClient = Config.builder().id(10).configPvList(Arrays.asList(configPv)).userName("myusername")
-				.description("description").name("config name").build();
+		rootNode = Node.builder().id(Node.ROOT_NODE_ID).uniqueId("root").name("root").build();
+		
+		configPvList = Arrays.asList(ConfigPv.builder().id(333).provider(Provider.ca).pvName("pvname").build());
 
-		config1 = Config.builder().configPvList(Arrays.asList(configPv)).description("description").userName("myusername")
-				.build();
+	}
 
-	
-		folderFromClient = Folder.builder().name("SomeFolder").userName("myusername").id(11).parentId(0).build();
-	
-		SnapshotItem item1 = SnapshotItem.builder()
-				.fetchStatus(true)
-				.configPvId(config1.getId())
-				.value(VDouble.of(7.7, alarm, time, display))
-				.build();
+	@Test
+	public void testGetRootNode() throws Exception {
 
-		snapshot = Snapshot.builder().comment("comment")
-				.name("name")
-				.snapshotItems(Arrays.asList(item1))
-				.build();
+		when(services.getRootNode()).thenReturn(rootNode);
 
-		when(services.createNewConfiguration(configFromClient)).thenReturn(config1);
-		when(services.getConfiguration(1)).thenReturn(config1);
+		MockHttpServletRequestBuilder request = get("/root").contentType(JSON);
 
-		Node parentNode = new Node();
-		parentNode.setName("Parent");
-		parentNode.setId(1);
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
 
-		nodeFromClient = new Node();
-		nodeFromClient.setId(77);
-		nodeFromClient.setName("Folder");
-		nodeFromClient.setParentId(parentNode.getId());
+		String s = result.getResponse().getContentAsString();
+		// Make sure response contains expected data
+		objectMapper.readValue(s, Node.class);
+
 	}
 
 	@Test
 	public void testCreateFolder() throws Exception {
-		
-		when(services.createFolder(folderFromClient)).thenReturn(folderFromClient);
 
-		MockHttpServletRequestBuilder request = put("/folder").contentType(JSON)
+		when(services.createNode("p", folderFromClient)).thenReturn(folderFromClient);
+
+		MockHttpServletRequestBuilder request = put("/node/p").contentType(JSON)
 				.content(objectMapper.writeValueAsString(folderFromClient));
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
@@ -154,26 +143,27 @@ public class ConfigurationControllerTest {
 
 		String s = result.getResponse().getContentAsString();
 		// Make sure response contains expected data
-		objectMapper.readValue(s, Folder.class);
+		objectMapper.readValue(s, Node.class);
 	}
-	
+
 	@Test
 	public void testCreateFolderNoUsername() throws Exception {
-		
-		Folder folder = Folder.builder().name("SomeFolder").id(11).parentId(0).build();
 
-		MockHttpServletRequestBuilder request = put("/folder").contentType(JSON)
+		Node folder = Node.builder().name("SomeFolder").id(11).build();
+
+		MockHttpServletRequestBuilder request = put("/node/p").contentType(JSON)
 				.content(objectMapper.writeValueAsString(folder));
 
 		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
-	
+
 	@Test
 	public void testCreateFolderParentIdDoesNotExist() throws Exception {
-		
-		when(services.createFolder(folderFromClient)).thenThrow(new IllegalArgumentException("Parent folder does not exist"));
 
-		MockHttpServletRequestBuilder request = put("/folder").contentType(JSON)
+		when(services.createNode("p", folderFromClient))
+				.thenThrow(new IllegalArgumentException("Parent folder does not exist"));
+
+		MockHttpServletRequestBuilder request = put("/node/p").contentType(JSON)
 				.content(objectMapper.writeValueAsString(folderFromClient));
 
 		mockMvc.perform(request).andExpect(status().isBadRequest());
@@ -182,34 +172,31 @@ public class ConfigurationControllerTest {
 	@Test
 	public void testCreateConfig() throws Exception {
 
-		MockHttpServletRequestBuilder request = put("/config").contentType(JSON)
-				.content(objectMapper.writeValueAsString(configFromClient));
+		reset(services);
+		
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).name("config").uniqueId("hhh")
+				.userName("user").build();
+		when(services.createNode("p", config)).thenAnswer(new Answer<Node>() {
+			public Node answer(InvocationOnMock invocation) throws Throwable {
+				return config1;
+			}
+		});
+		
+		MockHttpServletRequestBuilder request = put("/node/p").contentType(JSON).content(objectMapper.writeValueAsString(config));
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
 
 		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), Config.class);
-	}
-	
-	@Test
-	public void testCreateConfigNoUsername() throws Exception {
-		
-		Config config = Config.builder().id(10)
-		.description("description").build();
-
-		MockHttpServletRequestBuilder request = put("/config").contentType(JSON)
-				.content(objectMapper.writeValueAsString(config));
-
-		mockMvc.perform(request).andExpect(status().isBadRequest());
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
 	}
 
 	@Test
 	public void testGetNonExistingConfig() throws Exception {
 
-		when(services.getConfiguration(2)).thenThrow(new NodeNotFoundException("lasdfk"));
+		when(services.getNode("x")).thenThrow(new NodeNotFoundException("lasdfk"));
 
-		MockHttpServletRequestBuilder request = get("/config/2").contentType(JSON);
+		MockHttpServletRequestBuilder request = get("/node/x").contentType(JSON);
 
 		mockMvc.perform(request).andExpect(status().isNotFound());
 	}
@@ -217,24 +204,26 @@ public class ConfigurationControllerTest {
 	@Test
 	public void testGetSnapshots() throws Exception {
 
-		when(services.getSnapshots(1)).thenReturn(Arrays.asList(snapshot));
+		when(services.getSnapshots("s")).thenReturn(Arrays.asList(snapshot));
 
-		MockHttpServletRequestBuilder request = get("/config/1/snapshots").contentType(JSON);
+		MockHttpServletRequestBuilder request = get("/config/s/snapshots").contentType(JSON);
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
 
 		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<Snapshot>>() {
+		objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<Node>>() {
 		});
+
+		reset(services);
 	}
 
 	@Test
 	public void testGetSnapshotsForNonExistingConfig() throws Exception {
 
-		when(services.getSnapshots(2)).thenThrow(new NodeNotFoundException("lasdfk"));
+		when(services.getSnapshots("x")).thenThrow(new NodeNotFoundException("lasdfk"));
 
-		MockHttpServletRequestBuilder request = get("/config/2/snapshots").contentType(JSON);
+		MockHttpServletRequestBuilder request = get("/config/x/snapshots").contentType(JSON);
 
 		mockMvc.perform(request).andExpect(status().isNotFound());
 	}
@@ -248,159 +237,182 @@ public class ConfigurationControllerTest {
 
 	@Test
 	public void testDeleteFolder() throws Exception {
-		MockHttpServletRequestBuilder request = delete("/folder/1");
+		MockHttpServletRequestBuilder request = delete("/node/a");
 
 		mockMvc.perform(request).andExpect(status().isOk());
-		
-		doThrow(new IllegalArgumentException()).when(services).deleteNode(0);
-			
-		request = delete("/folder/0");
-		
+
+		doThrow(new IllegalArgumentException()).when(services).deleteNode("a");
+
+		request = delete("/node/a");
+
 		mockMvc.perform(request).andExpect(status().isBadRequest());
-		
+
 	}
 
 	@Test
 	public void testGetFolder() throws Exception {
-		when(services.getFolder(1)).thenReturn(Folder.builder().id(1).build());
+		when(services.getNode("q")).thenReturn(Node.builder().id(1).uniqueId("q").build());
 
-		MockHttpServletRequestBuilder request = get("/folder/1");
+		MockHttpServletRequestBuilder request = get("/node/q");
 
-		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
-				.andReturn();
-
-		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), Folder.class);
-	}
-
-	@Test
-	public void testGetConfiguration() throws Exception {
-		when(services.getConfiguration(1)).thenReturn(Config.builder().build());
-
-		MockHttpServletRequestBuilder request = get("/config/1");
-
-		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
-				.andReturn();
-
-		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), Config.class);
-	}
-	
-	@Test
-	public void testGetNonExistingConfiguration() throws Exception {
-		when(services.getConfiguration(1)).thenThrow(NodeNotFoundException.class);
-
-		MockHttpServletRequestBuilder request = get("/config/1");
-
-		mockMvc.perform(request).andExpect(status().isNotFound());
-		
-		Mockito.reset(services);
-	}
-	
-	@Test
-	public void testGetNonExistingFolder() throws Exception {
-		when(services.getFolder(1)).thenThrow(NodeNotFoundException.class);
-
-		MockHttpServletRequestBuilder request = get("/folder/1");
-
-		mockMvc.perform(request).andExpect(status().isNotFound());
-		
-		when(services.getFolder(7)).thenThrow(IllegalArgumentException.class);
-		
-		request = get("/folder/7");
-		
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-		
-		Mockito.reset(services);
-	}
-
-	@Test
-	public void testMoveNode() throws Exception {
-		when(services.moveNode(1, 2, "username")).thenReturn(Folder.builder().id(2).build());
-
-		MockHttpServletRequestBuilder request = post("/node/1").param("to", "2").param("username", "username");
-
-		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
-				.andReturn();
-
-		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), Folder.class);
-	}
-	
-	@Test
-	public void testMoveNodeNoUsername() throws Exception {
-		MockHttpServletRequestBuilder request = post("/node/1").param("to", "2");
-
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-	}
-	
-	@Test
-	public void testUpdateConfig() throws Exception {
-		
-		Config config = Config.builder().userName("myusername").id(0).build();
-		
-		when(services.updateConfiguration(Mockito.any(Config.class))).thenReturn(config);
-
-		MockHttpServletRequestBuilder request = post("/config").contentType(JSON)
-				.content(objectMapper.writeValueAsString(config));
-
-		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
-				.andReturn();
-
-		// Make sure response contains expected data
-		objectMapper.readValue(result.getResponse().getContentAsString(), Config.class);
-	}
-
-	@Test
-	public void testGetFolderIllegalArgument() throws Exception {
-		when(services.getFolder(666)).thenThrow(IllegalArgumentException.class);
-
-		MockHttpServletRequestBuilder request = get("/folder/666");
-
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-
-	}
-	
-	@Test
-	public void testRenameNodeIllegalArgument1() throws Exception{
-		when(services.renameNode(1, "whatever", "username")).thenThrow(IllegalArgumentException.class);
-		
-		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever&username=username");
-
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-	}
-	
-	@Test
-	public void testRenameNodeIllegalArgument2() throws Exception{
-		
-		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever");
-
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-	}
-	
-	@Test
-	public void testRenameNodeNoRequestParam() throws Exception{
-	
-		MockHttpServletRequestBuilder request = post("/node/1/rename");
-
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-	}
-	
-	@Test
-	public void testRenameNode() throws Exception{
-		
-		Node node = new Node();
-		node.setName("foo");
-		
-		when(services.renameNode(1, "whatever", "username")).thenReturn(node);
-		
-		MockHttpServletRequestBuilder request = post("/node/1/rename?name=whatever&username=username");
-		
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
 
 		// Make sure response contains expected data
 		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+	}
+
+	@Test
+	public void testGetConfiguration() throws Exception {
+		
+		Mockito.reset(services);
+		
+		when(services.getNode("a")).thenReturn(Node.builder().build());
+
+		MockHttpServletRequestBuilder request = get("/node/a");
+
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+	}
+
+	@Test
+	public void testGetNonExistingConfiguration() throws Exception {
+		Mockito.reset(services);
+		when(services.getNode("a")).thenThrow(NodeNotFoundException.class);
+
+		MockHttpServletRequestBuilder request = get("/node/a");
+
+		mockMvc.perform(request).andExpect(status().isNotFound());
+
 		
 	}
+
+	@Test
+	public void testGetNonExistingFolder() throws Exception {
+		
+		Mockito.reset(services);
+		when(services.getNode("a")).thenThrow(NodeNotFoundException.class);
+
+		MockHttpServletRequestBuilder request = get("/node/a");
+
+		mockMvc.perform(request).andExpect(status().isNotFound());
+
+		when(services.getNode("b")).thenThrow(IllegalArgumentException.class);
+
+		request = get("/node/b");
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+
+		
+	
+	}
+
+	@Test
+	public void testMoveNode() throws Exception {
+		when(services.moveNode("a", "b", "username")).thenReturn(Node.builder().id(2).uniqueId("a").build());
+
+		MockHttpServletRequestBuilder request = post("/node/a").param("to", "b").param("username", "username");
+
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+	}
+
+	@Test
+	public void testMoveNodeNoUsername() throws Exception {
+		MockHttpServletRequestBuilder request = post("/node/a").param("to", "b");
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+
+	@Test
+	public void testUpdateConfig() throws Exception {
+
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).userName("myusername").id(0).build();
+		List<ConfigPv> configPvList = Arrays.asList(ConfigPv.builder().id(1).provider(Provider.ca).pvName("name").build());
+		
+		UpdateConfigHolder holder = UpdateConfigHolder.builder().config(config).configPvList(configPvList).build();
+		
+		when(services.updateConfiguration(holder.getConfig(), holder.getConfigPvList())).thenReturn(config);
+
+		MockHttpServletRequestBuilder request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+	}
+	
+	@Test
+	public void testUpdateConfigBadConfigPv() throws Exception {
+
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).userName("myusername").id(0).build();
+		List<ConfigPv> configPvList = Arrays.asList(ConfigPv.builder().id(1).provider(Provider.ca).build());
+		
+		UpdateConfigHolder holder = UpdateConfigHolder.builder().config(config).configPvList(configPvList).build();
+		
+		when(services.updateConfiguration(holder.getConfig(), holder.getConfigPvList())).thenReturn(config);
+
+		MockHttpServletRequestBuilder request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+
+	@Test
+	public void testGetFolderIllegalArgument() throws Exception {
+		when(services.getNode("a")).thenThrow(IllegalArgumentException.class);
+
+		MockHttpServletRequestBuilder request = get("/node/a");
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+
+	}
+
+	@Test
+	public void testUpdateNode() throws Exception {
+
+		Node node = Node.builder().name("foo").uniqueId("a").build();
+
+		when(services.updateNode(node)).thenReturn(node);
+
+		MockHttpServletRequestBuilder request = post("/node/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(node));
+
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+
+	}
+	
+	@Test
+	public void testGetConfigPvs() throws Exception{
+		
+		ConfigPv configPv = ConfigPv.builder()
+				.id(1)
+				.provider(Provider.ca)
+				.pvName("pvname")
+				.build();
+		
+		when(services.getConfigPvs("cpv")).thenReturn(Arrays.asList(configPv));
+		
+		MockHttpServletRequestBuilder request = get("/config/cpv/items");
+			
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+		
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<ConfigPv>>() {
+		});
+	}
+
 }

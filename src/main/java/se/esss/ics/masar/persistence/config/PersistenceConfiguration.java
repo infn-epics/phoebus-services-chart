@@ -42,12 +42,12 @@ public class PersistenceConfiguration {
 		return DataSourceBuilder.create().type(HikariDataSource.class).build();
 	}
 
-	@Bean
-	public SimpleJdbcInsert configurationInsert() {
-		DataSource dataSource = dataSource();
-
-		return new SimpleJdbcInsert(dataSource).withTableName("config");
-	}
+//	@Bean
+//	public SimpleJdbcInsert configurationInsert() {
+//		DataSource dataSource = dataSource();
+//
+//		return new SimpleJdbcInsert(dataSource).withTableName("config");
+//	}
 
 	@Bean
 	public SimpleJdbcInsert configurationEntryInsert() {
@@ -63,18 +63,18 @@ public class PersistenceConfiguration {
 		return new SimpleJdbcInsert(dataSource).withTableName("config_pv_relation");
 	}
 
-	@Bean
-	public SimpleJdbcInsert snapshotInsert() {
-		DataSource dataSource = dataSource();
-
-		return new SimpleJdbcInsert(dataSource).withTableName("snapshot").usingGeneratedKeyColumns("id");
-	}
+//	@Bean
+//	public SimpleJdbcInsert snapshotInsert() {
+//		DataSource dataSource = dataSource();
+//
+//		return new SimpleJdbcInsert(dataSource).withTableName("snapshot_node").usingGeneratedKeyColumns("id");
+//	}
 
 	@Bean
 	public SimpleJdbcInsert snapshotPvInsert() {
 		DataSource dataSource = dataSource();
 
-		return new SimpleJdbcInsert(dataSource).withTableName("snapshot_pv");
+		return new SimpleJdbcInsert(dataSource).withTableName("snapshot_node_pv");
 	}
 
 	@Bean
@@ -97,5 +97,4 @@ public class PersistenceConfiguration {
 	public SimpleJdbcInsert nodeClosureInsert() {
 		return new SimpleJdbcInsert(dataSource()).withTableName("node_closure");
 	}
-
 }

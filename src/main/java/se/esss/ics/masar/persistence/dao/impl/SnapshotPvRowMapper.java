@@ -38,8 +38,7 @@ public class SnapshotPvRowMapper implements RowMapper<SnapshotPv> {
 		
 		return SnapshotPv.builder()
 				.configPv(configPv)
-				.fetchStatus(resultSet.getBoolean("fetch_status"))
-				.snapshotId(resultSet.getInt("snapshot_id"))
+				.snapshotId(resultSet.getInt("snapshot_node_id"))
 				.alarmSeverity(resultSet.getString("severity") == null ? null : AlarmSeverity.valueOf(resultSet.getString("severity")))
 				.alarmStatus(resultSet.getString("status") ==  null ? null : AlarmStatus.valueOf(resultSet.getString("status")))
 				.time(resultSet.getLong("time"))
@@ -47,7 +46,7 @@ public class SnapshotPvRowMapper implements RowMapper<SnapshotPv> {
 				.value(resultSet.getString("value"))
 				.sizes(resultSet.getString("sizes"))
 				.dataType(resultSet.getString("data_type") == null ? null : SnapshotPvDataType.valueOf(resultSet.getString("data_type")))
-				.configPv(configPv)
+				.readback(resultSet.getBoolean("readback"))
 				.build();
 
 	}

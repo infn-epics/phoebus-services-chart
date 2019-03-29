@@ -14,7 +14,7 @@
  * </p>
  * 
  * <p>
- * A <b>folder</b> is a container that may contain other folders (sub-folders) or configurations. A fodler has a name, which must be unique for
+ * A <b>folder</b> is a container that may contain other folders (sub-folders) or configurations. A folder has a name, which must be unique for
  * the folder that contains it, but is referenced in the API by its numerical id.
  * </p>
  * 
@@ -87,44 +87,7 @@
  * be valid names that can be accessed over EPICS channel access (ca) or EPICS pvaccess (pva). Consider the below work flow detailing
  * the steps needed to 
  * </p>
- * 
- * <p>
- * <b>Work flow </b>
- * <ol>
- * 
- * <li><b>Optional.</b> Create a folder for the configuration. Take care to choose folder names that make sense, avoid names
- * like "test1" or "My folder". Create a {@link se.esss.ics.masar.model.Folder} object specifying {@link se.esss.ics.masar.model.Folder#parentId}
- * and {@link se.esss.ics.masar.model.Folder#name} and submit this in a PUT request to the REST end point <code>/folder</code>.
- * The service will return a {@link se.esss.ics.masar.model.Folder} object representing the newly created and persisted folder.</li>
- * 
- * <li>Identify a folder for the configuration. Folders are uniquely identified by their numerical id (where the root folder has id=0). To list
- * existing folders in a folder with id=x, use the REST end point <code>/folder/x</code>.</li>
- * 
- * <li>Create a {@link se.esss.ics.masar.model.ConfigPv} object for each PV that should be included in the configuration.
- * Specify {@link se.esss.ics.masar.model.ConfigPv#pvName} and {@link se.esss.ics.masar.model.ConfigPv#provider} for each
- * {@link se.esss.ics.masar.model.ConfigPv} object. Wrap the {@link se.esss.ics.masar.model.ConfigPv} objects in a 
- * {@link java.util.List}.</li>
- * 
- * <li>Create a {@link se.esss.ics.masar.model.Config} object specifying {@link se.esss.ics.masar.model.Config#parentId},
- * {@link se.esss.ics.masar.model.Config#name} and {@link se.esss.ics.masar.model.Config#configPvList}. Submit this as a PUT request to 
- * the REST end point <code>/config</code>. The service will return a {@link se.esss.ics.masar.model.Config} object representing
- * the newly created and persisted configuration.</li>
- * 
- * <li>To take a snapshot for a configuration with id=y, make a PUT call to the REST end point <code>/snapshot/y</code>. The
- * service will return a newly created and persisted  {@link se.esss.ics.masar.model.Snapshot} object. However, the snapshot
- * will be in a preliminary state, which means it will not be listed when querying a configuration for its list of snapshots.</li>
- * 
- * <li>To put a snapshot with id=z in a committed state, make a POST request to the REST end point <code>/snapshot/z</code> providing
- * three mandatory request parameters like so: <code>/snapshot/z?snapshotName=some_name&amp;userName=logged_in_user&amp;comment=some_comment</code>.
- * The service returns the committed and persisted {@link se.esss.ics.masar.model.Snapshot} object.
- * </li>
- * 
- * <li>New snapshots for the same configuration can be created by repeating the two previous steps.</li>
- * 
- * <li>A snapshot with id=a that for some reason is not needed can - regardless of its current state - be deleted by sending a DELETE request
- * to the end point <code>/snapshot/a</code>.</li>
- * 
- * </ol>
+ 
  * 
  */
 package se.esss.ics.masar;

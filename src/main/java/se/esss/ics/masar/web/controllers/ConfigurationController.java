@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,11 +32,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiOperation;
-import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
-import se.esss.ics.masar.model.Snapshot;
+import se.esss.ics.masar.model.UpdateConfigHolder;
 import se.esss.ics.masar.services.IServices;
 
 @RestController
@@ -50,23 +49,26 @@ public class ConfigurationController extends BaseController {
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if:
 	 * <ul>
 	 * <li>The parent node does not exist</li>
-	 * <li>The parent node is not a {@link Folder}</li>
+	 * <li>The parent node is not a {@link Node}</li>
 	 * <li>A folder with the same name already exists in the parent folder</li>
 	 * </ul>
 	 * 
-	 * @param folder
-	 *            A {@link Folder} object. The {@link Folder#name} field must be
-	 *            non-null, and the {@link Folder#parentId} must specify an existing
-	 *            folder.
+	 * @param parentsUniqueId The unique id of the parent node for the new node.
+	 * @param node
+	 *            A {@link Node} object. The {@link Node#name} field must be
+	 *            non-null.
 	 * @return The new folder in the tree.
 	 */
-	@ApiOperation(value = "Create a new folder", consumes = JSON, produces = JSON)
-	@PutMapping("/folder")
-	public Folder createFolder(@RequestBody final Folder folder) {
-		if(folder.getUserName() == null || folder.getUserName().isEmpty()) {
+	@ApiOperation(value = "Create a new node", consumes = JSON, produces = JSON)
+	@PutMapping("/node/{parentsUniqueId}")
+	public Node createNode(@PathVariable String parentsUniqueId, @RequestBody final Node node) {
+		if(node.getUserName() == null || node.getUserName().isEmpty()) {
 			throw new IllegalArgumentException("User name must be non-null and of non-zero length");
 		}
-		return services.createFolder(folder);
+		if(node.getName() == null || node.getName().isEmpty()) {
+			throw new IllegalArgumentException("Node name must be non-null and of non-zero length");
+		}
+		return services.createNode(parentsUniqueId, node);
 	}
 
 	/**
@@ -75,32 +77,37 @@ public class ConfigurationController extends BaseController {
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is zero (i.e. root node).
 	 * 
 	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified node id does not exist.
-	 * @param nodeId The id of the folder
+	 * @param uniqueNodeId The id of the folder
 	 */
-	@ApiOperation(value = "Delete a folder and its sub-tree")
-	@DeleteMapping("/folder/{nodeId}")
-	public void deleteFolder(@PathVariable final int nodeId) {
-		services.deleteNode(nodeId);
+	@ApiOperation(value = "Delete a node and its sub-tree")
+	@DeleteMapping("/node/{uniqueNodeId}")
+	public void deleteFolder(@PathVariable final String uniqueNodeId) {
+		services.deleteNode(uniqueNodeId);
 	}
-
-	/**
-	 * Get a folder and its child nodes.
-	 * 
-	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified node id does not exist.
-	 * 
-	 * @param nodeId
-	 *            The database id of the folder.
-	 * @return A {@link Folder} object or <code>null</code> if the node id is not
-	 *         associated with an existing folder. The returned object will contain
-	 *         existing child nodes as well as the parent node, which is
-	 *         <code>null</code> for the root folder.
-	 */
-	@ApiOperation(value = "Get a folder and its child nodes", produces = JSON)
-	@GetMapping("/folder/{nodeId}")
-	public Folder getFolder(@PathVariable final int nodeId) {
-		return services.getFolder(nodeId);
+	
+	@ApiOperation(value = "Get a node, child nodes not included in response", produces = JSON)
+	@GetMapping("/node/{uniqueNodeId}")
+	public Node getNode(@PathVariable final String uniqueNodeId) {
+		return services.getNode(uniqueNodeId);
 	}
-
+	
+	@ApiOperation(value = "Get the root node, child nodes not included in response", produces = JSON)
+	@GetMapping("/root")
+	public Node getRootNode() {
+		return services.getRootNode();
+	}
+	
+	@ApiOperation(value = "Get the root node, child nodes not included in response", produces = JSON)
+	@GetMapping("/node/{uniqueNodeId}/parent")
+	public Node getParentNode(@PathVariable String uniqueNodeId) {
+		return services.getParentNode(uniqueNodeId);
+	}
+	
+	@ApiOperation(value = "Get a node's, child nodes. Child nodes of snapshot nodes are retrieved through a different end point. ", produces = JSON)
+	@GetMapping("/node/{uniqueNodeId}/children")
+	public List<Node> getChildNodes(@PathVariable final String uniqueNodeId) {
+		return services.getChildNodes(uniqueNodeId);
+	}
 	
 	/**
 	 * Create a new {@link Config} node. The list of {@link Config#configPvList} can be empty, 
@@ -108,18 +115,25 @@ public class ConfigurationController extends BaseController {
 	 * 
 	 * A {@link HttpStatus#BAD_REQUEST} is returned the parent node of the configuration 
 	 * does not exist, or if the parent node is a {@link Config} node.
-	 * 
+	 * @param parentsUniqueId Unique id of the parent node.
 	 * @param configuration The {@link Config} object to create/save.
 	 * @return A {@link Config} object.
 	 */
-	@ApiOperation(value = "Create a new configuration, name and user name must be non-null and of non-zero length.", consumes = JSON)
-	@PutMapping("/config")
-	public Config saveConfiguration(@RequestBody final Config configuration) {
-		if(configuration.getName() == null || configuration.getName().isEmpty() || configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
-			throw new IllegalArgumentException("Config name and user name must be non-null and of non-zero length");
-		}
-		return services.createNewConfiguration(configuration);
-	}
+//	@ApiOperation(value = "Create a new configuration, name and user name must be non-null and of non-zero length.", consumes = JSON)
+//	@PutMapping("/config/{parentsUniqueId}")
+//	public Node saveConfiguration(@PathVariable String parentsUniqueId, @RequestBody final Node configuration) {
+//		if(configuration.getName() == null || configuration.getName().isEmpty() || configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
+//			throw new IllegalArgumentException("Config name and user name must be non-null and of non-zero length");
+//		}
+//		try {
+//			Node c = services.createNewConfiguration(parentsUniqueId, configuration);
+//			return c;
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//			return null;
+//		}
+//	}
 
 	/**
 	 * Retrieve a configuration and its list of {@link ConfigPv}s.
@@ -128,14 +142,14 @@ public class ConfigurationController extends BaseController {
 	 * 
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is a folder node.
 	 * 
-	 * @param nodeId The id of the {@link Config}.
+	 * @param uniqueNodeId The id of the {@link Config}.
 	 * @return A {@link Config} object representing the persisted configuration.
 	 */
-	@ApiOperation(value = "Get configuration and its list of PVs", produces = JSON)
-	@GetMapping("/config/{nodeId}")
-	public Config getConfiguration(@PathVariable final int nodeId) {
-		return services.getConfiguration(nodeId);
-	}
+//	@ApiOperation(value = "Get configuration and its list of PVs", produces = JSON)
+//	@GetMapping("/config/{uniqueNodeId}")
+//	public Config getConfiguration(@PathVariable final String uniqueNodeId) {
+//		return services.getConfiguration(uniqueNodeId);
+//	}
 
 	/**
 	 * Updates a configuration. For instance, user may change the name of the
@@ -147,16 +161,30 @@ public class ConfigurationController extends BaseController {
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is a configuration node, or if a user name has not
 	 * been specified in the config data.
 	 * 
-	 * @param configuration The configuration object holding updated data (name, PV list etc).
-	 * @return The updated configuration.
+	 * @param uniqueNodeId The unique id of the configuration.
+	 * @param updateConfigHolder Wrapper of a {@link Node} object representing the config node and a list of {@link ConfigPv}s
+	 * @return The updated configuration {@link Node} object.
 	 */
 	@ApiOperation(value = "Update configuration (e.g. modify PV list or rename configuration)", consumes = JSON, produces = JSON)
-	@PostMapping("/config")
-	public Config updateConfiguration(@RequestBody Config configuration) {
-		if(configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
-			throw new IllegalArgumentException("User name must be non-null and of non-zero length");
+	@PostMapping("/config/{uniqueNodeId}/update")
+	public ResponseEntity<Node> updateConfiguration(@PathVariable String uniqueNodeId, 
+			@RequestBody UpdateConfigHolder updateConfigHolder) {
+	
+		if(updateConfigHolder.getConfig() == null || 
+				updateConfigHolder.getConfigPvList() == null ||
+				updateConfigHolder.getConfig().getUserName() == null || 
+				updateConfigHolder.getConfig().getUserName().isEmpty()) {
+			
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-		return services.updateConfiguration(configuration);
+		
+		for(ConfigPv configPv : updateConfigHolder.getConfigPvList()) {
+			if(configPv.getPvName() == null || configPv.getPvName().isEmpty()) {
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			}
+		}
+		
+		return new ResponseEntity<>(services.updateConfiguration(updateConfigHolder.getConfig(), updateConfigHolder.getConfigPvList()), HttpStatus.OK);
 	}
 
 	/**
@@ -167,28 +195,28 @@ public class ConfigurationController extends BaseController {
 	 * 
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is the tree root id (0).
 	 * 
-	 * @param nodeId The non-zero id of the node to delete
+	 * @param uniqueNodeId The non-zero id of the node to delete
 	 */
 	@ApiOperation(value = "Delete a configuration and all snapshots associated with it.")
-	@DeleteMapping("/config/{nodeId}")
-	public void deleteNode(@PathVariable final int nodeId) {
-		services.deleteNode(nodeId);
+	@DeleteMapping("/config/{uniqueNodeId}")
+	public void deleteNode(@PathVariable final String uniqueNodeId) {
+		services.deleteNode(uniqueNodeId);
 	}
 
 	/**
-	 * Returns a potentially empty list of {@link Snapshot}s associated with the specified configuration node id.
+	 * Returns a potentially empty list of {@link Node}s associated with the specified configuration node id.
 	 * 
 	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified configuration does not exist.
 	 * 
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is not a configuration.
 	 * 
-	 * @param nodeId The id of the configuration
-	 * @return A potentially empty list of {@link Snapshot}s for the specified configuration.
+	 * @param uniqueNodeId The id of the configuration
+	 * @return A potentially empty list of {@link Node}s for the specified configuration.
 	 */
 	@ApiOperation(value = "Get all snapshots for a config. NOTE: preliminary snapshots are not included.", produces = JSON)
-	@GetMapping("/config/{nodeId}/snapshots")
-	public List<Snapshot> getSnapshots(@PathVariable int nodeId) {
-		return services.getSnapshots(nodeId);
+	@GetMapping("/config/{uniqueNodeId}/snapshots")
+	public List<Node> getSnapshots(@PathVariable String uniqueNodeId) {
+		return services.getSnapshots(uniqueNodeId);
 	}
 
 	/**
@@ -203,17 +231,17 @@ public class ConfigurationController extends BaseController {
 	 * <li>The specified target node already contains a child node with same name and type (i.e. configuration or folder)</li>
 	 * </ol>
 	 * 
-	 * @param nodeId The id of the source node
+	 * @param uniqueNodeId The id of the source node
 	 * @param to The new parent (target) node id
 	 * @param userName The (account) name of the user performing the operation.
-	 * @return A {@link Folder} object representing the parent (target) folder.
+	 * @return A {@link Node} object representing the parent (target) folder.
 	 */
 	@ApiOperation(value = "Moves a node (and the sub-tree in case of a folder node) to another parent folder.", produces = JSON)
-	@PostMapping("/node/{nodeId}")
-	public Folder moveNode(@PathVariable int nodeId, 
-			@RequestParam(value = "to", required = true) int to, 
+	@PostMapping("/node/{uniqueNodeId}")
+	public Node moveNode(@PathVariable String uniqueNodeId, 
+			@RequestParam(value = "to", required = true) String to, 
 			@RequestParam(value = "username", required = true) String userName) {
-		return services.moveNode(nodeId, to, userName);
+		return services.moveNode(uniqueNodeId, to, userName);
 	}
 
 	/**
@@ -222,16 +250,21 @@ public class ConfigurationController extends BaseController {
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if a node of the same name and type already exists in the parent folder,
 	 * or if the node in question is the root node (0).
 	 * 
-	 * @param nodeId Node id of the node to rename. Must be non-zero.
-	 * @param name The new name of the node.
-	 * @param userName The (account) name of the user performing the operation.
-	 * @return A {@link Node} object representing the renamed node.
+	 * @param uniqueNodeId Node id of the node to rename. Must be non-zero.
+	 * @param nodeToUpdate {@link Node} object containing updated data. Only name and properties may be changed. The user name
+	 * should be set by the client in an automated fashion and will be updated by the persistence layer.
+	 * @return A {@link Node} object representing the updated node.
 	 */
 	@ApiOperation(value = "Renames a Node. The parent directory must not contain a node with same name and type.", produces = JSON)
-	@PostMapping("/node/{nodeId}/rename")
-	public Node renameNode(@PathVariable int nodeId, 
-			@RequestParam(value = "name", required = true) String name,
-			@RequestParam(value = "username", required = true) String userName) {
-		return services.renameNode(nodeId, name, userName);
+	@PostMapping("/node/{uniqueNodeId}/update")
+	public Node updateNode(@PathVariable String uniqueNodeId, 
+			@RequestBody Node nodeToUpdate) {
+		return services.updateNode(nodeToUpdate);
+	}
+	
+	@ApiOperation(value = "Retrieves the ConfigPv list for the specified configuration node.", produces = JSON)
+	@GetMapping("/config/{uniqueNodeId}/items")
+	public List<ConfigPv> getConfigPvs(@PathVariable String uniqueNodeId) {
+		return services.getConfigPvs(uniqueNodeId);
 	}
 }

@@ -1,4 +1,4 @@
-/** 
+/*
  * Copyright (C) 2018 European Spallation Source ERIC.
  *
  * This program is free software; you can redistribute it and/or
@@ -15,29 +15,38 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+
 package se.esss.ics.masar.persistence.dao.impl;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
-import org.springframework.jdbc.core.RowMapper;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
+
+import org.junit.Test;
+import org.mockito.Mockito;
 
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.NodeType;
 
-public class NodeRowMapper implements RowMapper<Node> {
+/**
+ * @author georgweiss Created 7 Feb 2019
+ */
+public class NodeRowMapperTest {
 
-	@Override
-	public Node mapRow(ResultSet resultSet, int rowIndex) throws SQLException {
+	@Test
+	public void testRowMapper() throws Exception {
 
-		return Node.builder()
-				.id(resultSet.getInt("id"))
-				.nodeType(NodeType.valueOf(resultSet.getString("type")))
-				.created(resultSet.getTimestamp("created"))
-				.lastModified(resultSet.getTimestamp("last_modified"))
-				.name(resultSet.getString("name"))
-				.userName(resultSet.getString("username"))
-				.uniqueId(resultSet.getString("unique_id"))
-				.build();
+		ResultSet resultSet = Mockito.mock(ResultSet.class);
+
+		when(resultSet.getInt("id")).thenReturn(1);
+		when(resultSet.getString("name")).thenReturn("name");
+		when(resultSet.getTimestamp("created")).thenReturn(new Timestamp(System.currentTimeMillis()));
+		when(resultSet.getTimestamp("last_modified")).thenReturn(new Timestamp(System.currentTimeMillis()));
+		when(resultSet.getString("username")).thenReturn("username");
+		when(resultSet.getString("type")).thenReturn(NodeType.FOLDER.toString());
+		
+		assertTrue(new NodeRowMapper().mapRow(resultSet, 0) instanceof Node);
 	}
 }

@@ -20,9 +20,9 @@ package se.esss.ics.masar.services.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -43,15 +44,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.Folder;
-import se.esss.ics.masar.model.Snapshot;
-import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
+import se.esss.ics.masar.model.Node;
+import se.esss.ics.masar.model.NodeType;
+import se.esss.ics.masar.model.SnapshotItem;
+import se.esss.ics.masar.persistence.dao.NodeDAO;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.config.ServicesTestConfig;
-import se.esss.ics.masar.services.exception.NodeNotFoundException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextHierarchy({ @ContextConfiguration(classes = { ServicesTestConfig.class}) })
@@ -61,16 +60,15 @@ public class ServicesTest {
 	private IServices services;
 	
 	@Autowired
-	private ConfigDAO configDAO;
+	private NodeDAO nodeDAO;
 	
-	@Autowired
-	private SnapshotDAO snapshotDAO;
-		
-	private Config configFromClient;
+	private Node configFromClient;
 	
-	private Config config1;
+	private Node config1;
 	
-	private Config configWithParent;
+	private Node configWithParent;
+	
+	List<ConfigPv> configPvList;
 	
 	
 	@Before
@@ -80,216 +78,196 @@ public class ServicesTest {
 				.pvName("pvName")
 				.build();
 		
-		configFromClient = Config.builder()
-				.configPvList(Arrays.asList(configPv))
-				.description("description")
+		configFromClient = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
 				.build();
 		
 		configFromClient.setId(1);
 		configFromClient.setCreated(new Date());
 		
 		
-		config1 = Config.builder()
-				.configPvList(Arrays.asList(configPv))
-				.description("description")
+		config1 = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
 				.build();
 		
 		config1.setId(1);
 		
-		configWithParent = Config.builder()
-				.configPvList(Arrays.asList(configPv))
-				.description("description")
-				.parentId(1)
+		configWithParent = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
 				.build();
 		
-		when(configDAO.createConfiguration(configFromClient)).thenReturn(configFromClient);
-		when(configDAO.createConfiguration(configWithParent)).thenReturn(configWithParent);
+		configPvList = Arrays.asList(configPv);
+		
+		
+		when(nodeDAO.createNode("a", configFromClient)).thenReturn(configFromClient);
+		when(nodeDAO.createNode("a", configWithParent)).thenReturn(configWithParent);
 	
 	}
 	
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testCreateConfigurationNoParent() {
-		services.createNewConfiguration(configFromClient);
+		services.createNode("x", configFromClient);
 	}
 	
 	@Test
 	public void testCreateConfiguration() {
-		when(configDAO.getFolder(1)).thenReturn(Folder.builder().id(1).build());
-		services.createNewConfiguration(configWithParent);
+		when(nodeDAO.getNode("a")).thenReturn(Node.builder().id(1).uniqueId("a").build());
+		services.createNode("a", configWithParent);
 	}
 	
 	@Test
 	public void testGetConfigNotNull() {
 		
-		when(configDAO.getConfiguration(1)).thenReturn(configFromClient);
+		when(nodeDAO.getNode("a")).thenReturn(configFromClient);
 		
-		Config config = services.getConfiguration(1);
+		Node config = services.getNode("a");
 		assertEquals(1, config.getId());
-	}
-	
-	@Test(expected = NodeNotFoundException.class)
-	public void testGetNonExistingConfiguration() {
-		
-		when(configDAO.getConfiguration(1)).thenReturn(null);
-		services.getConfiguration(1);
 	}
 
 	
 	@Test
 	public void testTakeSnapshot() {
-		when(configDAO.getConfiguration(1)).thenReturn(configFromClient);
-		when(snapshotDAO.savePreliminarySnapshot(configFromClient, Collections.emptyList()))
-			.thenReturn(Snapshot.builder().id(777).build());
-		services.takeSnapshot(1);
+		when(nodeDAO.getNode("a")).thenReturn(configFromClient);
+		when(nodeDAO.savePreliminarySnapshot(configFromClient.getUniqueId(), Collections.emptyList()))
+			.thenReturn(Node.builder().nodeType(NodeType.SNAPSHOT).id(777).build());
+		services.takeSnapshot("a");
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testTakeSnapshotConfigNotFound() {
-		
-		services.takeSnapshot(2);
-	}
-	
-
-	@Test
-	public void testDeleteSnapshot() {
-		
-		services.deleteSnapshot(1);
-		
-		verify(snapshotDAO, times(1)).deleteSnapshot(1);
-		
-		reset(snapshotDAO);
+		services.takeSnapshot("x");
 	}
 	
 	@Test
 	public void testCommitSnapshot() {
 		
-		when(snapshotDAO.getSnapshot(anyInt(), anyBoolean())).thenReturn(Snapshot.builder().id(777).build());
+		when(nodeDAO.getSnapshot("a", false)).thenReturn(Node.builder().nodeType(NodeType.SNAPSHOT).id(777).build());
 		
-		services.commitSnapshot(anyInt(), anyString(), anyString(), anyString());
+		services.commitSnapshot("a", "snapshot name", "comment", "user");
 		
-		verify(snapshotDAO, times(1)).commitSnapshot(anyInt(), anyString(), anyString(), anyString());
-		verify(snapshotDAO, atLeast(1)).getSnapshot(anyInt(), anyBoolean());
+		verify(nodeDAO, atLeast(1)).getSnapshot(anyString(), anyBoolean());
+		verify(nodeDAO, times(1)).commitSnapshot(anyString(), anyString(), anyString(), anyString());
 		
-		reset(snapshotDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testGetSnapshots() {
 		
-		services.getSnapshots(anyInt());
+		services.getSnapshots(anyString());
 		
-		verify(snapshotDAO, times(1)).getSnapshots(anyInt());
+		verify(nodeDAO, times(1)).getSnapshots(anyString());
 		
-		reset(snapshotDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testGetSnapshotNotFound() {
 		
-		when(snapshotDAO.getSnapshot(77, false)).thenReturn(null);
+		when(nodeDAO.getSnapshot("s", false)).thenReturn(null);
 		
 		try {
-			services.getSnapshot(77);
+			services.getSnapshot("s");
 			fail("Exception expected here");
 		} catch (Exception e) {
 			
 		}
 	
-		reset(snapshotDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testGetSnapshot() {
 		
-		when(snapshotDAO.getSnapshot(177, true)).thenReturn(mock(Snapshot.class));
+		when(nodeDAO.getSnapshot("s", true)).thenReturn(mock(Node.class));
 		
-		Snapshot snapshot = services.getSnapshot(177);
+		Node snapshot = services.getSnapshot("s");
 		
 		assertNotNull(snapshot);
 	
-		reset(snapshotDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void createNewFolderNoParentSpecified() {
 		
-		Folder folderFromClient = Folder.builder().name("SomeFolder").build();
+		Node folderFromClient = Node.builder().name("SomeFolder").build();
 		
-		services.createFolder(folderFromClient);
+		services.createNode(null, folderFromClient);
 	}
 	
 	@Test
 	public void testCreateNewFolder() {
 		
-		Folder folderFromClient = Folder.builder().name("SomeFolder")
-				.parentId(0).build();
+		Node folderFromClient = Node.builder().name("SomeFolder").build();
 		
-		when(configDAO.getFolder(0)).thenReturn(Folder.builder().parentId(0).build());
+		when(nodeDAO.getNode("p")).thenReturn(Node.builder().build());
+		when(nodeDAO.createNode("p", folderFromClient)).thenReturn(folderFromClient);
 		
-		services.createFolder(folderFromClient);
+		services.createNode("p", folderFromClient);
 		
-		verify(configDAO, atLeast(1)).createFolder(folderFromClient);
+		verify(nodeDAO, atLeast(1)).createNode("p", folderFromClient);
 		
-		reset(configDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testGetFolder() {
 			
-		when(configDAO.getFolder(77)).thenReturn(Folder.builder().id(77).build());
-		assertNotNull(services.getFolder(77));
+		when(nodeDAO.getNode("a")).thenReturn(Node.builder().id(77).uniqueId("a").build());
+		assertNotNull(services.getNode("a"));
 
 	}
 	
 	
-	@Test(expected = NodeNotFoundException.class)
+	@Test
 	public void testGetNonExsitingFolder() {
 			
-		when(configDAO.getFolder(77)).thenReturn(null);
-		services.getFolder(77);
+		when(nodeDAO.getNode("a")).thenReturn(null);
+		assertNull(services.getNode("a"));
 		
-		reset(configDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testDeleteConfiguration() {
 			
-		services.deleteNode(1);
+		services.deleteNode("a");
 		
-		verify(configDAO, atLeast(1)).deleteNode(1);
+		verify(nodeDAO, atLeast(1)).deleteNode("a");
 		
-		reset(configDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testDeleteFolder() {
 			
-		services.deleteNode(1);
+		services.deleteNode("a");
 		
-		verify(configDAO, atLeast(1)).deleteNode(1);
+		verify(nodeDAO, atLeast(1)).deleteNode("a");
 		
-		reset(configDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
 	public void testMoveNode() {
 			
-		services.moveNode(1, 2, "username");
+		services.moveNode("a", "b", "username");
 		
-		verify(configDAO, atLeast(1)).moveNode(1, 2, "username");
+		verify(nodeDAO, atLeast(1)).moveNode("a", "b", "username");
 		
-		reset(configDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test
-	public void testRenameNode() {
-			
-		services.renameNode(1, "whatever", "username");
+	public void testUpdateNode() {
+		Node node = Node.builder().build();
+		services.updateNode(node);
 		
-		verify(configDAO, atLeast(1)).renameNode(1, "whatever", "username");
+		verify(nodeDAO, atLeast(1)).updateNode(node);
 		
-		reset(configDAO);
+		reset(nodeDAO);
 	}
 	
 	@Test 
@@ -301,9 +279,17 @@ public class ServicesTest {
 	
 	@Test
 	public void testUpdateConfiguration() {
-		when(configDAO.updateConfiguration(config1)).thenReturn(config1);
 		
-		assertNotNull(services.updateConfiguration(config1));
+		when(nodeDAO.updateConfiguration(config1, configPvList)).thenReturn(config1);
+		
+		assertNotNull(services.updateConfiguration(config1, configPvList));
+	}
+	
+	@Test
+	public void testGetSnapshotItems() {
+		when(nodeDAO.getSnapshotItems("a")).thenReturn(Collections.emptyList());
+		
+		assertNotNull(services.getSnapshotItems("a"));
 	}
 	
 }

@@ -19,10 +19,10 @@ package se.esss.ics.masar.epics;
 
 import java.util.List;
 
-import se.esss.ics.masar.model.Config;
+import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.SnapshotItem;
 
 public interface IEpicsService {
 	
-	public List<SnapshotItem> readPvs(Config config);
+	public List<SnapshotItem> readPvs(List<ConfigPv> configPvs);
 }

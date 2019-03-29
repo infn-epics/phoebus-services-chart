@@ -43,8 +43,8 @@ public class PersistenceConfigurationTest {
 	@Autowired
 	private DataSource dataSource;
 	
-	@Autowired
-	private SimpleJdbcInsert configurationInsert;
+//	@Autowired
+//	private SimpleJdbcInsert configurationInsert;
 	
 	@Autowired
 	private SimpleJdbcInsert configurationEntryInsert;
@@ -52,8 +52,8 @@ public class PersistenceConfigurationTest {
 	@Autowired
 	private SimpleJdbcInsert configurationEntryRelationInsert;
 	
-	@Autowired
-	private SimpleJdbcInsert snapshotInsert;
+//	@Autowired
+//	private SimpleJdbcInsert snapshotInsert;
 	
 	@Autowired
 	private SimpleJdbcInsert snapshotPvInsert;
@@ -68,16 +68,16 @@ public class PersistenceConfigurationTest {
 	@Test
 	public void test() {
 		assertNotNull(dataSource);
-		assertNotNull(configurationInsert);
-		assertEquals("config", configurationInsert.getTableName());
+//		assertNotNull(configurationInsert);
+//		assertEquals("config", configurationInsert.getTableName());
 		assertNotNull(configurationEntryInsert);
 		assertEquals("config_pv", configurationEntryInsert.getTableName());
 		assertNotNull(configurationEntryRelationInsert);
 		assertEquals("config_pv_relation", configurationEntryRelationInsert.getTableName());
-		assertNotNull(snapshotInsert);
-		assertEquals("snapshot", snapshotInsert.getTableName());
+//		assertNotNull(snapshotInsert);
+//		assertEquals("snapshot_node", snapshotInsert.getTableName());
 		assertNotNull(snapshotPvInsert);
-		assertEquals("snapshot_pv", snapshotPvInsert.getTableName());
+		assertEquals("snapshot_node_pv", snapshotPvInsert.getTableName());
 		assertNotNull(jdbcTemplate);
 		assertNotNull(objectMapper);
 	}

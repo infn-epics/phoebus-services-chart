@@ -18,18 +18,19 @@
 
 package se.esss.ics.masar.persistence.dao.impl;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
-import java.sql.ResultSet;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import org.epics.vtype.Alarm;
 import org.epics.vtype.AlarmSeverity;
@@ -52,17 +53,16 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 
-import se.esss.ics.masar.model.Config;
+//import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
-import se.esss.ics.masar.model.Folder;
+//import se.esss.ics.masar.model.Folder;
 import se.esss.ics.masar.model.Node;
-import se.esss.ics.masar.model.Provider;
-import se.esss.ics.masar.model.Snapshot;
+import se.esss.ics.masar.model.NodeType;
+//import se.esss.ics.masar.model.Snapshot;
 import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.persistence.config.PersistenceConfiguration;
 import se.esss.ics.masar.persistence.config.PersistenceTestConfig;
-import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
+import se.esss.ics.masar.persistence.dao.NodeDAO;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
 import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
 
@@ -74,18 +74,15 @@ import se.esss.ics.masar.services.exception.SnapshotNotFoundException;
 public class DAOTest {
 
 	@Autowired
-	private ConfigDAO configDAO;
+	private NodeDAO nodeDAO;
 
-	@Autowired
-	private SnapshotDAO snapshotDAO;
-	
 	private Alarm alarm;
 	private Time time;
 	private Display display;
 
 	@Before
 	public void init() {
-		time = Time.of(Instant.ofEpochSecond(1000, 7000));
+		time = Time.of(Instant.now());
 		alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
 		display = Display.none();
 	}
@@ -95,62 +92,56 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testCreateConfigNoParentFound() {
 
-		ConfigPv configPv = ConfigPv.builder().pvName("pvName")
-				.build();
-
-		Config config = Config.builder().configPvList(Arrays.asList(configPv)).description("description")
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION)
 			.build();
 
-		config.setParentId(2);
 		// The parent node does not exist in the database, so this throws an exception
-		configDAO.createConfiguration(config);
+		nodeDAO.createNode(UUID.randomUUID().toString(), config);
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
-	public void testNewFolder(){
+	public void testNewNode(){
 		
-		Folder root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		Node root = nodeDAO.getRootNode();
 		
 		Date lastModified = root.getLastModified();
+		
+		Map<String, String> props = new HashMap<>();
+		props.put("a", "b");
 	
-		Folder folder = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID)
+		Node folder = Node.builder().name("SomeFolder")
 				.userName("username")
+				.properties(props)
 				.build();
 
-		Node newNode = configDAO.createFolder(folder);
+		Node newNode = nodeDAO.createNode(root.getUniqueId(), folder);
 		
-		root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		root = nodeDAO.getRootNode();
 
 		assertNotNull(newNode);
+		assertEquals(NodeType.FOLDER, newNode.getNodeType());
+		assertNotNull(newNode.getProperty("a"));
+		assertNull(newNode.getProperty("x"));
 		
 		// Check that the parent folder's last modified date is updated
 		assertTrue(root.getLastModified().getTime() > lastModified.getTime());
-	}
-
-	@FlywayTest(invokeCleanDB = true)
-	public void testNewFolderNoParentImpliesRootFolerAsParent() {
-
-		Folder folderFromClient = Folder.builder().name("SomeFolder").build();
-
-		Folder newFolder = configDAO.createFolder(folderFromClient);
-		
-		assertEquals(Node.ROOT_NODE_ID, newFolder.getId());
-
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewFolderWithDuplicateName() {
 
-		Folder folderFromClient = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID)
+		Node rootNode = nodeDAO.getRootNode();
+		
+		Node node = Node.builder().name("SomeFolder")
 				.build();
 
 		// Create a new folder
-		configDAO.createFolder(folderFromClient);
+		nodeDAO.createNode(rootNode.getUniqueId(), node);
 
 		// Try to create a new folder with the same name in the same parent directory
-		configDAO.createFolder(folderFromClient);
+		nodeDAO.createNode(rootNode.getUniqueId(), node);
 
 	}
 
@@ -158,16 +149,17 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewFolderNoDuplicateName() {
 
+		Node rootNode = nodeDAO.getRootNode();
 		
-		Folder folder1 = Folder.builder().name("Folder 1").parentId(Node.ROOT_NODE_ID).build();
+		Node folder1 = Node.builder().name("Folder 1").build();
 
-		Folder folder2 = Folder.builder().name("Folder 2").parentId(Node.ROOT_NODE_ID).build();
+		Node folder2 = Node.builder().name("Folder 2").build();
 
 		// Create a new folder
-		assertNotNull(configDAO.createFolder(folder1));
+		assertNotNull(nodeDAO.createNode(rootNode.getUniqueId(), folder1));
 
 		// Try to create a new folder with a different name in the same parent directory
-		assertNotNull(configDAO.createFolder(folder2));
+		assertNotNull(nodeDAO.createNode(rootNode.getUniqueId(), folder2));
 
 	}
 	
@@ -175,27 +167,24 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewFolderParentIsConfiguration() {
 
-		
-		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
+		Node rootNode = nodeDAO.getRootNode();
+	
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION)
+				.name("My config").build();
 
-		Config config = Config.builder().description("description").parentId(Node.ROOT_NODE_ID)
-				.name("My config").configPvList(Arrays.asList(configPv)).build();
-
-		Config newConfig = configDAO.createConfiguration(config);
+		Node newConfig = nodeDAO.createNode(rootNode.getUniqueId(), config);
 		
-		Folder folder1 = Folder.builder().name("Folder 1").parentId(newConfig.getId()).build();
+		Node folder1 = Node.builder().name("Folder 1").build();
 		
-		configDAO.createFolder(folder1);
+		nodeDAO.createNode(newConfig.getUniqueId(), folder1);
 
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewFolderParentDoesNotExist() {
-		
-		Folder folder1 = Folder.builder().name("Folder 1").parentId(Integer.MAX_VALUE).build();
-		
-		configDAO.createFolder(folder1);
+		Node folder1 = Node.builder().name("Folder 1").build();		
+		nodeDAO.createNode(null, folder1);
 
 	}
 
@@ -203,61 +192,66 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewConfig() {
 
+		Node rootNode = nodeDAO.getRootNode();
 		
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
-		Config config = Config.builder()
-				.description("description")
-				.parentId(Node.ROOT_NODE_ID)
+		Node config = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
 				.name("My config")
-				.userName("username")
-				.configPvList(Arrays.asList(configPv)).build();
+				.userName("username").build();
 
-		Config newConfig = configDAO.createConfiguration(config);
+		Node newConfig = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(newConfig, Arrays.asList(configPv));
 
-		assertFalse(newConfig.getConfigPvList().isEmpty());
+		int configPvId = nodeDAO.getConfigPvs(newConfig.getUniqueId()).get(0).getId();
 
-		int configPvId = newConfig.getConfigPvList().get(0).getId();
+		config = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
+				.name("My config 2")
+				.build();
 
-		config = Config.builder().description("description").parentId(Node.ROOT_NODE_ID)
-				.name("My config 2").configPvList(Arrays.asList(configPv)).build();
-
-		newConfig = configDAO.createConfiguration(config);
-
+		newConfig = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		assertEquals(NodeType.CONFIGURATION, newConfig.getNodeType());
+		
+		nodeDAO.updateConfiguration(newConfig, Arrays.asList(configPv));
 		// Verify that a new ConfigPv has NOT been created
 
-		assertEquals(configPvId, newConfig.getConfigPvList().get(0).getId());
+		assertEquals(configPvId, nodeDAO.getConfigPvs(newConfig.getUniqueId()).get(0).getId());
+		
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testNewConfigNoConfigPvs() {
-
-		Config config = Config.builder()
-				.description("description")
-				.parentId(Node.ROOT_NODE_ID)
+		Node rootNode = nodeDAO.getRootNode();
+		
+		Node config = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
 				.name("My config")
 				.build();
 
-		Config newConfig = configDAO.createConfiguration(config);
+		Node newConfig = nodeDAO.createNode(rootNode.getUniqueId(), config);
 
-		assertTrue(newConfig.getConfigPvList().isEmpty());
+		assertTrue(nodeDAO.getConfigPvs(newConfig.getUniqueId()).isEmpty());
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteConfiguration() {
+		
+		Node rootNode = nodeDAO.getRootNode();
 
-		Config config = Config.builder().description("description").build();
+		Node config = Node.builder()
+				.name("My config")
+				.nodeType(NodeType.CONFIGURATION)
+				.build();
+		
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
 
-		config.setParentId(Node.ROOT_NODE_ID);
-		config.setName("My config");
+		nodeDAO.deleteNode(config.getUniqueId());
 
-		config = configDAO.createConfiguration(config);
-
-		configDAO.deleteNode(config.getId());
-
-		assertNull(configDAO.getConfiguration(config.getId()));
+		assertNull(nodeDAO.getNode(config.getUniqueId()));
 
 	}
 
@@ -265,18 +259,23 @@ public class DAOTest {
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteConfigurationAndPvs() {
+		
+		Node rootNode = nodeDAO.getRootNode();
 
 		ConfigPv configPv = ConfigPv.builder().pvName("pvName").build();
 
-		Config config = Config.builder().description("description")
-				.configPvList(Arrays.asList(configPv)).build();
+		Node config = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
+				.build();
 
-		config.setParentId(Node.ROOT_NODE_ID);
 		config.setName("My config");
 
-		config = configDAO.createConfiguration(config);
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(configPv));
 
-		configDAO.deleteNode(config.getId());
+		nodeDAO.deleteNode(config.getUniqueId());
+		
+		// TODO: Check that PVs have been deleted. Imposed by foreign key constraint on config_pv table
 
 	}
 
@@ -284,162 +283,219 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteNonExistingFolder() {
 
-		configDAO.deleteNode(-1);
+		nodeDAO.deleteNode("a");
 	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	@FlywayTest(invokeCleanDB = true)
+	public void testDeleteNodeNullId() {
+
+		nodeDAO.deleteNode(null);
+	}
+
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteFolder() {
+		
+		Node rootNode = nodeDAO.getRootNode();
 
-		Folder root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		Node root = nodeDAO.getNode(rootNode.getUniqueId());
 
 		Date rootLastModified = root.getLastModified();
 
-		Folder folder1 = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build();
+		Node folder1 = Node.builder().name("SomeFolder").build();
 
-		folder1 = configDAO.createFolder(folder1);
+		folder1 = nodeDAO.createNode(rootNode.getUniqueId(), folder1);
 
-		Folder folder2 = Folder.builder().name("SomeFolder").parentId(folder1.getId()).build();
+		Node folder2 = Node.builder().name("SomeFolder").build();
 
-		folder2 = configDAO.createFolder(folder2);
+		folder2 = nodeDAO.createNode(folder1.getUniqueId(), folder2);
 
-		Config config = configDAO
-				.createConfiguration(Config.builder().name("Config").description("Desc").parentId(folder2.getId()).build());
+		Node config = nodeDAO
+				.createNode(folder1.getUniqueId(), 
+						Node.builder().nodeType(NodeType.CONFIGURATION).name("Config").build());
 
-		configDAO.deleteNode(folder1.getId());
+		nodeDAO.deleteNode(folder1.getUniqueId());
 
-		root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		root = nodeDAO.getNode(rootNode.getUniqueId());
 	
 		assertTrue(root.getLastModified().getTime() > rootLastModified.getTime());
 
-		assertNull(configDAO.getConfiguration(config.getId()));
+		assertNull(nodeDAO.getNode(config.getUniqueId()));
 		
-		assertNull(configDAO.getFolder(folder2.getId()));
+		assertNull(nodeDAO.getNode(folder2.getUniqueId()));
 			
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteConfigurationLeaveReferencedPVs() {
+		
+		Node rootNode = nodeDAO.getRootNode();
 
-		Node parentNode = configDAO.getFolder(Node.ROOT_NODE_ID);
+		nodeDAO.getNode(rootNode.getUniqueId());
 
 		ConfigPv configPv1 = ConfigPv.builder().pvName("pvName").build();
 
 		ConfigPv configPv2 = ConfigPv.builder().pvName("pvName2")
 				.build();
 
-		Config config1 = Config.builder().description("description")
-				.configPvList(Arrays.asList(configPv1, configPv2)).build();
+		Node config1 = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
+				.name("My config")
+				.build();
+	
+		config1 = nodeDAO.createNode(rootNode.getUniqueId(), config1);
+		nodeDAO.updateConfiguration(config1, Arrays.asList(configPv1, configPv2));
 
-		config1.setParentId(parentNode.getId());
-		config1.setName("My config");
+		Node config2 = Node.builder()
+				.name("My config 2")
+				.nodeType(NodeType.CONFIGURATION)
+				.build();
+		
+		config2 = nodeDAO.createNode(rootNode.getUniqueId(), config2);
+		nodeDAO.updateConfiguration(config2, Arrays.asList(configPv2));
 
-		config1 = configDAO.createConfiguration(config1);
+		nodeDAO.deleteNode(config1.getUniqueId());
 
-		Config config2 = Config.builder().description("description")
-				.configPvList(Arrays.asList(configPv2)).build();
-
-		config2.setParentId(parentNode.getId());
-		config2.setName("My config 2");
-
-		config2 = configDAO.createConfiguration(config2);
-
-		configDAO.deleteNode(config1.getId());
-
-		Config config = configDAO.getConfiguration(config2.getId());
-
-		assertEquals(1, config.getConfigPvList().size());
+		assertEquals(1, nodeDAO.getConfigPvs(config2.getUniqueId()).size());
 
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = false)
 	public void testGetNodeAsConfig() {
+		Node rootNode = nodeDAO.getRootNode();
 
-		Folder parentNode = configDAO.getFolder(Node.ROOT_NODE_ID);
-
-		Config config = Config.builder().name("My config 3").parentId(parentNode.getId()).description("description")
+		Node config = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
+				.name("My config 3")
 				.build();
 
-		Config newConfig = configDAO.createConfiguration(config);
+		Node newConfig = nodeDAO.createNode(rootNode.getUniqueId(), config);
 
-		Config configFromDB = configDAO.getConfiguration(newConfig.getId());
+		Node configFromDB = nodeDAO.getNode(newConfig.getUniqueId());
 
 		assertEquals(newConfig, configFromDB);
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testGetConfigForSnapshot() {
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node config = Node.builder()
+				.nodeType(NodeType.CONFIGURATION)
+				.name("My config 3")
+				.build();
+
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
+		
+		List<ConfigPv> configPvs = nodeDAO.getConfigPvs(config.getUniqueId());
+		SnapshotItem item1 = SnapshotItem.builder()
+				.configPv(configPvs.get(0))
+				.value(VDouble.of(7.7, alarm, time, display))
+				.build();
+
+		Node newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		nodeDAO.commitSnapshot(newSnapshot.getUniqueId(), "snapshot name", "user", "comment");
+		
+		config = nodeDAO.getParentNode(newSnapshot.getUniqueId());
+		
+		assertNotNull(config);
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testSaveSnapshot() {
+		Node rootNode = nodeDAO.getRootNode();
 
-		Config config = Config.builder().name("My config 3").parentId(Node.ROOT_NODE_ID)
-				.description("description")
-				.configPvList(Arrays.asList(ConfigPv.builder().pvName("whatever").build())).build();
-
-		config = configDAO.createConfiguration(config);
+		Node config = Node.builder().name("My config 3")
+				.nodeType(NodeType.CONFIGURATION)
+				.build();
+		
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
 		
 		SnapshotItem item1 = SnapshotItem.builder()
-				.configPvId(config.getId())
-				.fetchStatus(true)
+				.configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
 				.value(VDouble.of(7.7, alarm, time, display))
+				.readbackValue(VDouble.of(7.7, alarm, time, display))
 				.build();
 
-		Snapshot newSnapshot = snapshotDAO.savePreliminarySnapshot(config, Arrays.asList(item1));
-		assertEquals(7.7, ((VDouble)newSnapshot.getSnapshotItems().get(0).getValue()).getValue().doubleValue(), 0.01);
+		Node newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		List<SnapshotItem> snapshotItems = nodeDAO.getSnapshotItems(newSnapshot.getUniqueId());
+		assertEquals(7.7, ((VDouble)snapshotItems.get(0).getValue()).getValue().doubleValue(), 0.01);
+		assertEquals(7.7, ((VDouble)snapshotItems.get(0).getReadbackValue()).getValue().doubleValue(), 0.01);
 
-		Snapshot fullSnapshot = snapshotDAO.getSnapshot(newSnapshot.getId(), true);
+		Node fullSnapshot = nodeDAO.getSnapshot(newSnapshot.getUniqueId(), true);
 		assertNull(fullSnapshot);
 
-		List<Snapshot> snapshots = snapshotDAO.getSnapshots(config.getId());
+		List<Node> snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 		assertTrue(snapshots.isEmpty());
 
-		snapshotDAO.commitSnapshot(newSnapshot.getId(), "snapshot name", "user", "comment");
+		nodeDAO.commitSnapshot(newSnapshot.getUniqueId(), "snapshot name", "user", "comment");
 
-		fullSnapshot = snapshotDAO.getSnapshot(newSnapshot.getId(), true);
-		assertEquals(1, fullSnapshot.getSnapshotItems().size());
+		fullSnapshot = nodeDAO.getSnapshot(newSnapshot.getUniqueId(), true);
+		assertNotNull(fullSnapshot);
+		snapshotItems = nodeDAO.getSnapshotItems(newSnapshot.getUniqueId());
+		assertEquals(1, snapshotItems.size());
 
-		snapshots = snapshotDAO.getSnapshots(config.getId());
+		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 		assertEquals(1, snapshots.size());
 
-		snapshotDAO.deleteSnapshot(newSnapshot.getId());
+		nodeDAO.deleteNode(newSnapshot.getUniqueId());
 
-		snapshots = snapshotDAO.getSnapshots(config.getId());
+		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 		assertTrue(snapshots.isEmpty());
 		
+		List<ConfigPv> configPvs = nodeDAO.getConfigPvs(config.getUniqueId());
 		item1 = SnapshotItem.builder()
-				.configPvId(config.getId())
-				.fetchStatus(false)
+				.configPv(configPvs.get(0))
 				.build();
 		
-		newSnapshot = snapshotDAO.savePreliminarySnapshot(config, Arrays.asList(item1));
+		newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
 		
-		snapshotDAO.commitSnapshot(newSnapshot.getId(), "snapshot name", "user", "comment");
+		nodeDAO.commitSnapshot(newSnapshot.getUniqueId(), "snapshot name", "user", "comment");
 
 	}
 	
 	@Test(expected = SnapshotNotFoundException.class)
+	@FlywayTest(invokeCleanDB = true)
 	public void testCommitNonExistingSnapshot() {
-		snapshotDAO.commitSnapshot(-1, "", "", "");
+		nodeDAO.commitSnapshot("a", "", "", "");
 	}
 
-	@Test(expected = NodeNotFoundException.class)
+	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testGetSnapshotsNoSnapshots() {
 
-		snapshotDAO.getSnapshots(-1);
+		assertTrue(nodeDAO.getSnapshots("a").isEmpty());
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testGetRootsParent() {
+		Node rootNode = nodeDAO.getRootNode();
+		Node parent = nodeDAO.getParentNode(rootNode.getUniqueId());
+		
+		assertEquals(rootNode.getUniqueId(), parent.getUniqueId());
 	}
 
 	@Test(expected = NodeNotFoundException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testMoveNodeIllegalSource() {
 
-		Folder folderFromClient = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID)
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node folderFromClient = Node.builder().name("SomeFolder")
 				.build();
 
-		Folder folder1 = configDAO.createFolder(folderFromClient);
+		Node folder1 = nodeDAO.createNode(rootNode.getUniqueId(), folderFromClient);
 
-		configDAO.moveNode(-1, folder1.getId(), "username");
+		nodeDAO.moveNode("a", folder1.getUniqueId(), "username");
 	}
 	
 	
@@ -447,47 +503,49 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testMoveNodeIllegalTarget() {
 
-		Folder folderFromClient = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID)
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node folderFromClient = Node.builder().name("SomeFolder")
 				.build();
 
-		Folder folder1 = configDAO.createFolder(folderFromClient);
+		Node folder1 = nodeDAO.createNode(rootNode.getUniqueId(), folderFromClient);
 
-		configDAO.moveNode(folder1.getId(), -1, "username");
+		nodeDAO.moveNode(folder1.getUniqueId(), "a", "username");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testMoveNodeNameClash1() {
 
-		Folder root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		Node rootNode = nodeDAO.getRootNode();
 
-		Folder folder1 = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build();
+		Node folder1 = Node.builder().name("SomeFolder").build();
 
-		folder1 = configDAO.createFolder(folder1);
+		folder1 = nodeDAO.createNode(rootNode.getUniqueId(), folder1);
 
-		Folder folder2 = Folder.builder().name("SomeFolder").parentId(folder1.getId()).build();
+		Node folder2 = Node.builder().name("SomeFolder").build();
 
-		folder2 = configDAO.createFolder(folder2);
+		folder2 = nodeDAO.createNode(rootNode.getUniqueId(), folder2);
 
-		configDAO.createConfiguration(Config.builder().name("Config").description("Desc").parentId(folder2.getId()).build());
+		nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().nodeType(NodeType.CONFIGURATION).name("Config").build());
 
-		configDAO.moveNode(folder2.getId(), root.getId(), "username");
+		nodeDAO.moveNode(folder2.getUniqueId(), rootNode.getUniqueId(), "username");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testMoveNodeNameClash2() {
 
-		Folder root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		Node rootNode = nodeDAO.getRootNode();
 
-		configDAO.createConfiguration(Config.builder().name("Config").description("Desc").parentId(Node.ROOT_NODE_ID).build());
+		nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().nodeType(NodeType.CONFIGURATION).name("Config").build());
 
-		Folder folder1 = configDAO.createFolder(Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build());
+		Node folder = nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("SomeFolder").build());
 
-		Config config2 = configDAO
-				.createConfiguration(Config.builder().name("Config").description("Desc").parentId(folder1.getId()).build());
+		Node config2 = nodeDAO
+				.createNode(folder.getUniqueId(), Node.builder().nodeType(NodeType.CONFIGURATION).name("Config").build());
 
-		configDAO.moveNode(config2.getId(), root.getId(), "username");
+		nodeDAO.moveNode(config2.getUniqueId(), rootNode.getUniqueId(), "username");
 
 	}
 
@@ -495,279 +553,364 @@ public class DAOTest {
 	@FlywayTest(invokeCleanDB = true)
 	public void testMoveNode()  throws Exception{
 
-		Folder root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		Node rootNode = nodeDAO.getRootNode();
 
-		Folder folder1 = Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build();
+		Node folder1 = Node.builder().name("SomeFolder").build();
 
-		folder1 = configDAO.createFolder(folder1);
-
-		root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		// Create folder1 in the root folder
+		folder1 = nodeDAO.createNode(rootNode.getUniqueId(), folder1);
 
 		// Root node has one child node
-		assertEquals(1, root.getChildNodes().size());
+		assertEquals(1, nodeDAO.getChildNodes(rootNode.getUniqueId()).size());
 
-		Folder folder2 = Folder.builder().name("SomeFolder2").parentId(folder1.getId()).userName("dummy").build();
+		Node folder2 = Node.builder().name("SomeFolder2").userName("dummy").build();
 
-		folder2 = configDAO.createFolder(folder2);
+		// Create folder2 in the folder1 folder
+		folder2 = nodeDAO.createNode(folder1.getUniqueId(), folder2);
 
-		folder1 = configDAO.getFolder(folder1.getId());
+		// folder1 has one child node
+		assertEquals(1, nodeDAO.getChildNodes(folder1.getUniqueId()).size());
 
-		// SomeFolder has one child node
-		assertEquals(1, folder1.getChildNodes().size());
-
-		configDAO.createConfiguration(Config.builder().name("Config").description("Desc").parentId(folder2.getId()).build());
+		// Create a configuration node in folder2
+		nodeDAO.createNode(folder2.getUniqueId(), Node.builder().nodeType(NodeType.CONFIGURATION).name("Config").build());
 
 		Date lastModifiedOfSource = folder1.getLastModified();
-		Date lastModifiedOfTarget = root.getLastModified();
-		
-		Date lastModified = folder2.getLastModified();
-
+		Date lastModifiedOfTarget = rootNode.getLastModified();
+	
 		Thread.sleep(100);
 		
-		folder2 = configDAO.moveNode(folder2.getId(), Node.ROOT_NODE_ID, "username");
+		// Move folder2 from folder1 to root folder
+		rootNode = nodeDAO.moveNode(folder2.getUniqueId(), rootNode.getUniqueId(), "username");
 		
-		assertNotEquals(lastModified, folder2.getLastModified());
-
-		root = configDAO.getFolder(Node.ROOT_NODE_ID);
-		folder1 = configDAO.getFolder(folder1.getId());
+		folder2 = nodeDAO.getNode(folder2.getUniqueId());
 
 		// After move the target's last_modified should have been updated
-		assertTrue(root.getLastModified().getTime() > lastModifiedOfTarget.getTime());
+		assertTrue(rootNode.getLastModified().getTime() > lastModifiedOfTarget.getTime());
 
 		// After move the source's last_modified should have been updated
-		assertTrue(folder1.getLastModified().getTime() > lastModifiedOfSource.getTime());
+		assertTrue(folder2.getLastModified().getTime() > lastModifiedOfSource.getTime());
 		
-		// After the move, the target's username should have been updated
-		assertEquals("username", folder1.getUserName());
-
-		root = configDAO.getFolder(Node.ROOT_NODE_ID);
+		// After the move, the target's (root folder) username should have been updated
+		assertEquals("username", rootNode.getUserName());
 
 		// After move root node has two child nodes
-		assertEquals(2, root.getChildNodes().size());
+		assertEquals(2, nodeDAO.getChildNodes(rootNode.getUniqueId()).size());
 
-		folder1 = configDAO.getFolder(folder1.getId());
-		// After mode SomeFolder has no child nodes
-		assertTrue(folder1.getChildNodes().isEmpty());
-
+		folder1 = nodeDAO.getNode(folder1.getUniqueId());
+		// After move folder1 has no child nodes
+		assertTrue(nodeDAO.getChildNodes(folder1.getUniqueId()).isEmpty());
 	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testUpdateConfig() throws Exception{
 
-		Folder folder1 = configDAO.createFolder(Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build());
+		Node rootNode = nodeDAO.getRootNode();
+
+		nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("SomeFolder").build());
 
 		ConfigPv configPv1 = ConfigPv.builder().pvName("configPv1").build();
 		ConfigPv configPv2 = ConfigPv.builder().pvName("configPv2").build();
 
-		Config config = Config.builder().name("My config").parentId(folder1.getId()).description("description")
-				.name("name")
-				.configPvList(Arrays.asList(configPv1, configPv2)).build();
+		Node config = Node.builder().name("My config")
+				.nodeType(NodeType.CONFIGURATION)
+				.name("name").build();
 
-		config = configDAO.createConfiguration(config);
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(configPv1, configPv2));
 		
 		Date lastModified = config.getLastModified();
 		
 		SnapshotItem item1 = SnapshotItem.builder()
-				.configPvId(config.getId())
-				.fetchStatus(true)
+				.configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
 				.value(VDouble.of(7.7, alarm, time, display))
 				.build();
 		
 		SnapshotItem item2 = SnapshotItem.builder()
-				.configPvId(config.getId())
-				.fetchStatus(true)
+				.configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
 				.value(VInt.of(7, alarm, time, display))
 				.build();
 
-		Snapshot snapshot = snapshotDAO.savePreliminarySnapshot(config, Arrays.asList(item1, item2));
+		Node snapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1, item2));
+		
+		List<SnapshotItem> snapshotItems = nodeDAO.getSnapshotItems(snapshot.getUniqueId());
 
-		assertEquals(7.7, ((VDouble)snapshot.getSnapshotItems().get(0).getValue()).getValue().doubleValue(), 0.01);
-		assertEquals(7, ((VInt)snapshot.getSnapshotItems().get(1).getValue()).getValue().intValue());
+		assertEquals(7.7, ((VDouble)snapshotItems.get(0).getValue()).getValue().doubleValue(), 0.01);
+		assertEquals(7, ((VInt)snapshotItems.get(1).getValue()).getValue().intValue());
 
-		Snapshot fullSnapshot = snapshotDAO.getSnapshot(snapshot.getId(), true);
+		Node fullSnapshot = nodeDAO.getSnapshot(snapshot.getUniqueId(), true);
 
 		assertNull(fullSnapshot);
 
-		List<Snapshot> snapshots = snapshotDAO.getSnapshots(config.getId());
+		List<Node> snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 
 		assertTrue(snapshots.isEmpty());
 
-		snapshotDAO.commitSnapshot(snapshot.getId(), "snapshot name", "user", "comment");
+		nodeDAO.commitSnapshot(snapshot.getUniqueId(), "snapshot name", "user", "comment");
 
-		fullSnapshot = snapshotDAO.getSnapshot(snapshot.getId(), false);
+		fullSnapshot = nodeDAO.getSnapshot(snapshot.getUniqueId(), false);
 
 		assertNotNull(fullSnapshot);
-		assertEquals(2, fullSnapshot.getSnapshotItems().size());
-
-		Config updatedConfig = Config.builder().id(config.getId()).name("My updated config")
-				.parentId(folder1.getId()).description("Updated description")
-				.configPvList(Arrays.asList(configPv1)).build();
+		assertEquals(2, nodeDAO.getSnapshotItems(fullSnapshot.getUniqueId()).size());
 		
+		
+		config.putProperty("description", "Updated description");
+	
 		lastModified = config.getLastModified();
 		
 		Thread.sleep(100);
-		updatedConfig = configDAO.updateConfiguration(updatedConfig);
+		Node updatedConfig = nodeDAO.updateConfiguration(config, Arrays.asList(configPv1, configPv2));
 		
 		assertNotEquals(lastModified, updatedConfig.getLastModified());
-
-		assertEquals("My updated config", updatedConfig.getName());
 		
 		// Verify that last modified time has been updated
 		assertTrue(updatedConfig.getLastModified().getTime() > lastModified.getTime());
 		
 		// Verify the list of PVs
-		assertEquals(1, updatedConfig.getConfigPvList().size());
+		assertEquals(2, nodeDAO.getConfigPvs(config.getUniqueId()).size());
 		
 		ConfigPv configPv3 = ConfigPv.builder().pvName("configPv3").build();
-		
-		updatedConfig = Config.builder().id(config.getId()).name("My updated config")
-				.parentId(folder1.getId()).description("Updated description")
-				.configPvList(Arrays.asList(configPv1, configPv2, configPv3)).build();
-		
-		updatedConfig = configDAO.updateConfiguration(updatedConfig);
+			
+		updatedConfig = nodeDAO.updateConfiguration(config, Arrays.asList(configPv1, configPv2, configPv3));
 		
 		// Verify the list of PVs
-		assertEquals(3, updatedConfig.getConfigPvList().size());
+		assertEquals(3, nodeDAO.getConfigPvs(config.getUniqueId()).size());
 
 	}
 	
-	@Test(expected = NodeNotFoundException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void testUpdateNonExistinConfiguration() {
 		
-		configDAO.updateConfiguration(Config.builder().id(-1).build());
+		nodeDAO.updateConfiguration(Node.builder().id(-1).build(), null);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	public void testUpdateNodethatIsNotConfiguration() {
-		
-		configDAO.updateConfiguration(Config.builder().id(Node.ROOT_NODE_ID).build());
+		nodeDAO.updateConfiguration(Node.builder().id(Node.ROOT_NODE_ID).build(), null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
 	public void testDeleteRootNode() {
 
+		Node rootNode = nodeDAO.getRootNode();
+
 		// Try to delete root folder (id = 0)
-		configDAO.deleteNode(Node.ROOT_NODE_ID);
+		nodeDAO.deleteNode(rootNode.getUniqueId());
 
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testGetConfigThatIsNotAConfig() {
-
-		configDAO.getConfiguration(Node.ROOT_NODE_ID);
-
-	}
-	
 	@Test
 	public void testNonExistingFolder() {
-
-		assertNull(configDAO.getFolder(-1));
-
+		assertNull(nodeDAO.getNode("a"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@FlywayTest(invokeCleanDB = true)
 	public void testGetFolderThatIsNotAFolder() {
+		
 
-		Folder folder1 = configDAO.createFolder(Folder.builder().name("SomeFolder").parentId(Node.ROOT_NODE_ID).build());
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node folder1 = nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("SomeFolder").build());
 
 		ConfigPv configPv1 = ConfigPv.builder().pvName("configPv1").build();
 
-		Config config = Config.builder().name("My config").parentId(folder1.getId()).description("description")
-				.configPvList(Arrays.asList(configPv1)).build();
+		Node config = Node.builder()
+				.name("My config")
+				.nodeType(NodeType.CONFIGURATION)
+				.build();
 
-		config = configDAO.createConfiguration(config);
+		config = nodeDAO.createNode(folder1.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(configPv1));
 
-		configDAO.getFolder(config.getId());
+		assertNotEquals(NodeType.FOLDER, nodeDAO.getNode(config.getUniqueId()).getNodeType());
 
 	}
 
 	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testNoNameClash1() {
+		
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node n1 = Node.builder().id(1).name("n1").build();
+		n1 = nodeDAO.createNode(rootNode.getUniqueId(), n1);
+		Node n2 = Node.builder().nodeType(NodeType.CONFIGURATION).id(2).name("n1").build();
+		n2 = nodeDAO.createNode(rootNode.getUniqueId(), n2);
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testNoNameClash() {
+		
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node n1 = Node.builder().id(1).name("n1").build();
+		n1 = nodeDAO.createNode(rootNode.getUniqueId(), n1);
+		Node n2 = Node.builder().id(2).name("n2").build();
+		n2 = nodeDAO.createNode(rootNode.getUniqueId(), n2);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	@FlywayTest(invokeCleanDB = true)
 	public void testNameClash() {
+		
+		Node rootNode = nodeDAO.getRootNode();
 
-		Node n1 = Folder.builder().name("n1").build();
-		Node n2 = Folder.builder().name("n1").build();
-		Node n3 = Folder.builder().name("n3").build();
-
-		ConfigJdbcDAO jdbcDAO = (ConfigJdbcDAO) configDAO;
-
-		assertTrue(jdbcDAO.doesNameClash(n1, Arrays.asList(n2, n3)));
-		assertFalse(jdbcDAO.doesNameClash(n1, Arrays.asList(n3)));
-
-		Node n4 = Config.builder().name("n1").build();
-
-		assertFalse(jdbcDAO.doesNameClash(n1, Arrays.asList(n4)));
-	}
-	
-	@Test(expected = IllegalArgumentException.class)
-	public void testRenameRootFolder() {
-		configDAO.renameNode(Node.ROOT_NODE_ID, null, "username");
+		Node n1 = Node.builder().id(1).name("n1").build();
+		n1 = nodeDAO.createNode(rootNode.getUniqueId(), n1);
+		Node n2 = Node.builder().id(2).name("n1").build();
+		n2 = nodeDAO.createNode(rootNode.getUniqueId(), n2);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
-	public void testRenameFolderNameAlreadyExists() {
-			
-		configDAO.createFolder(Folder.builder().name("Folder1").parentId(Node.ROOT_NODE_ID).build());
+	public void testUpdateRootNode() {
+		Node rootNode = nodeDAO.getRootNode();
 		
-		Folder folder2 = configDAO.createFolder(Folder.builder().name("Folder2").parentId(Node.ROOT_NODE_ID).build());
-		
-		configDAO.renameNode(folder2.getId(), "Folder1", "username");
+		nodeDAO.updateNode(rootNode);
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
 	@FlywayTest(invokeCleanDB = true)
-	public void testRenameConfigNameAlreadyExists() {
-			
-		configDAO.createConfiguration(Config.builder().description("description")
-				.name("Config1").parentId(Node.ROOT_NODE_ID).build());
+	public void testUpdateNodeInvalidNewName() {
 		
-		Config config2 = configDAO.createConfiguration(Config.builder().
-				description("description").name("Config2").parentId(Node.ROOT_NODE_ID).build());
+		Node rootNode = nodeDAO.getRootNode();
 		
-		configDAO.renameNode(config2.getId(), "Config1", "username");
+		nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("a").build());
+		Node childNode2 = nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("b").build());
+		
+		childNode2.setName("a");
+		
+		nodeDAO.updateNode(childNode2);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	@FlywayTest(invokeCleanDB = true)
+	public void testUpdateNodeChangeNodeType() {
+		
+		Node rootNode = nodeDAO.getRootNode();
+		
+		nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("a").build());
+		Node childNode2 = nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("b").build());
+		
+		childNode2.setNodeType(NodeType.CONFIGURATION);
+		
+		nodeDAO.updateNode(childNode2);
 	}
 	
 	@Test
 	@FlywayTest(invokeCleanDB = true)
-	public void testRenameFolder(){
-			
-		Folder folder1 = configDAO.createFolder(Folder.builder()
-				.userName("dummy")
-				.name("Folder1").parentId(Node.ROOT_NODE_ID).build());
+	public void testUpdateNode() {
+		Node rootNode = nodeDAO.getRootNode();
 		
-		Date lastModified = folder1.getLastModified();
+		Map<String, String> props = new HashMap<>();
+		props.put("a", "b");
 		
-		configDAO.createConfiguration(Config.builder().description("whatever")
-				.name("Config1").parentId(Node.ROOT_NODE_ID).build());
+		Node childNode2 = nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().name("b").userName("u1").properties(props).build());
 		
-		configDAO.renameNode(folder1.getId(), "NewName", "username");
+		childNode2.setName("c");
+		Map<String, String> props2 = new HashMap<>();
+		props2.putAll(props);
+		props2.put("aa",  "bb");
 		
-		folder1 = configDAO.getFolder(folder1.getId());
+		childNode2.setProperties(props2);
 		
-		assertTrue(folder1.getLastModified().getTime() > lastModified.getTime());
-		assertEquals("username", folder1.getUserName());
+		childNode2 = nodeDAO.updateNode(childNode2);
 		
+		assertEquals(2, childNode2.getProperties().size());
+		assertNotNull(childNode2.getProperty("aa"));
+		assertNotNull(childNode2.getProperty("a"));
+		
+		Map<String, String> props3 = new HashMap<>();
+		props3.put("x", "z");
+		
+		childNode2.setProperties(props3);
+		
+		childNode2 = nodeDAO.updateNode(childNode2);
+		
+		assertEquals(1, childNode2.getProperties().size());
+		assertNull(childNode2.getProperty("aa"));
+		assertNull(childNode2.getProperty("a"));
+		assertNotNull(childNode2.getProperty("x"));
+	}
+	
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testTagSnapshotAsGolden(){
+		
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node config = Node.builder().name("My config 3")
+				.nodeType(NodeType.CONFIGURATION)
+				.build();
+
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
+		
+		SnapshotItem item1 = SnapshotItem.builder()
+				.configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
+				.value(VDouble.of(7.7, alarm, time, display))
+				.build();
+
+		Node newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		nodeDAO.commitSnapshot(newSnapshot.getUniqueId(), "snapshot name", "user", "comment");
+
+		Node anotherSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		nodeDAO.commitSnapshot(anotherSnapshot.getUniqueId(), "snapshot name 2", "user", "comment");
+		
+		List<Node> snapshots = nodeDAO.getSnapshots(config.getUniqueId());
+		assertEquals(2, snapshots.size());
+		
+		nodeDAO.tagAsGolden(newSnapshot.getUniqueId());
+	
+		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
+		
+		int goldenCount = 0;
+		
+		for(Node snapshot : snapshots) {
+			if(snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
+				goldenCount++;
+			}
+		}
+		
+		assertEquals(1, goldenCount);
+		goldenCount = 0;
+		
+		nodeDAO.tagAsGolden(anotherSnapshot.getUniqueId());
+		for(Node snapshot : snapshots) {
+			if(snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
+				goldenCount++;
+			}
+		}
+		
+		assertEquals(1, goldenCount);
+	}
+	
+	@Test(expected = RuntimeException.class)
+	@FlywayTest(invokeCleanDB = true)
+	public void testUniqueKeyOnNode() {
+		
+		Node root = nodeDAO.getRootNode();
+		
+		nodeDAO.createNode(root.getUniqueId(), Node.builder().uniqueId("b").name("n1").userName("g").build());
+		nodeDAO.createNode(root.getUniqueId(), Node.builder().uniqueId("b").name("n2").userName("g").build());
 	}
 	
 	@Test
 	@FlywayTest(invokeCleanDB = true)
-	public void testCreatePriliminarySnapshot() {
-		Config config = configDAO.createConfiguration(Config.builder()
-				.description("description")
-				.name("Config1")
-				.parentId(Node.ROOT_NODE_ID)
-				.configPvList(Arrays.asList(ConfigPv.builder()
-						.pvName("pvName")
-						.provider(Provider.ca)
-						.build()))
-				.build());
+	public void testSetRootNodeProperty() {
 		
-		Snapshot snapshot = snapshotDAO.createPreliminarySnapshot(config.getId());
+		Node rootNode = nodeDAO.getRootNode();
 		
-		assertEquals(config.getId(), snapshot.getConfigId());
-		assertTrue(snapshot.getId() != 0);
+		Map<String, String> props = new HashMap<>();
+		props.put("root", "true");
+		
+		Node node = nodeDAO.createNode(rootNode.getUniqueId(), Node.builder().properties(props).name("a").build());
+		
+		assertNull(node.getProperty("root"));
 	}
+	
 }

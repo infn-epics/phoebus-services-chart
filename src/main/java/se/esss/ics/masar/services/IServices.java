@@ -19,37 +19,45 @@ package se.esss.ics.masar.services;
 
 import java.util.List;
 
-import se.esss.ics.masar.model.Config;
-import se.esss.ics.masar.model.Folder;
+import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Node;
-import se.esss.ics.masar.model.Snapshot;
+import se.esss.ics.masar.model.SnapshotItem;
+
 
 public interface IServices {
 	
-	public Folder createFolder(Folder folder);
+	public Node createNode(String parentsUniqueId, Node node);
 	
-	public Folder getFolder(int nodeId);
+	public Node getNode(String nodeId);
+	
+	public List<Node> getChildNodes(String parentsUniqueId);
 		
-	public Config createNewConfiguration(Config configuration);
+	//public Node createNewConfiguration(String parentsUniqueId, Node configNode, List<ConfigPv> configPvList);
 	
-	public Config getConfiguration(int nodeId);
-			
-	public Snapshot takeSnapshot(int configId);
+	public List<ConfigPv> getConfigPvs(String configUniqueId);
+				
+	public Node takeSnapshot(String configUniqueId);
 	
-	public Snapshot commitSnapshot(int snapshotId, String snapshotName, String userName, String comment);
+	public void commitSnapshot(String snapshotUniqueId, String snapshotName, String userName, String comment);
 	
-	public List<Snapshot> getSnapshots(int configId);
+	public List<Node> getSnapshots(String configUniqueId);
 	
-	public Snapshot getSnapshot(int snapshotId);
+	public Node getSnapshot(String snapshotUniqueId);
+	
+	public List<SnapshotItem> getSnapshotItems(String snapshotUniqueId);
 		
-	public void deleteSnapshot(int snapshotId);
+	public Node moveNode(String uniqueNodeId, String targetUniqueId, String userName);
 	
-	public Folder moveNode(int nodeId, int targetNodeId, String userName);
+	public void deleteNode(String uniqueNodeId);
 	
-	public void deleteNode(int nodeId);
+	public Node updateConfiguration(Node configToUpdate, List<ConfigPv> configPvList);
 	
-	public Config updateConfiguration(Config config);
+	public Node updateNode(Node nodeToUpdate);
 	
-	public Node renameNode(int nodeId, String name, String userName);
+	public Node tagSnapshotAsGolden(String snapshotId);
+	
+	public Node getRootNode();
+	
+	public Node getParentNode(String uniqueNodeId);
 
 }

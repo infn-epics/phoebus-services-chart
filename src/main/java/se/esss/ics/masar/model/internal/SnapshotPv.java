@@ -47,13 +47,13 @@ public class SnapshotPv {
 	private AlarmSeverity alarmSeverity;
 	private AlarmStatus alarmStatus;
 	@Builder.Default
-	private String alarmName = "NO_NAME";
+	private String alarmName = AlarmStatus.NONE.toString();
 	private long time;
 	private int timens;
 	private String value;
-	private boolean fetchStatus;
 	private ConfigPv configPv;
 	private SnapshotPvDataType dataType;
 	private String sizes;
-	
+	@Builder.Default
+	private boolean readback = false;
 }

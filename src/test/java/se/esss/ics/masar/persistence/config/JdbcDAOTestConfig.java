@@ -27,24 +27,17 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
-import se.esss.ics.masar.persistence.dao.impl.ConfigJdbcDAO;
-import se.esss.ics.masar.persistence.dao.impl.SnapshotJdbcDAO;
+import se.esss.ics.masar.persistence.dao.NodeDAO;
+import se.esss.ics.masar.persistence.dao.impl.NodeJdbcDAO;
 
 @Configuration
 public class JdbcDAOTestConfig {
 
 
 	@Bean
-	public ConfigDAO configDAO() {
+	public NodeDAO nodeDAO() {
 
-		return new ConfigJdbcDAO();
-	}
-	
-	@Bean
-	public SnapshotDAO snapshotDAO() {
-		return new SnapshotJdbcDAO();
+		return new NodeJdbcDAO();
 	}
 	
 	@Bean

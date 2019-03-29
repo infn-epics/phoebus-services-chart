@@ -31,7 +31,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import se.esss.ics.masar.epics.IEpicsService;
 import se.esss.ics.masar.epics.config.EpicsServiceTestConfig;
 import se.esss.ics.masar.epics.exception.PVReadException;
-import se.esss.ics.masar.model.Config;
 import se.esss.ics.masar.model.ConfigPv;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -49,9 +48,8 @@ public class EpicsServiceTest {
 				.pvName("channelName")
 				.build();
 		
-		Config config = Config.builder().configPvList(Arrays.asList(configPv)).build();
 		
-		epicsService.readPvs(config);
+		epicsService.readPvs(Arrays.asList(configPv));
 
 	}
 
@@ -60,10 +58,8 @@ public class EpicsServiceTest {
 		ConfigPv configPv = ConfigPv.builder()
 				.pvName("badChannelName")
 				.build();
-		
-		Config config = Config.builder().configPvList(Arrays.asList(configPv)).build();
-		
-		epicsService.readPvs(config);
+				
+		epicsService.readPvs(Arrays.asList(configPv));
 
 	}
 	
@@ -80,12 +76,7 @@ public class EpicsServiceTest {
 		ConfigPv configPv3 = ConfigPv.builder()
 				.pvName("badChannelName")
 				.build();
-		
-		
-		Config config = Config.builder().configPvList(Arrays.asList(configPv1, configPv2, configPv3)).build();
-		
-		epicsService.readPvs(config);
-		
-		
+			
+		epicsService.readPvs(Arrays.asList(configPv1, configPv2, configPv3));
 	}
 }

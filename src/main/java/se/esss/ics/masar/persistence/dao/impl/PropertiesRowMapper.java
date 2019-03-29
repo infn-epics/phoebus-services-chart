@@ -19,25 +19,21 @@ package se.esss.ics.masar.persistence.dao.impl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.ResultSetExtractor;
 
-import se.esss.ics.masar.model.Config;
-
-public class ConfigRowMapper implements RowMapper<Config> {
+public class PropertiesRowMapper implements ResultSetExtractor<Map<String, String>> {
 
 	@Override
-	public Config mapRow(ResultSet resultSet, int rowIndex) throws SQLException {
+	public Map<String, String> extractData(ResultSet resultSet) throws SQLException {
 		
-		return Config.builder()
-				.description(resultSet.getString("description"))
-				.id(resultSet.getInt("id"))
-				.name(resultSet.getString("name"))
-				.created(resultSet.getTimestamp("created"))
-				.lastModified(resultSet.getTimestamp("last_modified"))
-				.userName(resultSet.getString("username"))
-				.build();
+		Map<String, String> properties = new HashMap<>();
+		while(resultSet.next()) {
+			properties.put(resultSet.getString("key"), resultSet.getString("value"));
+		}
 		
-		
+		return properties;
 	}
 }

@@ -24,8 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import se.esss.ics.masar.epics.IEpicsService;
-import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
+import se.esss.ics.masar.persistence.dao.NodeDAO;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.impl.Services;
 
@@ -38,13 +37,8 @@ public class ServicesTestConfig {
 	}
 	
 	@Bean
-	public ConfigDAO configDAO() {
-		return mock(ConfigDAO.class);
-	}
-	
-	@Bean
-	public SnapshotDAO snapshotDAO() {
-		return mock(SnapshotDAO.class);
+	public NodeDAO nodeDAO() {
+		return mock(NodeDAO.class);
 	}
 	
 	@Bean

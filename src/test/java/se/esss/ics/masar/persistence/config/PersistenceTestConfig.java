@@ -22,33 +22,25 @@ import org.flywaydb.core.Flyway;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
-import se.esss.ics.masar.persistence.dao.impl.ConfigJdbcDAO;
-import se.esss.ics.masar.persistence.dao.impl.SnapshotJdbcDAO;
+import se.esss.ics.masar.persistence.dao.NodeDAO;
+import se.esss.ics.masar.persistence.dao.impl.NodeJdbcDAO;
 
 @Configuration
 public class PersistenceTestConfig {
 
 
 	@Bean
-	public ConfigDAO configDAO() {
+	public NodeDAO nodeDAO() {
 
-		return new ConfigJdbcDAO();
+		return new NodeJdbcDAO();
 	}
-	
-	@Bean
-	public SnapshotDAO snapshotDAO() {
-		return new SnapshotJdbcDAO();
-	}
-
 	
 	@Bean("flyway")
 	public Flyway flyway() {
 		Flyway flyway = new Flyway();
 		
 		flyway.setDataSource("jdbc:h2:nio:./db/h2.db", "", "");
-		flyway.setLocations("db/migration/h2");
+		flyway.setLocations("db/migration/h2", "db/migration/common");
 		flyway.setValidateOnMigrate(true);
 		flyway.setOutOfOrder(false);
 		

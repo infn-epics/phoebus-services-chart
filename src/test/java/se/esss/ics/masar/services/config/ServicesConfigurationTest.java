@@ -31,8 +31,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import se.esss.ics.masar.epics.IEpicsService;
 import se.esss.ics.masar.epics.config.EpicsConfiguration;
 import se.esss.ics.masar.persistence.config.PersistenceConfiguration;
-import se.esss.ics.masar.persistence.dao.ConfigDAO;
-import se.esss.ics.masar.persistence.dao.SnapshotDAO;
+import se.esss.ics.masar.persistence.dao.NodeDAO;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextHierarchy({ @ContextConfiguration(classes = { ServicesConfiguration.class, PersistenceConfiguration.class, EpicsConfiguration.class}) })
@@ -43,15 +42,12 @@ public class ServicesConfigurationTest {
 	private IEpicsService epicsService;
 	
 	@Autowired
-	private ConfigDAO configDAO;
-	
-	@Autowired
-	private SnapshotDAO snapshotDAO;
+	private NodeDAO nodeDAO;
+
 	
 	@Test
 	public void testConfig() {
 		assertNotNull(epicsService);
-		assertNotNull(configDAO);
-		assertNotNull(snapshotDAO);
+		assertNotNull(nodeDAO);
 	}
 }

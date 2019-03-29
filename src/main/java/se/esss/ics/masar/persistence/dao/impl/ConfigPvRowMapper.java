@@ -35,7 +35,9 @@ public class ConfigPvRowMapper implements RowMapper<ConfigPv> {
 				ConfigPv.builder()
 				.id(resultSet.getInt("id"))
 				.pvName(resultSet.getString("name"))
+				.readbackPvName(resultSet.getString("readback_name"))
 				.provider(Provider.valueOf(provider))
+				.readOnly(false)
 				.build();
 	}
 }

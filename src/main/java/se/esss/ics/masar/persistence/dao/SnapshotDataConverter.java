@@ -98,16 +98,22 @@ public class SnapshotDataConverter {
 	
 	protected static final String SCALAR_AS_JSON = "[1]";
 	
-	public static SnapshotItem fromSnapshotPv(SnapshotPv snapshotPv) {
+	public static SnapshotItem fromSnapshotPv(SnapshotPv snapshotPv, SnapshotPv readback) {
+		if(snapshotPv == null) {
+			return null;
+		}
+		
 		SnapshotItem snapshotItem = SnapshotItem.builder()
-				.configPvId(snapshotPv.getConfigPv().getId())
+				.configPv(snapshotPv.getConfigPv())
 				.snapshotId(snapshotPv.getSnapshotId())
-				.fetchStatus(snapshotPv.isFetchStatus())
-				.pvName(snapshotPv.getConfigPv().getPvName())
 				.build();
 	
-		if(snapshotPv.isFetchStatus()) {
+		if(snapshotPv.getValue() != null) {
 			snapshotItem.setValue(toVType(snapshotPv));
+		}
+		
+		if(readback != null) {
+			snapshotItem.setReadbackValue(toVType(readback));
 		}
 	
 		return snapshotItem;

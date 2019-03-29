@@ -632,19 +632,23 @@ public class SnapshotDataConverterTest {
 	public void testFromSnapshotPv() {
 
 		SnapshotPv snapshotPv = SnapshotPv.builder().alarmName("name").alarmSeverity(AlarmSeverity.NONE).alarmStatus(AlarmStatus.NONE)
-				.snapshotId(2).dataType(SnapshotPvDataType.LONG).fetchStatus(true).time(1000L).timens(7000).value("[1]").sizes("[1]").configPv(ConfigPv.builder().id(1).build()).build();
-		SnapshotItem snapshotItem = SnapshotDataConverter.fromSnapshotPv(snapshotPv);
+				.snapshotId(2).dataType(SnapshotPvDataType.LONG).time(1000L).timens(7000).value("[1]").sizes("[1]").configPv(ConfigPv.builder().id(1).build()).build();
+		SnapshotPv readback = SnapshotPv.builder().alarmName("name").alarmSeverity(AlarmSeverity.NONE).alarmStatus(AlarmStatus.NONE)
+				.snapshotId(2).dataType(SnapshotPvDataType.LONG).time(1000L).timens(7000).value("[1]").sizes("[1]").configPv(ConfigPv.builder().id(1).build()).build();
+		SnapshotItem snapshotItem = SnapshotDataConverter.fromSnapshotPv(snapshotPv, readback);
 		
 		assertEquals(2, snapshotItem.getSnapshotId());
-		assertEquals(1, snapshotItem.getConfigPvId());
+		assertEquals(1, snapshotItem.getConfigPv().getId());
+		assertNotNull(snapshotItem.getReadbackValue());
 		
-		snapshotPv = SnapshotPv.builder().fetchStatus(false).snapshotId(1).configPv(ConfigPv.builder().id(1).build()).build();
+		snapshotPv = SnapshotPv.builder().snapshotId(1).configPv(ConfigPv.builder().id(1).build()).build();
 		
-		snapshotItem = SnapshotDataConverter.fromSnapshotPv(snapshotPv);
+		snapshotItem = SnapshotDataConverter.fromSnapshotPv(snapshotPv, readback);
 		
-		assertFalse(snapshotItem.isFetchStatus());
 		assertNull(snapshotItem.getValue());
 		
+		snapshotItem = SnapshotDataConverter.fromSnapshotPv(snapshotPv, null);
+		assertNull(snapshotItem.getReadbackValue());
 
 	}
 
