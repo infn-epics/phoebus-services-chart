@@ -182,4 +182,9 @@ public class Services implements IServices {
 	public List<SnapshotItem> getSnapshotItems(String snapshotUniqueId){
 		return nodeDAO.getSnapshotItems(snapshotUniqueId);
 	}
+	
+	@Override
+	public ConfigPv updateSingleConfigPv(String currentPvName, String newPvName, String currentReadbackPvName, String newReadbackPvName) {
+		return nodeDAO.updateSingleConfigPv(currentPvName, newPvName, currentReadbackPvName, newReadbackPvName);
+	}
 }

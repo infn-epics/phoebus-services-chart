@@ -267,4 +267,16 @@ public class ConfigurationController extends BaseController {
 	public List<ConfigPv> getConfigPvs(@PathVariable String uniqueNodeId) {
 		return services.getConfigPvs(uniqueNodeId);
 	}
+	
+	@ApiOperation(value = "Updates a ConfigPv with new name and optionally new read-back PV name.", produces = JSON)
+	@PostMapping("/configpv/{pvName}")
+	public ConfigPv updateSingleConfigPv(@PathVariable(required = true) String pvName,
+			@RequestParam(required = true) String newPvName,
+			@RequestParam(required = false) String readbackPvName,
+			@RequestParam(required = false) String newReadbackPvName) {
+			
+		return services.updateSingleConfigPv(pvName, newPvName, readbackPvName, newReadbackPvName);
+	}
+	
+	
 }

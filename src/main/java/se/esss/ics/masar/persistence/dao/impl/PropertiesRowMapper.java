@@ -31,7 +31,7 @@ public class PropertiesRowMapper implements ResultSetExtractor<Map<String, Strin
 		
 		Map<String, String> properties = new HashMap<>();
 		while(resultSet.next()) {
-			properties.put(resultSet.getString("key"), resultSet.getString("value"));
+			properties.put(resultSet.getString("property_name"), resultSet.getString("value"));
 		}
 		
 		return properties;

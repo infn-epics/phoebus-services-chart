@@ -29,10 +29,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.annotations.ApiOperation;
-import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.SnapshotItem;
-import se.esss.ics.masar.model.internal.SnapshotPv;
 import se.esss.ics.masar.services.IServices;
 
 @RestController

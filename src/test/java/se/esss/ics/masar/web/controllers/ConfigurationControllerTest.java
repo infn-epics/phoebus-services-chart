@@ -86,8 +86,6 @@ public class ConfigurationControllerTest {
 	private Node config1;
 
 	private Node snapshot;
-
-	private List<ConfigPv> configPvList;
 	
 	private ObjectMapper objectMapper = new ObjectMapper();
 
@@ -95,10 +93,6 @@ public class ConfigurationControllerTest {
 
 	@Before
 	public void setUp() {
-
-//		Time time = Time.of(Instant.ofEpochSecond(1000, 7000));
-//		Alarm alarm = Alarm.of(AlarmSeverity.NONE, AlarmStatus.NONE, "name");
-//		Display display = Display.none();
 
 		config1 = Node.builder().nodeType(NodeType.CONFIGURATION).uniqueId("a")
 				.userName("myusername").build();
@@ -110,8 +104,6 @@ public class ConfigurationControllerTest {
 
 		rootNode = Node.builder().id(Node.ROOT_NODE_ID).uniqueId("root").name("root").build();
 		
-		configPvList = Arrays.asList(ConfigPv.builder().id(333).provider(Provider.ca).pvName("pvname").build());
-
 	}
 
 	@Test
@@ -413,6 +405,34 @@ public class ConfigurationControllerTest {
 		// Make sure response contains expected data
 		objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<ConfigPv>>() {
 		});
+	}
+	
+	@Test
+	public void testUpdateSingleConfigPv() throws Exception{
+		
+		ConfigPv configPv = ConfigPv.builder()
+				.id(1)
+				.provider(Provider.ca)
+				.pvName("pvname")
+				.build();
+		
+		when(services.updateSingleConfigPv("pvname", "newpvname", null, null)).thenReturn(configPv);
+		MockHttpServletRequestBuilder request = post("/configpv/pvname").param("newPvName", "newpvname");
+		
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+		
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), ConfigPv.class);
+	}
+	
+	@Test
+	public void testUpdateSingleConfigPvIvalidRequest() throws Exception{
+			
+		MockHttpServletRequestBuilder request = post("/configpv/pvname");
+		
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	
 	}
 
 }

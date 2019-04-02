@@ -47,7 +47,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.NodeType;
-import se.esss.ics.masar.model.SnapshotItem;
 import se.esss.ics.masar.persistence.dao.NodeDAO;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.config.ServicesTestConfig;
@@ -292,4 +291,10 @@ public class ServicesTest {
 		assertNotNull(services.getSnapshotItems("a"));
 	}
 	
+	@Test
+	public void testUpdateSingeConfigPv() {
+		when(nodeDAO.updateSingleConfigPv(anyString(), anyString(), anyString(), anyString())).thenReturn(configPvList.get(0));
+		
+		assertNotNull(services.updateSingleConfigPv("a", "b", "c", "d"));
+	}
 }
