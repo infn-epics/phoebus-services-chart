@@ -160,6 +160,10 @@ public class SnapshotDataConverter {
 	
 	public static VType toVType(SnapshotPv snapshotPv) {
 		
+		if(snapshotPv.getValue() == null) {
+			return null;
+		}
+		
 		ObjectMapper objectMapper = new ObjectMapper();
 		
 		boolean isScalar = SCALAR_AS_JSON.equals(snapshotPv.getSizes());

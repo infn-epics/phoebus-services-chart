@@ -371,7 +371,7 @@ public class DAOTest {
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
-	public void testSaveSnapshot() {
+	public void testTakeSnapshot() {
 		Node rootNode = nodeDAO.getRootNode();
 
 		Node config = Node.builder().name("My config 3").nodeType(NodeType.CONFIGURATION).build();
@@ -429,6 +429,54 @@ public class DAOTest {
 	public void testGetSnapshotsNoSnapshots() {
 
 		assertTrue(nodeDAO.getSnapshots("a").isEmpty());
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testGetSnapshotsCommittedNoSnapshots() {
+
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node config = Node.builder().name("My config 3").nodeType(NodeType.CONFIGURATION).build();
+
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
+
+		SnapshotItem item1 = SnapshotItem.builder().configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
+				.value(VDouble.of(7.7, alarm, time, display)).readbackValue(VDouble.of(7.7, alarm, time, display))
+				.build();
+
+		Node newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		List<SnapshotItem> snapshotItems = nodeDAO.getSnapshotItems(newSnapshot.getUniqueId());
+		assertEquals(7.7, ((VDouble) snapshotItems.get(0).getValue()).getValue().doubleValue(), 0.01);
+		assertEquals(7.7, ((VDouble) snapshotItems.get(0).getReadbackValue()).getValue().doubleValue(), 0.01);
+
+		assertTrue(nodeDAO.getSnapshots(config.getUniqueId()).isEmpty());
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testGetSnapshotItemsWithNullPvValues() {
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node config = Node.builder().name("My config 3").nodeType(NodeType.CONFIGURATION).build();
+
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
+
+		SnapshotItem item1 = SnapshotItem.builder().configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
+				.value(VDouble.of(7.7, alarm, time, display))
+				.build();
+		Node newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		List<SnapshotItem> snapshotItems = nodeDAO.getSnapshotItems(newSnapshot.getUniqueId());
+		assertEquals(7.7, ((VDouble) snapshotItems.get(0).getValue()).getValue().doubleValue(), 0.01);
+		assertNull(snapshotItems.get(0).getReadbackValue());
+		
+		item1 = SnapshotItem.builder().configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
+				.build();
+		newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
+		snapshotItems = nodeDAO.getSnapshotItems(newSnapshot.getUniqueId());
+		assertNull(snapshotItems.get(0).getValue());
 	}
 
 	@Test
@@ -844,7 +892,7 @@ public class DAOTest {
 		List<Node> snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 		assertEquals(2, snapshots.size());
 
-		nodeDAO.tagAsGolden(newSnapshot.getUniqueId());
+		nodeDAO.tagAsGolden(newSnapshot.getUniqueId(), true);
 
 		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 
@@ -855,17 +903,26 @@ public class DAOTest {
 				goldenCount++;
 			}
 		}
-
 		assertEquals(1, goldenCount);
+		
 		goldenCount = 0;
-
-		nodeDAO.tagAsGolden(anotherSnapshot.getUniqueId());
+		nodeDAO.tagAsGolden(anotherSnapshot.getUniqueId(), true);
+		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
 		for (Node snapshot : snapshots) {
 			if (snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
 				goldenCount++;
 			}
 		}
-
+		assertEquals(2, goldenCount);
+	
+		goldenCount = 0;
+		nodeDAO.tagAsGolden(anotherSnapshot.getUniqueId(), false);
+		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
+		for (Node snapshot : snapshots) {
+			if (snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
+				goldenCount++;
+			}
+		}
 		assertEquals(1, goldenCount);
 	}
 
@@ -914,6 +971,28 @@ public class DAOTest {
 		assertEquals("pvName2", updatedConfigPv.getPvName());
 		assertEquals("readbackName", updatedConfigPv.getReadbackPvName());
 		
+	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testSaveSnapshot() {
+		Node rootNode = nodeDAO.getRootNode();
+
+		Node config = Node.builder().name("My config 3").nodeType(NodeType.CONFIGURATION).build();
+
+		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
+		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
+
+		SnapshotItem item1 = SnapshotItem.builder().configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
+				.value(VDouble.of(7.7, alarm, time, display)).readbackValue(VDouble.of(7.7, alarm, time, display))
+				.build();
+		
+		Node snapshotNode = nodeDAO.saveSnapshot(config.getUniqueId(), Arrays.asList(item1), "snapshotName", "comment", "userName");
+		
+		List<SnapshotItem> snapshotItems = nodeDAO.getSnapshotItems(snapshotNode.getUniqueId());
+		
+		assertTrue(snapshotItems.size() == 1);
+	
 	}
 
 }

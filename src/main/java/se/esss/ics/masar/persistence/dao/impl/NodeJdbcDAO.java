@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -493,23 +492,33 @@ public class NodeJdbcDAO implements NodeDAO {
 		
 		jdbcTemplate.update("update node set name=?, username=?, last_modified=? where unique_id=?", snapshotName, userName, Timestamp.from(Instant.now()), uniqueNodeId);
 		insertOrUpdateProperty(snapshotNode.getId(), "comment", comment);
+	}
+	
+	@Override
+	public Node saveSnapshot(String parentsUniqueId, List<SnapshotItem> snapshotItems, String snapshotName, String comment, String userName) {
+		Node snapshotNode = savePreliminarySnapshot(parentsUniqueId, snapshotItems);
+		commitSnapshot(snapshotNode.getUniqueId(), snapshotName, userName, comment);
 		
-		//jdbcTemplate.update("update snapshot_node set comment=? where node_id=?", comment, snapshot.getId());
+		return getSnapshot(snapshotNode.getUniqueId(), true);
 	}
 
+	/**
+	 * Retrieves snapshot nodes that have been saved (committed). A saved snapshot records has a non-null user name value.
+	 * @see se.esss.ics.masar.persistence.dao.NodeDAO#getSnapshots(java.lang.String)
+	 */
 	@Override
 	public List<Node> getSnapshots(String uniqueNodeId) {
 		
 		List<Node> snapshots = jdbcTemplate.query("select n.*, nc.ancestor from node as n " +
 				"join node_closure as nc on n.id=nc.descendant " +
-				"where nc.ancestor=(select id from node where unique_id=?) and nc.depth=1", new Object[] { uniqueNodeId }, 
+				"where n.username is not NULL and nc.ancestor=(select id from node where unique_id=?) and nc.depth=1", new Object[] { uniqueNodeId }, 
 				new NodeRowMapper());
 		
 		for(Node snapshot : snapshots) {
 			snapshot.setProperties(getProperties(snapshot.getId()));
 		}
 		
-		return snapshots.stream().filter(n -> n.getProperty("comment") != null).collect(Collectors.toList());
+		return snapshots;
 		
 	}
 	
@@ -529,7 +538,7 @@ public class NodeJdbcDAO implements NodeDAO {
 						+ "where readback=true and snapshot_node_id=(select id from node where unique_id=?)", 
 						new Object[] {snapshotUniqueId}, 
 						new SnapshotPvRowMapper());
-			snapshotItems.add(SnapshotDataConverter.fromSnapshotPv(snapshotPv.getValue() == null ? null : snapshotPv, readbacks.isEmpty() ? null : readbacks.get(0)));
+			snapshotItems.add(SnapshotDataConverter.fromSnapshotPv(snapshotPv, readbacks.isEmpty() ? null : readbacks.get(0)));
 		}
 		
 		return snapshotItems;
@@ -558,6 +567,7 @@ public class NodeJdbcDAO implements NodeDAO {
 
 		for (SnapshotItem snapshotItem : snapshotItems) {
 			params.put("config_pv_id", snapshotItem.getConfigPv().getId());
+			params.put("readback", 0);
 			if (snapshotItem.getValue() != null) {
 				SnapshotPv snapshotPv = SnapshotDataConverter.fromVType(snapshotItem.getValue());
 				params.put("severity", snapshotPv.getAlarmSeverity().toString());
@@ -567,7 +577,6 @@ public class NodeJdbcDAO implements NodeDAO {
 				params.put("sizes", snapshotPv.getSizes());
 				params.put("data_type", snapshotPv.getDataType().toString());
 				params.put("value", snapshotPv.getValue());
-				params.put("readback", 0);
 			}
 
 			snapshotPvInsert.execute(params);
@@ -582,7 +591,6 @@ public class NodeJdbcDAO implements NodeDAO {
 				params.put("data_type", snapshotPv.getDataType().toString());
 				params.put("value", snapshotPv.getValue());
 				params.put("readback", 1);
-				
 				snapshotPvInsert.execute(params);
 			}
 		}
@@ -591,24 +599,13 @@ public class NodeJdbcDAO implements NodeDAO {
 	}
 	
 	@Override
-	public Node tagAsGolden(String uniqueNodeId) {
+	public Node tagAsGolden(String uniqueNodeId, boolean isGolden) {
 		Node snapshotNode = getSnapshot(uniqueNodeId, true);
 		if(snapshotNode == null) {
 			throw new SnapshotNotFoundException(String.format("Snapshot with id=%s not found or is not committed", uniqueNodeId));
 		}
 		
-		Node parentNode = getParentNode(snapshotNode.getId());
-		
-		List<Node> allSnapshots = getSnapshots(parentNode.getUniqueId());
-		for(Node snapshot : allSnapshots) {
-			if(snapshot.getId() == snapshotNode.getId()) {
-				//jdbcTemplate.update("update snapshot_node set golden=true where node_id=?", new Object[] {snapshotToTag.getId()});
-				insertOrUpdateProperty(snapshot.getId(), "golden", "true");
-			}
-			else {
-				insertOrUpdateProperty(snapshot.getId(), "golden", "false");
-			}
-		}
+		insertOrUpdateProperty(snapshotNode.getId(), "golden", isGolden ? "true" : "false");	
 		
 		return getSnapshot(uniqueNodeId, true);
 	}

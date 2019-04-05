@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,7 +51,7 @@ public class SnapshotController extends BaseController {
 	 * @return A {@link Node} object representing the snapshot.
 	 */
 	@ApiOperation(value = "Take a snapshot, i.e. save preliminary.")
-	@PutMapping("/snapshot/{uniqueNodeId}")
+	@PutMapping("/config/{uniqueNodeId}/snapshot")
 	public Node takeSnapshot(@PathVariable String uniqueNodeId) {
 		Node node = services.takeSnapshot(uniqueNodeId);
 		return node;
@@ -79,20 +80,6 @@ public class SnapshotController extends BaseController {
 		return services.getSnapshotItems(uniqueNodeId);
 	}
 	
-	/**
-	 * Retrieves a {@link Snapshot} and its list of {@link SnapshotPv}s.
-	 * 
-	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified snapshot id does not exist.
-	 * 
-	 * @param uniqueNodeId The id of the snapshot
-	 * @return A {@link Config} object associated with the specified snapshot id.
-	 */
-//	@ApiOperation(value = "Get the configuration for a snapshot.", consumes = JSON)
-//	@GetMapping("/snapshot/{uniqueNodeId}/config")
-//	public Config getConfigForSnapshot(@PathVariable String uniqueNodeId) {
-//
-//		return services.getConfigurationForSnapshot(uniqueNodeId);
-//	}
 
 	/**
 	 * Commits a snapshot such that it will be visible when listing snapshots for a configuration,
@@ -122,14 +109,30 @@ public class SnapshotController extends BaseController {
 	}
 	
 	/**
-	 * Tags a snapshot as "golden". If there is a snapshot for the configuration
-	 * that is already tagged as golden, it will be tagged as not being golden. 
+	 * Tags a snapshot as "golden", or removes the tag from the snapshot.
 	 * @param uniqueNodeId The id of the snapshot
+	 * @param isGolden <code>true</code> if a snapshot is to be tagged as golden, <code>false</code> to remove the golden tag.
 	 * @return The update {@link Node} object.
 	 */
 	@ApiOperation(value = "Tag a snapshot as golden.")
 	@PostMapping("/snapshot/{uniqueNodeId}/golden")
-	public Node setGolden(@PathVariable String uniqueNodeId) {
-		return services.tagSnapshotAsGolden(uniqueNodeId);
+	public Node setGolden(@PathVariable String uniqueNodeId, @RequestParam(value = "isGolden", required = true) boolean isGolden) {
+		return services.tagSnapshotAsGolden(uniqueNodeId, isGolden);
+	}
+	
+	@ApiOperation(value = "Save a snapshot.")
+	@PutMapping("/snapshot/{configUniqueId}")
+	public Node saveSnapshot(@PathVariable String configUniqueId, 
+			@RequestParam(required = true) String snapshotName,
+			@RequestParam(required = true) String userName,
+			@RequestParam(required = true) String comment,
+			@RequestBody(required = true) List<SnapshotItem> snapshotItems) {
+		
+		if(snapshotName.length() == 0 || userName.length() == 0 || comment.length() == 0) {
+			throw new IllegalArgumentException("Snapshot name, user name must be of non-zero length");
+		}
+
+		Node n = services.saveSnapshot(configUniqueId, snapshotItems, snapshotName, userName, comment);
+		return n;
 	}
 }

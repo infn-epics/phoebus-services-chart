@@ -72,7 +72,6 @@ public class Services implements IServices {
 		logger.info(String.format("Took new preliminary snapshot: %s, time elapsed: %d ms", snapshot.toString(),
 				(System.currentTimeMillis() - start)));
 		return snapshot;
-
 	}
 
 	@Override
@@ -163,9 +162,9 @@ public class Services implements IServices {
 	}
 	
 	@Override
-	public Node tagSnapshotAsGolden(String snapshotUniqueId) {
+	public Node tagSnapshotAsGolden(String snapshotUniqueId, boolean isGolden) {
 		logger.info(String.format("Tagging snapshot %s as golden.", snapshotUniqueId));
-		return nodeDAO.tagAsGolden(snapshotUniqueId);
+		return nodeDAO.tagAsGolden(snapshotUniqueId, isGolden);
 	}
 	
 	@Override
@@ -186,5 +185,10 @@ public class Services implements IServices {
 	@Override
 	public ConfigPv updateSingleConfigPv(String currentPvName, String newPvName, String currentReadbackPvName, String newReadbackPvName) {
 		return nodeDAO.updateSingleConfigPv(currentPvName, newPvName, currentReadbackPvName, newReadbackPvName);
+	}
+	
+	@Override
+	public Node saveSnapshot(String configUniqueId, List<SnapshotItem> snapshotItems, String snapshotName, String userName, String comment) {
+		return nodeDAO.saveSnapshot(configUniqueId, snapshotItems, snapshotName, comment, userName);
 	}
 }

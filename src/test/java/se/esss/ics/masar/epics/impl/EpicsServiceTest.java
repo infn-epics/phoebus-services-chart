@@ -48,9 +48,7 @@ public class EpicsServiceTest {
 				.pvName("channelName")
 				.build();
 		
-		
 		epicsService.readPvs(Arrays.asList(configPv));
-
 	}
 
 	@Test

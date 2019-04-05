@@ -18,6 +18,7 @@
 
 package se.esss.ics.masar.web.controllers;
 
+import static org.hamcrest.CoreMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,7 +32,10 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -97,7 +101,7 @@ public class SnapshotControllerTest {
 		
 		when(services.takeSnapshot("a")).thenReturn(snapshot);
 		
-		MockHttpServletRequestBuilder request = put("/snapshot/a");
+		MockHttpServletRequestBuilder request = put("/config/a/snapshot");
 
 		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
 				.andReturn();
@@ -210,9 +214,16 @@ public class SnapshotControllerTest {
 	
 	@Test
 	public void testTagSnapshotAsGolden() throws Exception{
-		MockHttpServletRequestBuilder request = post("/snapshot/someId/golden");
+		MockHttpServletRequestBuilder request = post("/snapshot/someId/golden").param("isGolden", "true");
 		
 		mockMvc.perform(request).andExpect(status().isOk());
+	}
+	
+	@Test
+	public void testTagSnapshotAsGoldenBadRequest() throws Exception{
+		MockHttpServletRequestBuilder request = post("/snapshot/someId/golden");
+		
+		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
 	
 	@Test
@@ -234,5 +245,57 @@ public class SnapshotControllerTest {
 		objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<SnapshotItem>>() {
 		});
 	}
+	
+	@Test
+	public void testSaveSnapshotBadRequest() throws Exception{
+		MockHttpServletRequestBuilder request = put("/snapshot/configid").param("snapshotName", "a").param("comment", "c").param("userName", "u");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		List<SnapshotItem> snapshotItems = Arrays.asList(SnapshotItem.builder().build());
+		
+		request = put("/snapshot/configid")
+				.content(objectMapper.writeValueAsString(snapshotItems))
+				.param("snapshotName", "a").param("comment", "c");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		request = put("/snapshot/configid")
+				.content(objectMapper.writeValueAsString(snapshotItems))
+				.param("snapshotName", "a").param("userName", "c");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		request = put("/snapshot/configid")
+				.content(objectMapper.writeValueAsString(snapshotItems))
+				.param("userName", "a").param("comment", "c");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
 
+	@Test
+	public void testSaveSnapshot() throws Exception{
+		
+		Mockito.reset(services);
+		
+		List<SnapshotItem> snapshotItems = Arrays.asList(SnapshotItem.builder().build());
+
+		when(services.saveSnapshot(Mockito.anyString(), Mockito.argThat(new ArgumentMatcher<List<SnapshotItem>>() {
+			@Override
+			public boolean matches(List<SnapshotItem> o) {
+				return true;
+			}
+		}), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(Node.builder().build());
+		
+		MockHttpServletRequestBuilder request = put("/snapshot/configid").param("snapshotName", "a").param("comment", "c").param("userName", "u");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		
+		request = put("/snapshot/configid")
+				.contentType(JSON)
+				.content(objectMapper.writeValueAsString(snapshotItems))
+				.param("snapshotName", "a").param("comment", "c").param("userName", "u");
+		
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+		
+		// Make sure response contains expected data
+		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
+	}	
 }

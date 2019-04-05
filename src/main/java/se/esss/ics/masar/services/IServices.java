@@ -31,14 +31,14 @@ public interface IServices {
 	public Node getNode(String nodeId);
 	
 	public List<Node> getChildNodes(String parentsUniqueId);
-		
-	//public Node createNewConfiguration(String parentsUniqueId, Node configNode, List<ConfigPv> configPvList);
-	
+			
 	public List<ConfigPv> getConfigPvs(String configUniqueId);
 				
 	public Node takeSnapshot(String configUniqueId);
 	
 	public void commitSnapshot(String snapshotUniqueId, String snapshotName, String userName, String comment);
+	
+	public Node saveSnapshot(String configUniqueId, List<SnapshotItem> snapshotItems, String snapshotName, String userName, String comment);
 	
 	public List<Node> getSnapshots(String configUniqueId);
 	
@@ -54,7 +54,7 @@ public interface IServices {
 	
 	public Node updateNode(Node nodeToUpdate);
 	
-	public Node tagSnapshotAsGolden(String snapshotId);
+	public Node tagSnapshotAsGolden(String snapshotId, boolean isGolden);
 	
 	public Node getRootNode();
 	

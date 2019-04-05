@@ -20,10 +20,12 @@ package se.esss.ics.masar.epics.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.epics.gpclient.GPClient;
 import org.epics.vtype.VType;
@@ -79,15 +81,29 @@ public class EpicsService implements IEpicsService {
 		public SnapshotItem call() {
 			
 			String pvName = configPv.getPvName();
+			String readbackPvName = configPv.getReadbackPvName();
+			
 			Future<VType> value = GPClient.readOnce(configPv.getProvider().toString() + "://" + pvName);
-
+			VType pvValue;
+			VType readbackPvValue = null;
 			try {
-				VType vType = value.get(5L, TimeUnit.SECONDS);
-				return SnapshotItem.builder().configPv(configPv).value(vType).build();
+				pvValue = value.get(5L, TimeUnit.SECONDS);
 			} catch (Exception ex) {
-				LOGGER.error(String.format("Read of PV %s has timed out", pvName));
+				LOGGER.error(String.format("Read of PV %s has failed", pvName));
 				return SnapshotItem.builder().configPv(configPv).build();
 			}
+			
+			if(readbackPvName != null) {
+				value = GPClient.readOnce(configPv.getProvider().toString() + "://" + readbackPvName);
+				
+				try {
+					readbackPvValue = value.get(5L, TimeUnit.SECONDS);
+				} catch (Exception e) {
+					LOGGER.error(String.format("Read of read-back PV %s has failed", readbackPvName));
+				} 
+			}
+			
+			return SnapshotItem.builder().configPv(configPv).value(pvValue).readbackValue(readbackPvValue).build();
 		}
 	}
 }
