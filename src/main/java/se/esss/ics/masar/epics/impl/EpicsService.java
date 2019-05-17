@@ -20,12 +20,10 @@ package se.esss.ics.masar.epics.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.epics.gpclient.GPClient;
 import org.epics.vtype.VType;
@@ -47,7 +45,7 @@ public class EpicsService implements IEpicsService {
 	@Override
 	public List<SnapshotItem> readPvs(List<ConfigPv> configPvs) {
 		
-		LOGGER.info(String.format("Reading %d PVs", configPvs.size()));
+		LOGGER.info("Reading {} PVs", configPvs.size());
 		ExecutorCompletionService<SnapshotItem> ecs = new ExecutorCompletionService<>(executorPool);
 		for (ConfigPv configPv : configPvs) {
 			ecs.submit(new SnapshotPvCallable(configPv));

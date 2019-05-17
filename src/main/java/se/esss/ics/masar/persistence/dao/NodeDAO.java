@@ -95,20 +95,6 @@ public interface NodeDAO {
 	 */
 	public Node updateConfiguration(Node configToUpdate, List<ConfigPv> configPvList);
 
-	/**
-	 * Renames an existing node.
-	 * 
-	 * @param uniqueNodeId
-	 *            The unique node id of the node subject to change. The root folder's name
-	 *            cannot be changed.
-	 * @param name
-	 *            The new name of the node. The name and node type must be unique in
-	 *            the parent folder.
-	 * @param userName
-	 *            The (account) name of the user performing the operation.
-	 * @return The updated {@link Node} object.
-	 */
-	//public Node renameNode(String uniqueNodeId, String name, String userName);
 
 	/**
 	 * Convenience method

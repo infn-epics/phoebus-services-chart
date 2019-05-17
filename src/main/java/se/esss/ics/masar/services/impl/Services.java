@@ -43,12 +43,12 @@ public class Services implements IServices {
 	private IEpicsService epicsService;
 
 	private Logger logger = LoggerFactory.getLogger(Services.class);
-	
+
 	@Override
 	public Node getParentNode(String uniqueNodeId) {
 		return nodeDAO.getParentNode(uniqueNodeId);
 	}
-	
+
 	@Override
 	@Transactional
 	public Node takeSnapshot(String configUniqueId) {
@@ -60,37 +60,37 @@ public class Services implements IServices {
 			logger.error(message);
 			throw new IllegalArgumentException(message);
 		}
-		
-		logger.info(String.format("Reading PVs for configuration id=%d", config.getId()));
+
+		logger.info("Reading PVs for configuration id={}", config.getId());
 
 		List<ConfigPv> configPvs = nodeDAO.getConfigPvs(configUniqueId);
-		
+
 		long start = System.currentTimeMillis();
 		List<SnapshotItem> snapshotItems = epicsService.readPvs(configPvs);
 
 		Node snapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), snapshotItems);
-		logger.info(String.format("Took new preliminary snapshot: %s, time elapsed: %d ms", snapshot.toString(),
-				(System.currentTimeMillis() - start)));
+		logger.info("Took new preliminary snapshot: {}, time elapsed: {} ms", snapshot,
+				(System.currentTimeMillis() - start));
 		return snapshot;
 	}
 
 	@Override
 	public void commitSnapshot(String snapshotUniqueId, String snapshotName, String userName, String comment) {
-		
+
 		Node snapshot = nodeDAO.getSnapshot(snapshotUniqueId, false);
-		if(snapshot == null) {
+		if (snapshot == null) {
 			String message = String.format("Snapshot with id=%s not found", snapshotUniqueId);
 			logger.info(message);
 			throw new NodeNotFoundException(message);
 		}
 		nodeDAO.commitSnapshot(snapshotUniqueId, snapshotName, userName, comment);
 
-		logger.info(String.format("Committed snapshot: %s, id=%d", snapshotName, snapshot.getId()));
+		logger.info("Committed snapshot: {}, id={}", snapshotName, snapshot.getId());
 	}
 
 	@Override
 	public List<Node> getSnapshots(String configUniqueId) {
-		logger.info(String.format("Obtaining snapshot for config id=%s", configUniqueId));
+		logger.info("Obtaining snapshot for config id={}", configUniqueId);
 		return nodeDAO.getSnapshots(configUniqueId);
 	}
 
@@ -102,7 +102,7 @@ public class Services implements IServices {
 			logger.error(message);
 			throw new SnapshotNotFoundException(message);
 		}
-		logger.info(String.format("Retrieved snapshot id=%s", snapshotUniqueId));
+		logger.info("Retrieved snapshot id={}", snapshotUniqueId);
 		return snapshot;
 	}
 
@@ -118,77 +118,90 @@ public class Services implements IServices {
 		}
 
 		node = nodeDAO.createNode(parentsUniqueId, node);
-		logger.info(String.format("Created new node: %s", node.toString()));
+		logger.info("Created new node: {}", node);
 		return node;
 	}
 
 	@Override
 	@Transactional
 	public Node moveNode(String nodeId, String targetNodeId, String userName) {
-		logger.info(String.format("Moving node id %s to raget node id %s", nodeId, targetNodeId));
+		logger.info("Moving node id {} to raget node id {}", nodeId, targetNodeId);
 		return nodeDAO.moveNode(nodeId, targetNodeId, userName);
 	}
 
 	@Override
 	@Transactional
 	public void deleteNode(String nodeId) {
-		logger.info(String.format("Deleting node id=%s", nodeId));
+		logger.info("Deleting node id={}", nodeId);
 		nodeDAO.deleteNode(nodeId);
 	}
 
 	@Override
 	@Transactional
 	public Node updateConfiguration(Node configToUpdate, List<ConfigPv> configPvs) {
-		logger.info(String.format("Updating configuration unique id: %s", configToUpdate.getUniqueId()));
+		logger.info("Updating configuration unique id: {}", configToUpdate.getUniqueId());
 		return nodeDAO.updateConfiguration(configToUpdate, configPvs);
 	}
 
 	@Override
 	public Node updateNode(Node nodeToUpdate) {
-		logger.info(String.format("Updating node unique id: %s", nodeToUpdate.getUniqueId()));
+		logger.info("Updating node unique id: {}", nodeToUpdate.getUniqueId());
 		return nodeDAO.updateNode(nodeToUpdate);
 	}
 
 	@Override
 	public Node getNode(String nodeId) {
-		logger.info(String.format("Getting node %s", nodeId));
+		logger.info("Getting node {}", nodeId);
 		return nodeDAO.getNode(nodeId);
 	}
 
 	@Override
-	public List<Node> getChildNodes(String nodeUniqueId){
-		logger.info(String.format("Getting child nodes for node unique id=%s", nodeUniqueId));
+	public List<Node> getChildNodes(String nodeUniqueId) {
+		logger.info("Getting child nodes for node unique id={}", nodeUniqueId);
 		return nodeDAO.getChildNodes(nodeUniqueId);
 	}
-	
+
 	@Override
 	public Node tagSnapshotAsGolden(String snapshotUniqueId, boolean isGolden) {
-		logger.info(String.format("Tagging snapshot %s as golden.", snapshotUniqueId));
+		logger.info("Tagging snapshot {} as golden.", snapshotUniqueId);
 		return nodeDAO.tagAsGolden(snapshotUniqueId, isGolden);
 	}
-	
+
 	@Override
 	public Node getRootNode() {
 		return nodeDAO.getRootNode();
 	}
-	
+
 	@Override
-	public List<ConfigPv> getConfigPvs(String configUniqueId){
+	public List<ConfigPv> getConfigPvs(String configUniqueId) {
+		logger.info("Getting config pvs config id id {}", configUniqueId);
 		return nodeDAO.getConfigPvs(configUniqueId);
 	}
-	
+
 	@Override
-	public List<SnapshotItem> getSnapshotItems(String snapshotUniqueId){
+	public List<SnapshotItem> getSnapshotItems(String snapshotUniqueId) {
+		logger.info("Getting snapshot items for snapshot id {}", snapshotUniqueId);
 		return nodeDAO.getSnapshotItems(snapshotUniqueId);
 	}
-	
+
 	@Override
-	public ConfigPv updateSingleConfigPv(String currentPvName, String newPvName, String currentReadbackPvName, String newReadbackPvName) {
+	public ConfigPv updateSingleConfigPv(String currentPvName, String newPvName, String currentReadbackPvName,
+			String newReadbackPvName) {
+		logger.info("Updating config pv, old name: {}, new name: {}, old readback name: {}, new readback name: {}",
+				currentPvName, newPvName, currentReadbackPvName, newReadbackPvName);
 		return nodeDAO.updateSingleConfigPv(currentPvName, newPvName, currentReadbackPvName, newReadbackPvName);
 	}
-	
+
 	@Override
-	public Node saveSnapshot(String configUniqueId, List<SnapshotItem> snapshotItems, String snapshotName, String userName, String comment) {
+	public Node saveSnapshot(String configUniqueId, List<SnapshotItem> snapshotItems, String snapshotName,
+			String userName, String comment) {
+
+		logger.info("Saving snapshot for config id {}", configUniqueId);
+		logger.info("Snapshot name: {}, values:", snapshotName);
+		for (SnapshotItem snapshotItem : snapshotItems) {
+			logger.info(snapshotItem.toString());
+		}
+
 		return nodeDAO.saveSnapshot(configUniqueId, snapshotItems, snapshotName, comment, userName);
 	}
 }

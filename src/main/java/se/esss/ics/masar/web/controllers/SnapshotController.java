@@ -53,8 +53,7 @@ public class SnapshotController extends BaseController {
 	@ApiOperation(value = "Take a snapshot, i.e. save preliminary.")
 	@PutMapping("/config/{uniqueNodeId}/snapshot")
 	public Node takeSnapshot(@PathVariable String uniqueNodeId) {
-		Node node = services.takeSnapshot(uniqueNodeId);
-		return node;
+		return services.takeSnapshot(uniqueNodeId);
 	}
 
 	/**
@@ -129,10 +128,9 @@ public class SnapshotController extends BaseController {
 			@RequestBody(required = true) List<SnapshotItem> snapshotItems) {
 		
 		if(snapshotName.length() == 0 || userName.length() == 0 || comment.length() == 0) {
-			throw new IllegalArgumentException("Snapshot name, user name must be of non-zero length");
+			throw new IllegalArgumentException("Snapshot name, user name and comment must be of non-zero length");
 		}
 
-		Node n = services.saveSnapshot(configUniqueId, snapshotItems, snapshotName, userName, comment);
-		return n;
+		return services.saveSnapshot(configUniqueId, snapshotItems, snapshotName, userName, comment);
 	}
 }

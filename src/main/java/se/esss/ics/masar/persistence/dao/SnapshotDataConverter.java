@@ -98,6 +98,10 @@ public class SnapshotDataConverter {
 	
 	protected static final String SCALAR_AS_JSON = "[1]";
 	
+	private SnapshotDataConverter() {
+		
+	}
+	
 	public static SnapshotItem fromSnapshotPv(SnapshotPv snapshotPv, SnapshotPv readback) {
 		if(snapshotPv == null) {
 			return null;

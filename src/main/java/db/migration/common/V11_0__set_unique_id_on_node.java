@@ -18,29 +18,32 @@
 
 package db.migration.common;
 
-import java.util.List;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.UUID;
 
-import org.flywaydb.core.api.migration.spring.BaseSpringJdbcMigration;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.flywaydb.core.api.migration.BaseJavaMigration;
+import org.flywaydb.core.api.migration.Context;
 
 /**
  * @author georgweiss
  * Created 8 Mar 2019
  */
-public class V11_0__set_unique_id_on_node extends BaseSpringJdbcMigration{
+public class V11_0__set_unique_id_on_node extends BaseJavaMigration{
 	
 	
-	/* (non-Javadoc)
-	 * @see org.flywaydb.core.api.migration.spring.SpringJdbcMigration#migrate(org.springframework.jdbc.core.JdbcTemplate)
-	 */
 	@Override
-	public void migrate(JdbcTemplate jdbcTemplate) throws Exception {
+	public void migrate(Context context) throws Exception {
 		
-		List<Integer> ids = jdbcTemplate.queryForList("select id from node", Integer.class);
-		
-		for(Integer id : ids) {
-			jdbcTemplate.update("update node set unique_id=? where id=?", new Object[] {UUID.randomUUID().toString(), id});
-		}
+		try (Statement select = context.getConnection().createStatement()) {
+            try (ResultSet rows = select.executeQuery("SELECT id FROM node")) {
+                while (rows.next()) {
+                    int id = rows.getInt(1);
+                    try (Statement update = context.getConnection().createStatement()) {
+                        update.execute("update node set unique_id='" + UUID.randomUUID().toString() + "' where id=" + id);
+                    }
+                }
+            }
+        }
 	}
 }

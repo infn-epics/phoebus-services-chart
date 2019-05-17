@@ -18,7 +18,6 @@
 
 package se.esss.ics.masar.web.controllers;
 
-import static org.hamcrest.CoreMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,8 +33,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -266,6 +263,21 @@ public class SnapshotControllerTest {
 		request = put("/snapshot/configid")
 				.content(objectMapper.writeValueAsString(snapshotItems))
 				.param("userName", "a").param("comment", "c");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		request = put("/snapshot/configid")
+				.content(objectMapper.writeValueAsString(snapshotItems)).contentType("application/json")
+				.param("snapshotName", "").param("comment", "c").param("userName", "c");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		request = put("/snapshot/configid")
+				.content(objectMapper.writeValueAsString(snapshotItems)).contentType("application/json")
+				.param("snapshotName", "a").param("comment", "").param("userName", "c");
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		request = put("/snapshot/configid")
+				.content(objectMapper.writeValueAsString(snapshotItems)).contentType("application/json")
+				.param("snapshotName", "a").param("comment", "c").param("userName", "");
 		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
 

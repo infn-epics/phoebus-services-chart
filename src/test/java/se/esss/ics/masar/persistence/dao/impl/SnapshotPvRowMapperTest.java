@@ -20,18 +20,14 @@ package se.esss.ics.masar.persistence.dao.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.sql.ResultSet;
 
-import org.epics.vtype.AlarmStatus;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.internal.SnapshotPv;
-import se.esss.ics.masar.persistence.dao.SnapshotPvDataType;
 
 /**
  * @author georgweiss

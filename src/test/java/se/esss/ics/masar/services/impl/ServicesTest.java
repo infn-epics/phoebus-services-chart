@@ -50,6 +50,7 @@ import se.esss.ics.masar.model.NodeType;
 import se.esss.ics.masar.persistence.dao.NodeDAO;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.config.ServicesTestConfig;
+import se.esss.ics.masar.services.exception.NodeNotFoundException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextHierarchy({ @ContextConfiguration(classes = { ServicesTestConfig.class}) })
@@ -115,6 +116,12 @@ public class ServicesTest {
 		services.createNode("a", configWithParent);
 	}
 	
+	@Test(expected = IllegalArgumentException.class)
+	public void testCreateConfigurationParentNotFolder() {
+		when(nodeDAO.getNode("a")).thenReturn(Node.builder().id(1).nodeType(NodeType.CONFIGURATION).uniqueId("a").build());
+		services.createNode("a", configWithParent);
+	}
+	
 	@Test
 	public void testGetConfigNotNull() {
 		
@@ -147,6 +154,16 @@ public class ServicesTest {
 		
 		verify(nodeDAO, atLeast(1)).getSnapshot(anyString(), anyBoolean());
 		verify(nodeDAO, times(1)).commitSnapshot(anyString(), anyString(), anyString(), anyString());
+		
+		reset(nodeDAO);
+	}
+	
+	@Test(expected = NodeNotFoundException.class)
+	public void testCommitSnapshotNotFound() {
+		
+		when(nodeDAO.getSnapshot("a", false)).thenReturn(null);
+		
+		services.commitSnapshot("a", "snapshot name", "comment", "user");
 		
 		reset(nodeDAO);
 	}
@@ -296,5 +313,47 @@ public class ServicesTest {
 		when(nodeDAO.updateSingleConfigPv(anyString(), anyString(), anyString(), anyString())).thenReturn(configPvList.get(0));
 		
 		assertNotNull(services.updateSingleConfigPv("a", "b", "c", "d"));
+	}
+	
+	@Test
+	public void testgetParentNode() {
+		Node parentNode = Node.builder().name("a").uniqueId("u").build();
+		when(nodeDAO.getParentNode("u")).thenReturn(parentNode);
+		
+		assertNotNull(services.getParentNode("u"));
+	}
+	
+	@Test
+	public void testGetChildNodes() {
+		when(nodeDAO.getChildNodes("a")).thenReturn(Arrays.asList(Node.builder().build()));
+		assertNotNull(services.getChildNodes("a"));
+	}
+	
+
+	@Test
+	public void testTagSnapshotAsGolden() {
+		when(nodeDAO.tagAsGolden("a", true)).thenReturn(Node.builder().nodeType(NodeType.SNAPSHOT).build());
+		assertNotNull(services.tagSnapshotAsGolden("a", true));
+	}
+
+	
+	@Test
+	public void testGetRootNode() {
+		when(nodeDAO.getRootNode()).thenReturn(Node.builder().build());
+		assertNotNull(services.getRootNode());
+	}
+	
+	@Test
+	public void testGetConfigPvs() {
+		when(nodeDAO.getConfigPvs("a")).thenReturn(Arrays.asList(ConfigPv.builder().build()));
+		assertNotNull(services.getConfigPvs("a"));
+	}
+	
+	@Test
+	public void testSaveSnapshot() {
+		
+		when(nodeDAO.saveSnapshot("a", Collections.emptyList(), "b", "c", "d")).thenReturn(Node.builder().nodeType(NodeType.SNAPSHOT).build());
+		
+		assertNotNull(services.saveSnapshot("a", Collections.emptyList(), "b", "d", "c"));
 	}
 }

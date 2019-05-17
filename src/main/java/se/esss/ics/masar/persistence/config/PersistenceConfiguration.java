@@ -42,13 +42,6 @@ public class PersistenceConfiguration {
 		return DataSourceBuilder.create().type(HikariDataSource.class).build();
 	}
 
-//	@Bean
-//	public SimpleJdbcInsert configurationInsert() {
-//		DataSource dataSource = dataSource();
-//
-//		return new SimpleJdbcInsert(dataSource).withTableName("config");
-//	}
-
 	@Bean
 	public SimpleJdbcInsert configurationEntryInsert() {
 		DataSource dataSource = dataSource();
@@ -62,13 +55,6 @@ public class PersistenceConfiguration {
 
 		return new SimpleJdbcInsert(dataSource).withTableName("config_pv_relation");
 	}
-
-//	@Bean
-//	public SimpleJdbcInsert snapshotInsert() {
-//		DataSource dataSource = dataSource();
-//
-//		return new SimpleJdbcInsert(dataSource).withTableName("snapshot_node").usingGeneratedKeyColumns("id");
-//	}
 
 	@Bean
 	public SimpleJdbcInsert snapshotPvInsert() {

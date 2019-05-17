@@ -108,48 +108,6 @@ public class ConfigurationController extends BaseController {
 	public List<Node> getChildNodes(@PathVariable final String uniqueNodeId) {
 		return services.getChildNodes(uniqueNodeId);
 	}
-	
-	/**
-	 * Create a new {@link Config} node. The list of {@link Config#configPvList} can be empty, 
-	 * if client wishes to create a configuration before adding PVs to it.
-	 * 
-	 * A {@link HttpStatus#BAD_REQUEST} is returned the parent node of the configuration 
-	 * does not exist, or if the parent node is a {@link Config} node.
-	 * @param parentsUniqueId Unique id of the parent node.
-	 * @param configuration The {@link Config} object to create/save.
-	 * @return A {@link Config} object.
-	 */
-//	@ApiOperation(value = "Create a new configuration, name and user name must be non-null and of non-zero length.", consumes = JSON)
-//	@PutMapping("/config/{parentsUniqueId}")
-//	public Node saveConfiguration(@PathVariable String parentsUniqueId, @RequestBody final Node configuration) {
-//		if(configuration.getName() == null || configuration.getName().isEmpty() || configuration.getUserName() == null || configuration.getUserName().isEmpty()) {
-//			throw new IllegalArgumentException("Config name and user name must be non-null and of non-zero length");
-//		}
-//		try {
-//			Node c = services.createNewConfiguration(parentsUniqueId, configuration);
-//			return c;
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//			return null;
-//		}
-//	}
-
-	/**
-	 * Retrieve a configuration and its list of {@link ConfigPv}s.
-	 * 
-	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified node id does not exist.
-	 * 
-	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is a folder node.
-	 * 
-	 * @param uniqueNodeId The id of the {@link Config}.
-	 * @return A {@link Config} object representing the persisted configuration.
-	 */
-//	@ApiOperation(value = "Get configuration and its list of PVs", produces = JSON)
-//	@GetMapping("/config/{uniqueNodeId}")
-//	public Config getConfiguration(@PathVariable final String uniqueNodeId) {
-//		return services.getConfiguration(uniqueNodeId);
-//	}
 
 	/**
 	 * Updates a configuration. For instance, user may change the name of the
@@ -170,17 +128,20 @@ public class ConfigurationController extends BaseController {
 	public ResponseEntity<Node> updateConfiguration(@PathVariable String uniqueNodeId, 
 			@RequestBody UpdateConfigHolder updateConfigHolder) {
 	
-		if(updateConfigHolder.getConfig() == null || 
-				updateConfigHolder.getConfigPvList() == null ||
-				updateConfigHolder.getConfig().getUserName() == null || 
+		if(updateConfigHolder.getConfig() == null) {
+			throw new IllegalArgumentException("Cannot update a null configuration");
+		}
+		else if(updateConfigHolder.getConfigPvList() == null) {
+			throw new IllegalArgumentException("Cannot update a configration with a null config PV list");
+		}
+		else if(updateConfigHolder.getConfig().getUserName() == null || 
 				updateConfigHolder.getConfig().getUserName().isEmpty()) {
-			
-			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+			throw new IllegalArgumentException("Will not update a configuration where user name is null or empty");
 		}
 		
 		for(ConfigPv configPv : updateConfigHolder.getConfigPvList()) {
 			if(configPv.getPvName() == null || configPv.getPvName().isEmpty()) {
-				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+				throw new IllegalArgumentException("Cannot update configuration, encountered a null or empty PV name");
 			}
 		}
 		

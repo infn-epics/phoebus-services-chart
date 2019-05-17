@@ -21,6 +21,7 @@ package se.esss.ics.masar.persistence.dao.impl;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -136,6 +137,7 @@ public class NodeJdbcDAO implements NodeDAO {
 	}
 
 	@Override
+	@Transactional
 	public List<Node> getChildNodes(String uniqueNodeId) {
 
 		Node parentNode = getNode(uniqueNodeId);
@@ -152,7 +154,7 @@ public class NodeJdbcDAO implements NodeDAO {
 	public void deleteNode(String uniqueNodeId) {
 		
 		if(uniqueNodeId == null || uniqueNodeId.isEmpty()) {
-			throw new IllegalArgumentException(String.format("Cannot delete node, invalid unique node id specified:", uniqueNodeId));
+			throw new IllegalArgumentException(String.format("Cannot delete node, invalid unique node id specified:%s", uniqueNodeId));
 		}
 
 		Node nodeToDelete = getNode(uniqueNodeId);
@@ -164,6 +166,10 @@ public class NodeJdbcDAO implements NodeDAO {
 		}
 		
 		Node parent = getParentNode(nodeToDelete.getId());
+		
+		if(parent == null) {
+			throw new IllegalArgumentException(String.format("Parent node of node id=%d cannot be found. Should not happen!", nodeToDelete.getId()));
+		}
 		
 		if (nodeToDelete.getNodeType().equals(NodeType.CONFIGURATION)) {
 			List<Integer> configPvIds = jdbcTemplate.queryForList(
@@ -182,7 +188,9 @@ public class NodeJdbcDAO implements NodeDAO {
 		}
 
 		jdbcTemplate.update("delete from node where unique_id=?", uniqueNodeId);
-
+		
+		
+		
 		// Update last modified date of the parent node
 		jdbcTemplate.update("update node set last_modified=? where id=?", Timestamp.from(Instant.now()), parent.getId());
 	}
@@ -259,22 +267,6 @@ public class NodeJdbcDAO implements NodeDAO {
 		return getNode(uniqueId);
 	}
 
-//	@Transactional
-//	@Override
-//	public Node getConfiguration(String uniqueNodeId) {
-//
-//		try {
-//			Config config = jdbcTemplate.queryForObject("select n.*, c.description from node as n join config as c on n.id=c.node_id "+
-//					"where n.unique_id=?", new Object[] {uniqueNodeId}, new ConfigRowMapper());
-//
-//			config.setConfigPvList(getConfigPvs(config.getId()));
-//			
-//			return config;
-//		} catch (DataAccessException e) {
-//			return null;
-//		}
-//	}
-	
 	@Override
 	@Transactional
 	public List<ConfigPv> getConfigPvs(String configUniqueNodeId){
@@ -284,20 +276,7 @@ public class NodeJdbcDAO implements NodeDAO {
 				+ "where config_pv_relation.config_id=(select id from node where unique_id=?)",
 				new Object[] { configUniqueNodeId }, new ConfigPvRowMapper());
 	}
-//	
-//	@Transactional
-//	@Override
-//	public Node getConfigurationNodeForSnapshot(String uniqueNodeId) {
-//		String sql = "select unique_id from node as n join node_closure as nc on n.id=nc.ancestor where " +
-//	      "nc.descendant=(select id from node where unique_id=?) and depth=1";
-//		try {
-//			String uniqueConfigId = jdbcTemplate.queryForObject(sql, new Object[] {uniqueNodeId}, String.class);
-//			return getConfiguration(uniqueConfigId);
-//		} catch (DataAccessException e) {
-//			return null;
-//		}
-//	}
-	
+
 	private boolean isNodeNameValid(Node nodeToCheck, List<Node> parentsChildNodes) {
 		for (Node node : parentsChildNodes) {
 			if (node.getName().equals(nodeToCheck.getName()) && 
@@ -318,7 +297,7 @@ public class NodeJdbcDAO implements NodeDAO {
 		
 		List<Integer> list;
 		
-		if(configPv.getReadbackPvName() == null || configPv.getReadbackPvName().isEmpty()) {
+		if(configPv.getReadbackPvName() == null) { 
 			list = jdbcTemplate.queryForList("select id from config_pv where name=? and readback_name is NULL", 
 					new Object[] { configPv.getPvName() }, Integer.class);
 		}
@@ -335,7 +314,7 @@ public class NodeJdbcDAO implements NodeDAO {
 			Map<String, Object> params = new HashMap<>(4);
 			params.put("name", configPv.getPvName().trim());
 			params.put("provider", configPv.getProvider().toString());
-			params.put("readback_name", configPv.getReadbackPvName() == null || configPv.getReadbackPvName().isEmpty() ? null : configPv.getReadbackPvName().trim());
+			params.put("readback_name", configPv.getReadbackPvName());
 			params.put("readonly", configPv.isReadOnly());
 			configPvId = configurationEntryInsert.executeAndReturnKey(params).intValue();
 		}
@@ -457,6 +436,12 @@ public class NodeJdbcDAO implements NodeDAO {
 		}
 		
 		Node parentNode = getParentNode(persistedNode.getId());
+		
+		if(parentNode == null) {
+			throw new IllegalArgumentException(
+					String.format("Cannot update node id=%d as its parent node is not found. Should not happen!", persistedNode.getId()));
+		}
+		
 		List<Node> parentsChildNodes = getChildNodes(parentNode.getId());
 		
 		if(!nodeToUpdate.getName().equals(persistedNode.getName()) && !isNodeNameValid(nodeToUpdate, parentsChildNodes)) {
@@ -464,7 +449,7 @@ public class NodeJdbcDAO implements NodeDAO {
 		}
 		
 		jdbcTemplate.update("update node set name=?, last_modified=?, username=? where id=?", 
-				new Object[] {nodeToUpdate.getName(), Timestamp.from(Instant.now()), nodeToUpdate.getUserName(), persistedNode.getId()});
+				nodeToUpdate.getName(), Timestamp.from(Instant.now()), nodeToUpdate.getUserName(), persistedNode.getId());
 		
 	
 		updateProperties(persistedNode.getId(), nodeToUpdate.getProperties());
@@ -483,17 +468,25 @@ public class NodeJdbcDAO implements NodeDAO {
 			throw new SnapshotNotFoundException(String.format("Snapshot node with id=%s not found", uniqueNodeId));
 		}
 		
-		List<Node> parentsChildNodes = getChildNodes(getParentNode(snapshotNode.getId()).getUniqueId());
+		Node parentNode = getParentNode(snapshotNode.getId());
+		if(parentNode == null) {
+			throw new IllegalArgumentException(String.format("Cannot commit snapshot id=%d as its parent is not found. Should not happen!", snapshotNode.getId()));
+		}
+		
+		List<Node> parentsChildNodes = getChildNodes(parentNode.getUniqueId());
 		parentsChildNodes.remove(snapshotNode);
 		
-		if(!isNodeNameValid(snapshotNode, parentsChildNodes)) {
-			throw new IllegalArgumentException(String.format("A snapshot node with name=%s already exists for the configuration", snapshotName));
+		for(Node childNode : parentsChildNodes) {
+			if(childNode.getNodeType().equals(NodeType.SNAPSHOT) && childNode.getName().equals(snapshotName)) {
+				throw new IllegalArgumentException(String.format("A snapshot node with name=%s already exists for the configuration", snapshotName));
+			}
 		}
 		
 		jdbcTemplate.update("update node set name=?, username=?, last_modified=? where unique_id=?", snapshotName, userName, Timestamp.from(Instant.now()), uniqueNodeId);
-		insertOrUpdateProperty(snapshotNode.getId(), "comment", comment);
+		insertOrUpdateProperty(snapshotNode.getId(), new AbstractMap.SimpleEntry<String, String>("comment", comment));
 	}
 	
+	@Transactional
 	@Override
 	public Node saveSnapshot(String parentsUniqueId, List<SnapshotItem> snapshotItems, String snapshotName, String comment, String userName) {
 		Node snapshotNode = savePreliminarySnapshot(parentsUniqueId, snapshotItems);
@@ -544,17 +537,19 @@ public class NodeJdbcDAO implements NodeDAO {
 		return snapshotItems;
 	}
 
+	@Transactional
 	@Override
 	public Node getSnapshot(String uniqueNodeId, boolean committedOnly) {
 
 		Node snapshotNode = getNode(uniqueNodeId);
-		if(committedOnly && snapshotNode.getProperty("comment") == null){
+		if(snapshotNode == null || !snapshotNode.getNodeType().equals(NodeType.SNAPSHOT) || (committedOnly && snapshotNode.getProperty("comment") == null)) {
 			return null;
 		}
 		
 		return snapshotNode;
 	}
 	
+	@Transactional
 	@Override
 	public Node savePreliminarySnapshot(String parentsUniqueId, List<SnapshotItem> snapshotItems) {
 
@@ -598,6 +593,7 @@ public class NodeJdbcDAO implements NodeDAO {
 		return node;
 	}
 	
+	@Transactional
 	@Override
 	public Node tagAsGolden(String uniqueNodeId, boolean isGolden) {
 		Node snapshotNode = getSnapshot(uniqueNodeId, true);
@@ -605,7 +601,7 @@ public class NodeJdbcDAO implements NodeDAO {
 			throw new SnapshotNotFoundException(String.format("Snapshot with id=%s not found or is not committed", uniqueNodeId));
 		}
 		
-		insertOrUpdateProperty(snapshotNode.getId(), "golden", isGolden ? "true" : "false");	
+		insertOrUpdateProperty(snapshotNode.getId(), new AbstractMap.SimpleEntry<String, String>("golden", isGolden ? "true" : "false"));	
 		
 		return getSnapshot(uniqueNodeId, true);
 	}
@@ -615,7 +611,7 @@ public class NodeJdbcDAO implements NodeDAO {
 	 * as specified in the <code>properties</code> parameter. The client hence must make sure
 	 * that any existing properties that should not be deleted are present in the map.
 	 * 
-	 * The keys and values of the map must all be non-null and non-empty in order to
+	 * Keys and values of the map must all be non-null and non-empty in order to
 	 * be inserted.
 	 * 
 	 * Specifying a <code>null<code> map of properties will delete all existing.
@@ -630,8 +626,8 @@ public class NodeJdbcDAO implements NodeDAO {
 			return;
 		}
 		
-		for(String key : properties.keySet()) {
-			insertOrUpdateProperty(nodeId, key, properties.get(key));
+		for(Map.Entry<String, String> entry : properties.entrySet()) {
+			insertOrUpdateProperty(nodeId, entry);
 		}
 	}
 	
@@ -639,26 +635,25 @@ public class NodeJdbcDAO implements NodeDAO {
 	 * This method is intentionally not using "on duplicate key" insert since that
 	 * is tricky to set up for the H2 database used in unit testing.
 	 * @param nodeId The node id identifying the owning node.
-	 * @param propertyName Name of the property If <code>null</code> or empty this method returns silently without inserting a record.
-	 * @param value Value of the property. If <code>null</code> or empty this method returns silently without inserting a record.
+	 * @param entry The map entry (including key and value).
 	 */
-	private void insertOrUpdateProperty(int nodeId, String propertyName, String value) {
-		if(value == null || value.isEmpty()) {
-			return;
+	private void insertOrUpdateProperty(int nodeId, Map.Entry<String, String> entry) {
+		if(entry.getKey() == null || entry.getKey().isEmpty() || entry.getValue() == null || entry.getValue().isEmpty()) {
+			return; // Ignore rather than throwing exception in order to not break callee's loop.
 		}
 		// Disallow setting the "root" property. It is set by Flyway.
-		if("root".equals(propertyName)) {
+		if("root".equals(entry.getKey())) {
 			return;
 		}
 		// First check if there is an existing property for the combination of node id and key
 		int numberOfHits = jdbcTemplate.queryForObject("select count(*) from property where node_id=? and property_name=?", 
-				new Object[] {nodeId, propertyName},
+				new Object[] {nodeId, entry.getKey()},
 				Integer.class);
 		if(numberOfHits == 0) {
-			jdbcTemplate.update("insert into property values(?, ?, ?)", new Object[] {nodeId, propertyName, value});
+			jdbcTemplate.update("insert into property values(?, ?, ?)", nodeId, entry.getKey(), entry.getValue());
 		}
 		else {
-			jdbcTemplate.update("update property set value=? where node_id=? and property_name=?", new Object[] {value, nodeId, propertyName});
+			jdbcTemplate.update("update property set value=? where node_id=? and property_name=?", entry.getValue(), nodeId, entry.getKey());
 		}
 	}
 	
@@ -673,7 +668,7 @@ public class NodeJdbcDAO implements NodeDAO {
 		List<Integer> list;
 		
 		if(currentReadbackPVName == null || currentReadbackPVName.isEmpty()) {
-			list = jdbcTemplate.queryForList("select id from config_pv where name=? and readback_name is NULL", 
+			list = jdbcTemplate.queryForList("select id from config_pv where name=? and (readback_name is NULL or readback_name='')", 
 					new Object[] { currentPVName }, Integer.class);
 		}
 		else {
@@ -684,13 +679,8 @@ public class NodeJdbcDAO implements NodeDAO {
 		if(list.isEmpty()) {
 			throw new IllegalArgumentException(String.format("Config pv with PV name=%s and read-back PV name=%s does not exist", currentPVName, currentReadbackPVName));
 		}
-		
-		if(newReadbackPVName != null && !newReadbackPVName.isEmpty()) {
-			jdbcTemplate.update("update config_pv set name=?, readback_name=? where id=?", new Object[] {newPVName, newReadbackPVName, list.get(0)});
-		}
-		else {
-			jdbcTemplate.update("update config_pv set name=? where id=?", new Object[] {newPVName, list.get(0)});
-		}
+
+		jdbcTemplate.update("update config_pv set name=?, readback_name=? where id=?", newPVName, newReadbackPVName, list.get(0));
 		
 		return jdbcTemplate.query("select * from config_pv where id=?", new Object[] {list.get(0)}, new ConfigPvRowMapper()).get(0);
 	}

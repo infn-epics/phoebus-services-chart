@@ -18,6 +18,7 @@
 
 package se.esss.ics.masar.web.controllers;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -182,6 +183,56 @@ public class ConfigurationControllerTest {
 		// Make sure response contains expected data
 		objectMapper.readValue(result.getResponse().getContentAsString(), Node.class);
 	}
+	
+	@Test
+	public void testCreateNodeBadRequests() throws Exception{
+		reset(services);
+		
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).name("config").uniqueId("hhh")
+				.build();
+		MockHttpServletRequestBuilder request = put("/node/p").contentType(JSON).content(objectMapper.writeValueAsString(config));
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		config = Node.builder().nodeType(NodeType.CONFIGURATION).name("config").uniqueId("hhh")
+				.userName("").build();
+		
+		request = put("/node/p").contentType(JSON).content(objectMapper.writeValueAsString(config));
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		config = Node.builder().nodeType(NodeType.CONFIGURATION).uniqueId("hhh")
+				.userName("valid").build();
+		
+		request = put("/node/p").contentType(JSON).content(objectMapper.writeValueAsString(config));
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		config = Node.builder().nodeType(NodeType.CONFIGURATION).name("").uniqueId("hhh")
+				.userName("valid").build();
+		
+		request = put("/node/p").contentType(JSON).content(objectMapper.writeValueAsString(config));
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	public void testGetChildNodes() throws Exception{
+		reset(services);
+		
+		when(services.getChildNodes("p")).thenAnswer(new Answer<List<Node>>() {
+			public List<Node> answer(InvocationOnMock invocation) throws Throwable {
+				return Arrays.asList(config1);
+			}
+		});
+		
+		MockHttpServletRequestBuilder request = get("/node/p/children").contentType(JSON);
+		
+		MvcResult result = mockMvc.perform(request).andExpect(status().isOk()).andExpect(content().contentType(JSON))
+				.andReturn();
+		
+		// Make sure response contains expected data
+		List<Node> childNodes = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<List<Node>>() {
+		});
+		
+		assertEquals(1, childNodes.size());
+	}
 
 	@Test
 	public void testGetNonExistingConfig() throws Exception {
@@ -345,14 +396,47 @@ public class ConfigurationControllerTest {
 	@Test
 	public void testUpdateConfigBadConfigPv() throws Exception {
 
-		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).userName("myusername").id(0).build();
-		List<ConfigPv> configPvList = Arrays.asList(ConfigPv.builder().id(1).provider(Provider.ca).build());
+		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).id(0).build();
+		UpdateConfigHolder holder = UpdateConfigHolder.builder().build();
 		
-		UpdateConfigHolder holder = UpdateConfigHolder.builder().config(config).configPvList(configPvList).build();
+		MockHttpServletRequestBuilder request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		holder.setConfig(config);	
+		
+		request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+		
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		List<ConfigPv> configPvList = Arrays.asList(ConfigPv.builder().build());
+		holder.setConfigPvList(configPvList);
 		
 		when(services.updateConfiguration(holder.getConfig(), holder.getConfigPvList())).thenReturn(config);
 
-		MockHttpServletRequestBuilder request = post("/config/a/update").contentType(JSON)
+		request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		config.setUserName("");
+		
+		request = post("/config/a/update").contentType(JSON)
+				.content(objectMapper.writeValueAsString(holder));
+
+		mockMvc.perform(request).andExpect(status().isBadRequest());
+		
+		configPvList = Arrays.asList(ConfigPv.builder().pvName("").build());
+		holder.setConfigPvList(configPvList);
+		
+		request = post("/config/a/update").contentType(JSON)
 				.content(objectMapper.writeValueAsString(holder));
 
 		mockMvc.perform(request).andExpect(status().isBadRequest());

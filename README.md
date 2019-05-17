@@ -14,37 +14,49 @@ to perform the restore operation.
 The service depends on the jmasar-model artifact 
 (https://gitlab.esss.lu.se/ics-software/jmasar-model). 
 Java-based clients should also make use of jmasar-model to facilitate 
-marshalling/unmarshalling of data. The jmasar model is available from the ESS
-Maven repository (Artifactory).
+marshalling/unmarshalling of data.
 
 Features:
 
 * The service supports a tree structure of objects, much like a file system tree. 
-Tree node objects are either "folders" or configurations. 
+Tree node objects are folders, configurations (aka save sets) or snapshots.
 
-* Nodes in the tree can be renamed, moved or deleted. 
+* There is always a top level root node of type folder. This cannot be modified
+in any manner.
 
-* Snapshots are associated with configurations (aka save sets) and are not treated 
-as nodes in the tree. A client UI (e.g. CS Studio) may however present the
-snapshots as child nodes of a configuration.
+* Child nodes of folder nodes are folder or configuration nodes. Child nodes
+of configuration nodes are only snapshot nodes. Snapshot nodes do not contain
+child nodes, but though they are associated with snapshot items (PV values).
 
-* The service is built upon Spring Boot and depends on some persistence 
+* Each node can be associated with an arbitrary number of string properties, e.g.
+a "golden" property can be set on snapshot nodes.
+
+* Each node has a created date and a last updated date, as well as a user name
+attribute. This should identify the user creating or updating a node.
+
+* Nodes in the tree can be renamed and deleted. When a folder or configuration
+node is deleted, all its child nodes are deleted unconditionally.
+
+* Folder and configuration nodes can be moved to other parent nodes.
+
+* The service is built upon Spring Boot and depends on a persistence 
 implementation. In its current version, persistence is implemented against
 a RDB engine, using Spring's JdbcTemplate to manage SQL queries.
 
-* The service has been verified on Postgres 9.6 and Mysql 8.0, on Mac OS. Database 
+* The service has been verified on Postgres 9.6 and Mysql 8.0, on Mac OS, as well as on
+Postgres 9.6 on CentOS 7.4. Database 
 connection parameters are found in src/main/resources. To select a database engine, add
 -Ddbengine=postgresql or -Ddbengine=mysql to the command line when launching
 the service.
 
 * Flyway scripts for Postgres and Mysql are provided to set up the database. 
 Flyway is run as part of the application startup, i.e. there is no need to 
-run Flyway scripts manually.
+run Flyway scripts manually. The Flyway scripts will create the top level folder.
 
 * Unit tests rely on the H2 in-memory database and are hence independent of any
-external database engine. Note that Flyway scripts for the H2 database are found
+external database engine. Flyway scripts for the H2 database are found
 in src/test/resources/db/migration. Running the unit tests will create the H2
-"database file" (h2.db.mv.db) in a folder named db relative to the current directory.
+database file (h2.db.mv.db) in a folder named db relative to the current directory.
 
 * A Swagger UI is available by default.
 When running the service on any other host than the local development box, also
@@ -54,7 +66,7 @@ Missing features:
 
 * Security in terms of authentication and authorization.
 
-* Search for configurations or snapshots. This will be added next.
+* Search for configurations or snapshots.
 
 * JPA as persistence framework, which would make transition to database engines
 other than Postgresql or Mysql easier, and also hide some of the issues with
