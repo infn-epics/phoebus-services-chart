@@ -18,15 +18,15 @@ marshalling/unmarshalling of data.
 
 Features:
 
-* The service supports a tree structure of objects, much like a file system tree. 
-Tree node objects are folders, configurations (aka save sets) or snapshots.
+* The service supports a tree structure of objects. Nodes in the tree are
+folders, configurations (aka save sets) or snapshots.
 
 * There is always a top level root node of type folder. This cannot be modified
 in any manner.
 
 * Child nodes of folder nodes are folder or configuration nodes. Child nodes
 of configuration nodes are only snapshot nodes. Snapshot nodes do not contain
-child nodes, but though they are associated with snapshot items (PV values).
+child nodes, but they are associated with snapshot items (PV values).
 
 * Each node can be associated with an arbitrary number of string properties, e.g.
 a "golden" property can be set on snapshot nodes.
@@ -37,7 +37,8 @@ attribute. This should identify the user creating or updating a node.
 * Nodes in the tree can be renamed and deleted. When a folder or configuration
 node is deleted, all its child nodes are deleted unconditionally.
 
-* Folder and configuration nodes can be moved to other parent nodes.
+* A folder or configuration node can be moved to another parent node. All
+child nodes of the moved node remain child nodes of the object in question.
 
 * The service is built upon Spring Boot and depends on a persistence 
 implementation. In its current version, persistence is implemented against
@@ -53,7 +54,7 @@ the service.
 Flyway is run as part of the application startup, i.e. there is no need to 
 run Flyway scripts manually. The Flyway scripts will create the top level folder.
 
-* Unit tests rely on the H2 in-memory database and are hence independent of any
+* Unit tests rely on the H2 in-memory database and are independent of any
 external database engine. Flyway scripts for the H2 database are found
 in src/test/resources/db/migration. Running the unit tests will create the H2
 database file (h2.db.mv.db) in a folder named db relative to the current directory.
@@ -80,11 +81,8 @@ Being a Spring Boot application, one may build from Maven command line and
 then launch the jar artifact assembled by the build system. The following 
 parameters (environment variables) must be specified on the command line:
 
-* -Ddbengine=[postgresql | mysql]. 
-
-* -Dspring.datasource.username=<DB user name>
-
-* -Dspring.datasource.password=<DB password>
-
-* -Dspring.datasource.jdbcUrl=<JDBC URL e.g. jdbc:postgresql://localhost:5432/masar>
+-Ddbengine=[postgresql | mysql]. 
+-Dspring.datasource.username=<DB user name>
+-Dspring.datasource.password=<DB password>
+-Dspring.datasource.jdbcUrl=<JDBC URL e.g. jdbc:postgresql://localhost:5432/masar>
 
