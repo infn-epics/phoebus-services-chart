@@ -329,14 +329,6 @@ public class ServicesTest {
 		assertNotNull(services.getChildNodes("a"));
 	}
 	
-
-	@Test
-	public void testTagSnapshotAsGolden() {
-		when(nodeDAO.tagAsGolden("a", true)).thenReturn(Node.builder().nodeType(NodeType.SNAPSHOT).build());
-		assertNotNull(services.tagSnapshotAsGolden("a", true));
-	}
-
-	
 	@Test
 	public void testGetRootNode() {
 		when(nodeDAO.getRootNode()).thenReturn(Node.builder().build());

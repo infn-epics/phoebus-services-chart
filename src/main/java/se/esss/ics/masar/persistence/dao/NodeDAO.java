@@ -158,16 +158,6 @@ public interface NodeDAO {
 	public Node savePreliminarySnapshot(String parentsUniqueId, List<SnapshotItem> snapshotItems);
 	
 	public Node saveSnapshot(String parentsUniqueId, List<SnapshotItem> snapshotItems, String snapshotName, String comment, String userName);
-
-	/**
-	 * Set or reset the "golden" flag of a snapshot.
-	 * 
-	 * @param uniqueNodeId
-	 *            The unique id of the snapshot.
-	 *            @param isGolden Set to <code>true</code> to set the golden flag.
-	 * @return The updated {@link Node} object.
-	 */
-	public Node tagAsGolden(String uniqueNodeId, boolean isGolden);
 	
 	public List<ConfigPv> getConfigPvs(String configUniqueId);
 	

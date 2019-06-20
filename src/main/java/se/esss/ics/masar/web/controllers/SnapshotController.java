@@ -107,17 +107,6 @@ public class SnapshotController extends BaseController {
 		services.commitSnapshot(uniqueNodeId, snapshotName, userName, comment);
 	}
 	
-	/**
-	 * Tags a snapshot as "golden", or removes the tag from the snapshot.
-	 * @param uniqueNodeId The id of the snapshot
-	 * @param isGolden <code>true</code> if a snapshot is to be tagged as golden, <code>false</code> to remove the golden tag.
-	 * @return The update {@link Node} object.
-	 */
-	@ApiOperation(value = "Tag a snapshot as golden.")
-	@PostMapping("/snapshot/{uniqueNodeId}/golden")
-	public Node setGolden(@PathVariable String uniqueNodeId, @RequestParam(value = "isGolden", required = true) boolean isGolden) {
-		return services.tagSnapshotAsGolden(uniqueNodeId, isGolden);
-	}
 	
 	@ApiOperation(value = "Save a snapshot.")
 	@PutMapping("/snapshot/{configUniqueId}")

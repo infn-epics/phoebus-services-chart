@@ -77,27 +77,24 @@ public class EpicsService implements IEpicsService {
 
 		@Override
 		public SnapshotItem call() {
-			
-			String pvName = configPv.getPvName();
-			String readbackPvName = configPv.getReadbackPvName();
-			
-			Future<VType> value = GPClient.readOnce(configPv.getProvider().toString() + "://" + pvName);
+				
+			Future<VType> value = GPClient.readOnce(configPv.getPvName());
 			VType pvValue;
 			VType readbackPvValue = null;
 			try {
 				pvValue = value.get(5L, TimeUnit.SECONDS);
 			} catch (Exception ex) {
-				LOGGER.error(String.format("Read of PV %s has failed", pvName));
+				LOGGER.error(String.format("Read of PV %s has failed", configPv.getPvName()));
 				return SnapshotItem.builder().configPv(configPv).build();
 			}
 			
-			if(readbackPvName != null) {
-				value = GPClient.readOnce(configPv.getProvider().toString() + "://" + readbackPvName);
+			if(configPv.getReadbackPvName() != null) {
+				value = GPClient.readOnce(configPv.getReadbackPvName());
 				
 				try {
 					readbackPvValue = value.get(5L, TimeUnit.SECONDS);
 				} catch (Exception e) {
-					LOGGER.error(String.format("Read of read-back PV %s has failed", readbackPvName));
+					LOGGER.error(String.format("Read of read-back PV %s has failed", configPv.getReadbackPvName()));
 				} 
 			}
 			

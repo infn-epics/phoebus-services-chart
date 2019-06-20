@@ -209,19 +209,6 @@ public class SnapshotControllerTest {
 		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
 	
-	@Test
-	public void testTagSnapshotAsGolden() throws Exception{
-		MockHttpServletRequestBuilder request = post("/snapshot/someId/golden").param("isGolden", "true");
-		
-		mockMvc.perform(request).andExpect(status().isOk());
-	}
-	
-	@Test
-	public void testTagSnapshotAsGoldenBadRequest() throws Exception{
-		MockHttpServletRequestBuilder request = post("/snapshot/someId/golden");
-		
-		mockMvc.perform(request).andExpect(status().isBadRequest());
-	}
 	
 	@Test
 	public void testGetSnapshotItems() throws Exception{

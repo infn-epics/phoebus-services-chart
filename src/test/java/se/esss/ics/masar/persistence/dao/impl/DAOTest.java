@@ -623,6 +623,24 @@ public class DAOTest {
 		nodeDAO.moveNode(config2.getUniqueId(), rootNode.getUniqueId(), "username");
 
 	}
+	
+	@Test
+	@FlywayTest(invokeCleanDB = true)
+	public void testGetChildNodes() throws Exception {
+		Node rootNode = nodeDAO.getRootNode();
+		
+		Map<String, String> props = new HashMap<>();
+		props.put("a", "b");
+
+		Node folder1 = Node.builder().name("SomeFolder").properties(props).build();
+
+		// Create folder1 in the root folder
+		folder1 = nodeDAO.createNode(rootNode.getUniqueId(), folder1);
+		
+		List<Node> childNodes = nodeDAO.getChildNodes(rootNode.getUniqueId());
+		
+		assertEquals("b", childNodes.get(0).getProperty("a"));
+	}
 
 	@Test
 	@FlywayTest(invokeCleanDB = true)
@@ -1003,68 +1021,7 @@ public class DAOTest {
 		assertNotNull(childNode2.getProperty("x"));
 	}
 
-	@Test
-	@FlywayTest(invokeCleanDB = true)
-	public void testTagSnapshotAsGolden() {
-
-		Node rootNode = nodeDAO.getRootNode();
-
-		Node config = Node.builder().name("My config 3").nodeType(NodeType.CONFIGURATION).build();
-
-		config = nodeDAO.createNode(rootNode.getUniqueId(), config);
-		nodeDAO.updateConfiguration(config, Arrays.asList(ConfigPv.builder().pvName("whatever").build()));
-
-		SnapshotItem item1 = SnapshotItem.builder().configPv(nodeDAO.getConfigPvs(config.getUniqueId()).get(0))
-				.value(VDouble.of(7.7, alarm, time, display)).build();
-
-		Node newSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
-		nodeDAO.commitSnapshot(newSnapshot.getUniqueId(), "snapshot name", "user", "comment");
-
-		Node anotherSnapshot = nodeDAO.savePreliminarySnapshot(config.getUniqueId(), Arrays.asList(item1));
-		nodeDAO.commitSnapshot(anotherSnapshot.getUniqueId(), "snapshot name 2", "user", "comment");
-
-		List<Node> snapshots = nodeDAO.getSnapshots(config.getUniqueId());
-		assertEquals(2, snapshots.size());
-
-		nodeDAO.tagAsGolden(newSnapshot.getUniqueId(), true);
-
-		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
-
-		int goldenCount = 0;
-
-		for (Node snapshot : snapshots) {
-			if (snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
-				goldenCount++;
-			}
-		}
-		assertEquals(1, goldenCount);
-		
-		goldenCount = 0;
-		nodeDAO.tagAsGolden(anotherSnapshot.getUniqueId(), true);
-		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
-		for (Node snapshot : snapshots) {
-			if (snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
-				goldenCount++;
-			}
-		}
-		assertEquals(2, goldenCount);
 	
-		goldenCount = 0;
-		nodeDAO.tagAsGolden(anotherSnapshot.getUniqueId(), false);
-		snapshots = nodeDAO.getSnapshots(config.getUniqueId());
-		for (Node snapshot : snapshots) {
-			if (snapshot.getProperty("golden") != null && Boolean.valueOf(snapshot.getProperty("golden"))) {
-				goldenCount++;
-			}
-		}
-		assertEquals(1, goldenCount);
-	}
-	
-	@Test(expected = SnapshotNotFoundException.class)
-	@FlywayTest(invokeCleanDB = true)
-	public void testTagAsGoldenOnNonExistingSnapshot() {
-		nodeDAO.tagAsGolden("invalidNodeId", true);
-	}
 	
 	@Test
 	@FlywayTest(invokeCleanDB = true)

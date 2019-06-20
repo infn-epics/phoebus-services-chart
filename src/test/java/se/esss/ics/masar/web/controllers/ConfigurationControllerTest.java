@@ -54,7 +54,6 @@ import se.esss.ics.masar.application.swagger.SwaggerConfig;
 import se.esss.ics.masar.model.ConfigPv;
 import se.esss.ics.masar.model.Node;
 import se.esss.ics.masar.model.NodeType;
-import se.esss.ics.masar.model.Provider;
 import se.esss.ics.masar.model.UpdateConfigHolder;
 import se.esss.ics.masar.services.IServices;
 import se.esss.ics.masar.services.exception.NodeNotFoundException;
@@ -377,7 +376,7 @@ public class ConfigurationControllerTest {
 	public void testUpdateConfig() throws Exception {
 
 		Node config = Node.builder().nodeType(NodeType.CONFIGURATION).userName("myusername").id(0).build();
-		List<ConfigPv> configPvList = Arrays.asList(ConfigPv.builder().id(1).provider(Provider.ca).pvName("name").build());
+		List<ConfigPv> configPvList = Arrays.asList(ConfigPv.builder().id(1).pvName("name").build());
 		
 		UpdateConfigHolder holder = UpdateConfigHolder.builder().config(config).configPvList(configPvList).build();
 		
@@ -475,7 +474,6 @@ public class ConfigurationControllerTest {
 		
 		ConfigPv configPv = ConfigPv.builder()
 				.id(1)
-				.provider(Provider.ca)
 				.pvName("pvname")
 				.build();
 		
@@ -496,7 +494,6 @@ public class ConfigurationControllerTest {
 		
 		ConfigPv configPv = ConfigPv.builder()
 				.id(1)
-				.provider(Provider.ca)
 				.pvName("pvname")
 				.build();
 		

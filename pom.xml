@@ -13,7 +13,7 @@
 
 	<groupId>se.esss.ics.jmasar</groupId>
 	<artifactId>jmasar-service</artifactId>
-	<version>1.0.12</version>
+	<version>1.0.13</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>se.esss.ics.jmasar</groupId>
 			<artifactId>jmasar-model</artifactId>
-			<version>1.0.11</version>
+			<version>1.0.12</version>
 		</dependency>
 
 		<dependency>
@@ -116,7 +116,6 @@
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 		</dependency>
-
 
 		<!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
 		<dependency>
@@ -250,6 +249,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
 </project>

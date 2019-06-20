@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,8 +146,12 @@ public class NodeJdbcDAO implements NodeDAO {
 	}
 	
 	private List<Node> getChildNodes(int nodeId){
-		return jdbcTemplate.query("select n.* from node as n join node_closure as nc on n.id=nc.descendant where "
+		List<Node> childNodes = jdbcTemplate.query("select n.* from node as n join node_closure as nc on n.id=nc.descendant where "
 				+ "nc.ancestor=? and nc.depth=1", new Object[] { nodeId }, new NodeRowMapper());
+		childNodes.forEach(childNode -> childNode.setProperties(getProperties(childNode.getId())));
+		
+		return childNodes;
+		
 	}
 
 	@Transactional
@@ -313,7 +318,6 @@ public class NodeJdbcDAO implements NodeDAO {
 		} else {
 			Map<String, Object> params = new HashMap<>(4);
 			params.put("name", configPv.getPvName().trim());
-			params.put("provider", configPv.getProvider().toString());
 			params.put("readback_name", configPv.getReadbackPvName());
 			params.put("readonly", configPv.isReadOnly());
 			configPvId = configurationEntryInsert.executeAndReturnKey(params).intValue();
@@ -591,19 +595,6 @@ public class NodeJdbcDAO implements NodeDAO {
 		}
 
 		return node;
-	}
-	
-	@Transactional
-	@Override
-	public Node tagAsGolden(String uniqueNodeId, boolean isGolden) {
-		Node snapshotNode = getSnapshot(uniqueNodeId, true);
-		if(snapshotNode == null) {
-			throw new SnapshotNotFoundException(String.format("Snapshot with id=%s not found or is not committed", uniqueNodeId));
-		}
-		
-		insertOrUpdateProperty(snapshotNode.getId(), new AbstractMap.SimpleEntry<String, String>("golden", isGolden ? "true" : "false"));	
-		
-		return getSnapshot(uniqueNodeId, true);
 	}
 	
 	/**

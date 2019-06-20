@@ -162,12 +162,6 @@ public class Services implements IServices {
 	}
 
 	@Override
-	public Node tagSnapshotAsGolden(String snapshotUniqueId, boolean isGolden) {
-		logger.info("Tagging snapshot {} as golden.", snapshotUniqueId);
-		return nodeDAO.tagAsGolden(snapshotUniqueId, isGolden);
-	}
-
-	@Override
 	public Node getRootNode() {
 		return nodeDAO.getRootNode();
 	}

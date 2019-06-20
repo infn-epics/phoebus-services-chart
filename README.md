@@ -1,20 +1,18 @@
-CAVEAT: in the following the name MASAR is used for reasons of legacy. It is slightly misleading
-as it suggest that the service supports restore operations (the R in MASAR). Please
-not that the jmasar service does NOT provide a restore API.
+CAVEAT: in the following the name MASAR is used for reasons of legacy. 
 
 The jmasar-service implements the MAchine Save And Restore service as a collection
-of REST endpoints. These can be used by clients to create and manage configurations and
-snapshots. 
+of REST endpoints. These can be used by clients to create and manage configurations 
+(aka save sets) and snapshots. 
 
-NOTE: the R(estore) portion of the name JMasar is a bit misleading. The service does not provide
-a way to restore/write PV values. However, it provides an API to retrieve PV values
+NOTE: The service does not provide
+means to restore/write PV values. However, it provides an API to retrieve PV values
 that have been persisted in a snapshot at some point in time. It is then up to the client application 
 to perform the restore operation.
 
 The service depends on the jmasar-model artifact 
 (https://gitlab.esss.lu.se/ics-software/jmasar-model). 
 Java-based clients should also make use of jmasar-model to facilitate 
-marshalling/unmarshalling of data.
+marshalling/unmarshalling of data in Java-based clients.
 
 Features:
 
@@ -26,7 +24,8 @@ in any manner.
 
 * Child nodes of folder nodes are folder or configuration nodes. Child nodes
 of configuration nodes are only snapshot nodes. Snapshot nodes do not contain
-child nodes, but they are associated with snapshot items (PV values).
+child nodes, but they are associated with snapshot items (PV values) that are
+not part of the tree structure.
 
 * Each node can be associated with an arbitrary number of string properties, e.g.
 a "golden" property can be set on snapshot nodes.
@@ -38,7 +37,7 @@ attribute. This should identify the user creating or updating a node.
 node is deleted, all its child nodes are deleted unconditionally.
 
 * A folder or configuration node can be moved to another parent node. All
-child nodes of the moved node remain child nodes of the object in question.
+child nodes of the moved node remain child nodes of the node in question.
 
 * The service is built upon Spring Boot and depends on a persistence 
 implementation. In its current version, persistence is implemented against

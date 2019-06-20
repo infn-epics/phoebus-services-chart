@@ -18,6 +18,7 @@
 package se.esss.ics.masar.web.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -127,7 +128,7 @@ public class ConfigurationController extends BaseController {
 	@PostMapping("/config/{uniqueNodeId}/update")
 	public ResponseEntity<Node> updateConfiguration(@PathVariable String uniqueNodeId, 
 			@RequestBody UpdateConfigHolder updateConfigHolder) {
-	
+		
 		if(updateConfigHolder.getConfig() == null) {
 			throw new IllegalArgumentException("Cannot update a null configuration");
 		}
@@ -238,6 +239,4 @@ public class ConfigurationController extends BaseController {
 			
 		return services.updateSingleConfigPv(pvName, newPvName, readbackPvName, newReadbackPvName);
 	}
-	
-	
 }

@@ -19,6 +19,7 @@ package se.esss.ics.masar.persistence.config;
 
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,13 +38,13 @@ public class PersistenceTestConfig {
 	
 	@Bean("flyway")
 	public Flyway flyway() {
-		Flyway flyway = new Flyway();
 		
-		flyway.setDataSource("jdbc:h2:nio:./db/h2.db", "", "");
-		flyway.setLocations("db/migration/h2", "db/migration/common");
-		flyway.setValidateOnMigrate(true);
-		flyway.setOutOfOrder(false);
+		FluentConfiguration configuration = Flyway.configure()
+		.dataSource("jdbc:h2:nio:./db/h2.db", "", "")
+		.locations("db/migration/h2", "db/migration/common")
+		.validateOnMigrate(true)
+		.outOfOrder(false);
 		
-		return flyway;
+		return new Flyway(configuration);
 	}
 }
