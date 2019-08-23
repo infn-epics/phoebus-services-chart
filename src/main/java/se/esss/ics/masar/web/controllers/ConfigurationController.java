@@ -18,7 +18,6 @@
 package se.esss.ics.masar.web.controllers;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -73,19 +72,13 @@ public class ConfigurationController extends BaseController {
 	}
 
 	/**
-	 * Recursively deletes a folder and and all its child folders and configurations.
+	 * Gets a node.
 	 * 
 	 * A {@link HttpStatus#BAD_REQUEST} is returned if the specified node id is zero (i.e. root node).
 	 * 
 	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified node id does not exist.
 	 * @param uniqueNodeId The id of the folder
-	 */
-	@ApiOperation(value = "Delete a node and its sub-tree")
-	@DeleteMapping("/node/{uniqueNodeId}")
-	public void deleteFolder(@PathVariable final String uniqueNodeId) {
-		services.deleteNode(uniqueNodeId);
-	}
-	
+	 */	
 	@ApiOperation(value = "Get a node, child nodes not included in response", produces = JSON)
 	@GetMapping("/node/{uniqueNodeId}")
 	public Node getNode(@PathVariable final String uniqueNodeId) {
@@ -150,8 +143,9 @@ public class ConfigurationController extends BaseController {
 	}
 
 	/**
-	 * Recursively deletes a node (configuration or folder) and all its child nodes. NOTE: if the node id points to a configuration,
-	 * all snapshots associated with that configuration will also be deleted.
+	 * Recursively deletes a node and all its child nodes, if any. In particular, if the node id points to a configuration,
+	 * all snapshots associated with that configuration will also be deleted. A client may wish to alert the
+	 * user of this side-effect.
 	 * 
 	 * A {@link HttpStatus#NOT_FOUND} is returned if the specified node id does not exist.
 	 * 
@@ -160,7 +154,7 @@ public class ConfigurationController extends BaseController {
 	 * @param uniqueNodeId The non-zero id of the node to delete
 	 */
 	@ApiOperation(value = "Delete a configuration and all snapshots associated with it.")
-	@DeleteMapping("/config/{uniqueNodeId}")
+	@DeleteMapping("/node/{uniqueNodeId}")
 	public void deleteNode(@PathVariable final String uniqueNodeId) {
 		services.deleteNode(uniqueNodeId);
 	}

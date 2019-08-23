@@ -640,6 +640,13 @@ public class DAOTest {
 		List<Node> childNodes = nodeDAO.getChildNodes(rootNode.getUniqueId());
 		
 		assertEquals("b", childNodes.get(0).getProperty("a"));
+		assertTrue(nodeDAO.getChildNodes(folder1.getUniqueId()).isEmpty());
+	}
+	
+	@Test(expected = NodeNotFoundException.class)
+	@FlywayTest(invokeCleanDB = true)
+	public void testGetChildNodesOfNonExistingNode() throws Exception {
+		nodeDAO.getChildNodes("non-existing");
 	}
 
 	@Test

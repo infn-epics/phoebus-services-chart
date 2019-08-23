@@ -232,6 +232,16 @@ public class ConfigurationControllerTest {
 		
 		assertEquals(1, childNodes.size());
 	}
+	
+	@Test
+	public void testGetChildNodesNonExistingNode() throws Exception{
+		reset(services);
+		
+		when(services.getChildNodes("non-existing")).thenThrow(NodeNotFoundException.class);
+		MockHttpServletRequestBuilder request = get("/node/non-existing/children").contentType(JSON);
+		
+		mockMvc.perform(request).andExpect(status().isNotFound());
+	}
 
 	@Test
 	public void testGetNonExistingConfig() throws Exception {
@@ -268,13 +278,6 @@ public class ConfigurationControllerTest {
 		MockHttpServletRequestBuilder request = get("/config/x/snapshots").contentType(JSON);
 
 		mockMvc.perform(request).andExpect(status().isNotFound());
-	}
-
-	@Test
-	public void testDeleteConfiguration() throws Exception {
-		MockHttpServletRequestBuilder request = delete("/config/1");
-
-		mockMvc.perform(request).andExpect(status().isOk());
 	}
 
 	@Test

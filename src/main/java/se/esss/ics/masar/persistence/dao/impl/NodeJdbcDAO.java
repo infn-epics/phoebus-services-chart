@@ -142,6 +142,10 @@ public class NodeJdbcDAO implements NodeDAO {
 	public List<Node> getChildNodes(String uniqueNodeId) {
 
 		Node parentNode = getNode(uniqueNodeId);
+		// Node may have been deleted -> client's data is out-of-sync with server's data
+		if(parentNode == null) {
+			throw new NodeNotFoundException(String.format("Cannot get child nodes of unique id %s as it does not exist", uniqueNodeId));
+		}
 		return getChildNodes(parentNode.getId());
 	}
 	
