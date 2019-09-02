@@ -13,7 +13,7 @@
 
 	<groupId>se.esss.ics.jmasar</groupId>
 	<artifactId>jmasar-service</artifactId>
-	<version>1.0.14</version>
+	<version>1.0.15</version>
 	<packaging>jar</packaging>
 
 	<properties>
