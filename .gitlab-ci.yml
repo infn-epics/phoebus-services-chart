@@ -1,39 +1,44 @@
+services:
+  - docker:19.03.12-dind
+
 stages:
-  - build
-  - deploy
+    - build
 
-build:
+build_image:
+#  tags:
+#    - lnf
   stage: build
-  image: registry.esss.lu.se/ics-docker/maven:openjdk-8
-  tags:
-    - docker
+  image: docker:19.03.12
+  variables:
+    # When using dind service, you must instruct docker to talk with the
+    # daemon started inside of the service. The daemon is available with
+    # a network connection instead of the default /var/run/docker.sock socket.
+    #
+    # The 'docker' hostname is the alias of the service container as described at
+    # https://docs.gitlab.com/ee/ci/docker/using_docker_images.html#accessing-the-services
+    #
+    # If you're using GitLab Runner 12.7 or earlier with the Kubernetes executor and Kubernetes 1.6 or earlier,
+    # the variable must be set to tcp://localhost:2375 because of how the
+    # Kubernetes executor connects services to the job container
+    # DOCKER_HOST: tcp://localhost:2375
+    #
+    # DOCKER_HOST: tcp://docker:2375
+    #
+    # This instructs Docker not to start over TLS.
+    DOCKER_TLS_CERTDIR: ""
+    LAST_TAG: $CI_COMMIT_REF_NAME
+    LATEST_TAG: "latest"
+  
+  before_script:
+    - apk add --no-cache git
+
+    
   script:
-    - >
-      mvn --batch-mode clean deploy
-      -Dserver.id=distribution-repository
-      -Dserver.username=${ARTIFACTORY_USERNAME}
-      -Dserver.password=${ARTIFACTORY_PASSWORD}
-      -Ddistribution.repository.snapshot=${ARTIFACTORY_URL}/libs-snapshot-local
-      -Ddistribution.repository.release=${ARTIFACTORY_URL}/libs-release-local
-  only:
-    - branches@ics-software/jmasar-service
+    - LAST_TAG=$(git describe --tags --abbrev=0)
+    - docker login baltig.infn.it:4567 -u DOCKER_IO_KEY -p ${DOCKER_IO_KEY}
+    - docker build --build-arg RESOLUTION="1920x1080" -t baltig.infn.it:4567/epics-containers/jmasar-docker:$LAST_TAG .
+    - docker tag baltig.infn.it:4567/epics-containers/jmasar-docker:$LAST_TAG baltig.infn.it:4567/epics-containers/jmasar-docker:$LATEST_TAG
+    - docker push baltig.infn.it:4567/epics-containers/jmasar-docker:$LAST_TAG
+    - docker push baltig.infn.it:4567/epics-containers/jmasar-docker:$LATEST_TAG
 
 
-deploy-staging:
-  stage: deploy
-  image: registry.esss.lu.se/ics-docker/tower-cli:3.3
-  tags:
-    - docker
-  script:
-    - version=$(get_pom_version)
-    - >
-      tower-cli job launch
-      -h torn.tn.esss.lu.se
-      -t ${TOWER_OAUTH_TOKEN}
-      -J deploy-jmasar-staging
-      -e "jmasar_version=${version}" --monitor
-  environment:
-    name: staging
-    url: http://jmasar-test.esss.lu.se/swagger-ui.html
-  only:
-    - branches@ics-software/jmasar-service
