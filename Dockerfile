@@ -1,8 +1,8 @@
 FROM maven:3.8.6-openjdk-8-slim as build
 COPY src /root
+COPY jmasar-model /root
 COPY pom.xml /root
 WORKDIR /root
-RUN git clone https://gitlab.esss.lu.se/ics-software/jmasar-model.git
 RUN cd jmasar-model ; mvn -DskipTests clean install; cd -
 RUN mvn -DskipTests clean install
 

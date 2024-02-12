@@ -1,0 +1,3 @@
+[submodule "jmasar-model"]
+	path = jmasar-model
+	url = https://gitlab.esss.lu.se/ics-software/jmasar-model.git
