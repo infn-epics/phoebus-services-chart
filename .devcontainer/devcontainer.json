@@ -1,22 +1,19 @@
 // For format details, see https://containers.dev/implementors/json_reference/
 {
     "name": "Maven",
-    // "build": {
-    //     "dockerfile": "",
-    //     "target": "developer",
-    //     "args": {
-    //         "TARGET_ARCHITECTURE": "linux"
-    //     }
-    // },
-    "image" : "maven:3.8.6-openjdk-8-slim",
+     "build": {
+         "dockerfile": "../Dockerfile"
+        
+     },
+   // "image" : "maven:3.8.6-openjdk-8-slim",
     
-    "features": {
+   // "features": {
         // add quality of life features for developers including git config integration
-        "ghcr.io/devcontainers/features/common-utils:2": {
+   //     "ghcr.io/devcontainers/features/common-utils:2": {
             // don't upgrade to make this similar to the runtime container
-            "upgradePackages": false
-        }
-    },
+   //         "upgradePackages": false
+   //     }
+   // },
     // IMPORTANT for this devcontainer to work with docker EC_REMOTE_USER must be
     // set to vscode. You will run as vscode with full sudo rights.
     // For podman it should be left blank. You will run as root but host mounts
@@ -37,10 +34,10 @@
     },
     // Make sure the files we are mapping into the container exist on the host
     // You can place any other outside of the container before-launch commands here
-    "initializeCommand": "bash .devcontainer/initializeCommand ${devcontainerId}",
+   // "initializeCommand": "bash .devcontainer/initializeCommand ${devcontainerId}",
     // Hooks the global .bashprofile_dev_container but also can add any other commands
     // to run in the container at creation in here
-    "postCreateCommand": "bash .devcontainer/postCreateCommand ${devcontainerId}",
+    //"postCreateCommand": "bash .devcontainer/postCreateCommand ${devcontainerId}",
     "runArgs": [
         // Allow the container to access the host X11 display and EPICS CA
         "--net=host",
