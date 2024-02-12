@@ -3,8 +3,8 @@ COPY src /root
 COPY jmasar-model /root
 COPY pom.xml /root
 WORKDIR /root
-RUN cd jmasar-model ; mvn -DskipTests clean install; cd -
-RUN mvn -DskipTests clean install
+RUN ls -latr; cd /root/jmasar-model ; mvn -DskipTests clean install
+RUN cd /root; mvn -DskipTests clean install
 
 FROM openjdk:8-jre as system
 COPY --from=build /root/target/ /target 
