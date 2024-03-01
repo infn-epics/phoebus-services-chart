@@ -37,18 +37,18 @@ spec:
             - sh 
             - -c
             - |
-              if [ "{{ .Values.phoebusservice }}" == "saveandrestore" ]; then
+              if [[ "{{ .Values.phoebusservice }}" == "saveandrestore" ]]; then
                 elastic={{ .Values.elasticsearch.network.host }}
                 elasticport={{ .Values.elasticsearch.http.port }}
                 echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
                 java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host=$elastic -Delasticsearch.http.port=$elasticport
               
               fi
-              if [ "{{ .Values.phoebusservice }}" == "alarmserver" ]; then
+              if [[ "{{ .Values.phoebusservice }}" == "alarmserver" ]]; then
                 ## needs kafka
                 echo "Not yet installed"
               fi
-              if [ "{{ .Values.phoebusservice }}" == "alarmlogger" ]; then
+              if [[ "{{ .Values.phoebusservice }}" == "alarmlogger" ]]; then
                 ## needs kafka
                 echo "Not yet installed"
               fi
