@@ -90,13 +90,4 @@ elasticsearch:
     port: 9300 
   http:
     port: 9200
-  tag:
-    index: "cf_tags"
-  property:
-    index: cf_properties
-  channel:
-    index: channelfinder
-  query:
-    size: 10000
-  create:
-    indices: true
+  
