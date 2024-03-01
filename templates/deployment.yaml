@@ -37,7 +37,7 @@ spec:
             - name: config
               mountPath: /config
           ports:
-            - name: saverestore-http
+            - name: sr-http
               containerPort: 8080
               protocol: TCP
             
