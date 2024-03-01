@@ -42,7 +42,7 @@ spec:
               containerPort: 8080
               protocol: TCP
             {{- end}}
-            {{- if eq .Values.phoebusservice "saveandrestore" }}
+            {{- if eq .Values.phoebusservice "scanserver" }}
             - name: rest
               containerPort: 4810
               protocol: TCP
