@@ -36,6 +36,11 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+          ports:
+            - name: saverestore-http
+              containerPort: 8080
+              protocol: TCP
+            
           command: 
             - sh 
             - -c
