@@ -87,6 +87,7 @@ phoebusservice: "saveandrestore"
 elasticsearch:
   network:
     host: localhost
+    port: 9300 
   http:
     port: 9200
   tag:

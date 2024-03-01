@@ -39,9 +39,11 @@ spec:
             - |
               if [ "{{ .Values.phoebusservice }}" = "saveandrestore" ]; then
                 elastic={{ .Values.elasticsearch.network.host }}
-                elasticport={{ .Values.elasticsearch.http.port }}
+                elastichttpport={{ .Values.elasticsearch.http.port }}
+                elasticport={{ .Values.elasticsearch.network.port }}
+
                 echo "Testing connection to $elastic:$elasticport"
-                until curl --silent --fail http://$elastic:$elasticport/_cluster/health; do
+                until curl --silent --fail http://$elastic:$elastichttpport/_cluster/health; do
                 echo "Waiting for Elasticsearch $elastic"
                 sleep 4
                 done
