@@ -40,6 +40,9 @@ spec:
             - name: sr-http
               containerPort: 8080
               protocol: TCP
+            - name: ss-http
+              containerPort: 4810
+              protocol: TCP
             
           command: 
             - sh 
@@ -67,6 +70,11 @@ spec:
               if [ "{{ .Values.phoebusservice }}" = "alarmlogger" ]; then
                 ## needs kafka
                 echo "Not yet installed"
+              fi
+              if [ "{{ .Values.phoebusservice }}" = "scanserver" ]; then
+                echo "* Starting scan server"
+
+                java -jar service-scan-server.jar -noshell 
               fi
 
       {{- with .Values.nodeSelector }}
