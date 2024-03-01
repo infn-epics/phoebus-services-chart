@@ -52,7 +52,7 @@ spec:
                 done
                 echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
-                java -jar  /phoebus/service-save-and-restore.jar  -Dspring.config.location=file:/config/saveandrestore.properties
+                java -jar -Dspring.config.location=file:/config/saveandrestore.properties /phoebus/service-save-and-restore.jar  
               
               fi
               if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
