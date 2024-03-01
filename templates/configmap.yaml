@@ -29,7 +29,7 @@ data:
 
       ############################## REST Logging ###############################
       # DEBUG level will log all requests and responses to and from the REST end points
-      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=INFO
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
 
       # Mapping of static resources. Needed as otherwise the web front-end (if present) will intercept and fail to
       # serve a resource like for instance SearchHelp.html
