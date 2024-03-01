@@ -37,13 +37,16 @@ spec:
             - name: config
               mountPath: /config
           ports:
-            - name: sr-http
+            {{- if eq .Values.phoebusservice "saveandrestore" }}
+            - name: rest
               containerPort: 8080
               protocol: TCP
-            - name: ss-http
+            {{- end}}
+            {{- if eq .Values.phoebusservice "saveandrestore" }}
+            - name: rest
               containerPort: 4810
               protocol: TCP
-            
+            {{- end }}
           command: 
             - sh 
             - -c

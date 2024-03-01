@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: sr-http
+      targetPort: rest
       protocol: TCP
-      name: sr-http
+      name: rest
   selector:
     {{- include "phoebus-services-chart.selectorLabels" . | nindent 4 }}
