@@ -40,6 +40,10 @@ spec:
               if [ "{{ .Values.phoebusservice }}" = "saveandrestore" ]; then
                 elastic={{ .Values.elasticsearch.network.host }}
                 elasticport={{ .Values.elasticsearch.http.port }}
+                until curl --silent --fail http://$elastic:$elasticport/_cluster/health; do
+                echo "Waiting for Elasticsearch $elastic"
+                sleep 4
+                done
                 echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
                 java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host=$elastic -Delasticsearch.http.port=$elasticport
               
