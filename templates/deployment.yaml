@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "phoebus-services-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "phoebus-services-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "phoebus-services-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: 
+            - sh 
+            - -c
+            - |
+              if [ {{ .Values.phoebusservice }} == "saveandrestore" ]; then
+                elastic={{ .Values.elasticsearch.network.host }}
+                elasticport={{ .Values.elasticsearch.network.port }}
+                echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
+                java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host=$elastic -Delasticsearch.http.port=$elasticport
+              
+              fi
+              if [ {{ .Values.phoebusservice }} == "alarmserver" ]; then
+                ## needs kafka
+                echo "Not yet installed"
+              fi
+              if [ {{ .Values.phoebusservice }} == "alarmlogger" ]; then
+                ## needs kafka
+                echo "Not yet installed"
+              fi
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
