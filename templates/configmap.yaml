@@ -4,7 +4,7 @@ metadata:
   name: {{ include "phoebus-services-chart.fullname" . }}-config
 data:
   saveandrestore.properties: |-
-      logging.level.org.springframework=TRACE
+      logging.level.org.springframework={{ .Values.service.loglevel}}
       app.version=@project.version@
       app.name=@project.artifactId@
 
@@ -21,15 +21,15 @@ data:
       server.servlet.contextPath=/save-restore
 
       # The names of the index to use for save&restore
-      elasticsearch.tree_node.index={{ include "phoebus-services-chart.fullname" . }}-saveandrestore_tree
-      elasticsearch.configuration_node.index={{ include "phoebus-services-chart.fullname" . }}-saveandrestore_configuration
-      elasticsearch.snapshot_node.index:{{ include "phoebus-services-chart.fullname" . }}-saveandrestore_snapshot
-      elasticsearch.composite_snapshot_node.index:{{ include "phoebus-services-chart.fullname" . }}-saveandrestore_composite_snapshot
-      elasticsearch.filter.index:{{ include "phoebus-services-chart.fullname" . }}-saveandrestore_filter
+      elasticsearch.tree_node.index={{ include "phoebus-services-chart.fullname" . }}_tree
+      elasticsearch.configuration_node.index={{ include "phoebus-services-chart.fullname" . }}_configuration
+      elasticsearch.snapshot_node.index:{{ include "phoebus-services-chart.fullname" . }}_snapshot
+      elasticsearch.composite_snapshot_node.index:{{ include "phoebus-services-chart.fullname" . }}_composite_snapshot
+      elasticsearch.filter.index:{{ include "phoebus-services-chart.fullname" . }}_filter
 
       ############################## REST Logging ###############################
-      # DEBUG level will log all requests and responses to and from the REST end points
-      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
+      # {{ .Values.service.loglevel}} level will log all requests and responses to and from the REST end points
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter={{ .Values.service.loglevel}}
 
       # Mapping of static resources. Needed as otherwise the web front-end (if present) will intercept and fail to
       # serve a resource like for instance SearchHelp.html
@@ -110,13 +110,13 @@ data:
       #spring.main.banner-mode=off
 
       # suppress the logging from spring boot
-      # during debugging this should be set to DEBUG
-      logging.level.root=DEBUG
-      logging.level.org.springframework=DEBUG
-      logging.level.org.apache.catalina=DEBUG
-      logging.level.org.apache.kafka=DEBUG
-      logging.level.org.springframework.web=DEBUG
-      logging.level.org.springframework.security=DEBUG
+      # during {{ .Values.service.loglevel}}ging this should be set to {{ .Values.service.loglevel}}
+      logging.level.root={{ .Values.service.loglevel}}
+      logging.level.org.springframework={{ .Values.service.loglevel}}
+      logging.level.org.apache.catalina={{ .Values.service.loglevel}}
+      logging.level.org.apache.kafka={{ .Values.service.loglevel}}
+      logging.level.org.springframework.web={{ .Values.service.loglevel}}
+      logging.level.org.springframework.security={{ .Values.service.loglevel}}
 
       spring.main.allow-bean-definition-overriding=true
 
@@ -190,20 +190,20 @@ data:
       elasticsearch.cluster.name: elasticsearch
 
       # The names of the index to use for olog
-      elasticsearch.tag.index: {{ include "phoebus-services-chart.fullname" . }}-olog_tags
-      elasticsearch.tag.type: {{ include "phoebus-services-chart.fullname" . }}-olog_tag
+      elasticsearch.tag.index: {{ include "phoebus-services-chart.fullname" . }}_tags
+      elasticsearch.tag.type: {{ include "phoebus-services-chart.fullname" . }}_tag
 
-      elasticsearch.logbook.index: {{ include "phoebus-services-chart.fullname" . }}-olog_logbooks
-      elasticsearch.logbook.type: {{ include "phoebus-services-chart.fullname" . }}-olog_logbook
+      elasticsearch.logbook.index: {{ include "phoebus-services-chart.fullname" . }}_logbooks
+      elasticsearch.logbook.type: {{ include "phoebus-services-chart.fullname" . }}_logbook
 
-      elasticsearch.property.index: {{ include "phoebus-services-chart.fullname" . }}-olog_properties
-      elasticsearch.property.type: {{ include "phoebus-services-chart.fullname" . }}-olog_property
+      elasticsearch.property.index: {{ include "phoebus-services-chart.fullname" . }}_properties
+      elasticsearch.property.type: {{ include "phoebus-services-chart.fullname" . }}_property
 
-      elasticsearch.log.index: {{ include "phoebus-services-chart.fullname" . }}-olog_logs
-      elasticsearch.log.type: {{ include "phoebus-services-chart.fullname" . }}-olog_log
+      elasticsearch.log.index: {{ include "phoebus-services-chart.fullname" . }}_logs
+      elasticsearch.log.type: {{ include "phoebus-services-chart.fullname" . }}_log
 
-      elasticsearch.sequence.index: {{ include "phoebus-services-chart.fullname" . }}-olog_sequence
-      elasticsearch.sequence.type: {{ include "phoebus-services-chart.fullname" . }}-olog_sequence
+      elasticsearch.sequence.index: {{ include "phoebus-services-chart.fullname" . }}_sequence
+      elasticsearch.sequence.type: {{ include "phoebus-services-chart.fullname" . }}_sequence
 
       ############################## Mongo gridfs client ###############################
       mongo.database: {{ .Values.mongo.database }}
@@ -213,7 +213,7 @@ data:
 
       ############################## Spring Session repository configuration ##############################
 
-      # For debugging purposes, set the below to true
+      # For {{ .Values.service.loglevel}}ging purposes, set the below to true
       # spring.h2.console.enabled=true
 
       # Sets the maximum inactive interval, MUST be in minutes. Defaults to 30 if not set here.

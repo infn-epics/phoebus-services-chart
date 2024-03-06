@@ -42,6 +42,7 @@ service:
   http:
     enable: false
     port: 8081
+  loglevel: "INFO"
 
 ingress:
   enabled: false
