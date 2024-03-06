@@ -206,7 +206,7 @@ data:
       elasticsearch.sequence.type: {{ include "phoebus-services-chart.fullname" . }}-olog_sequence
 
       ############################## Mongo gridfs client ###############################
-      mongo.database: {{ .Values.mongo.db }}
+      mongo.database: {{ .Values.mongo.database }}
       mongo.host: {{ .Values.mongo.host }}
       mongo.port: {{ .Values.mongo.port }}
 
