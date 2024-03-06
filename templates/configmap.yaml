@@ -9,7 +9,7 @@ data:
       app.name=@project.artifactId@
 
       # The server port for the rest service
-      server.port={{service.restport}}
+      server.port=8080
 
       # Elasticsearch connection parameters
       elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
@@ -100,11 +100,11 @@ data:
     
   olog.properties: |-
       # the server port for the rest service
-      server.port: {{service.restport}}
+      server.port: 8181
 
       # Options support for unsecure http
-      server.http.enable={{service.http.enable}}
-      server.http.port={{service.http.port}}
+      server.http.enable={{ .Values.service.http.enable }}
+      server.http.port=8080
 
       # Disable the spring banner
       #spring.main.banner-mode=off

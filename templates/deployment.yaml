@@ -47,6 +47,19 @@ spec:
               containerPort: 4810
               protocol: TCP
             {{- end }}
+            {{- if eq .Values.phoebusservice "olog" }}
+            - name: rest
+              containerPort: 8181
+              protocol: TCP
+            {{- if .Values.service.http.enable }}
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            {{- end }}
+            {{- end }}
+
+            
+            
           command: 
             - sh 
             - -c
