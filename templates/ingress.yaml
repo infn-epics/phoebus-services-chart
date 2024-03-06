@@ -55,7 +55,7 @@ spec:
                   number: {{ .port }}
                   {{- else}}
                   number: {{ $svcPort }}
-                  {{-end }}
+                  {{- end }}
               {{- else }}
               serviceName: {{ $fullName }}
               servicePort: {{ $svcPort }}
