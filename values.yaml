@@ -39,6 +39,10 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 80
+  restport: 8080
+  http:
+    enable: true
+    port: 8081
 
 ingress:
   enabled: false
@@ -81,7 +85,7 @@ tolerations: []
 
 affinity: {}
 
-#alarmserver alarmlogger saveandrestore scanserver
+#alarmserver alarmlogger saveandrestore scanserver olog
 phoebusservice: "saveandrestore"
 
 elasticsearch:
@@ -90,4 +94,8 @@ elasticsearch:
     port: 9300 
   http:
     port: 9200
-  
+
+mongo:
+  database: ologAttachments
+  host: mongo
+  port: 27017

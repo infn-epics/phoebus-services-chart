@@ -79,6 +79,11 @@ spec:
 
                 java -jar service-scan-server.jar -noshell 
               fi
+              if [ "{{ .Values.phoebusservice }}" = "olog" ]; then
+                echo "* Starting olog server"
+
+                java -jar -Dspring.config.location=file:/config/olog.properties service-olog.jar
+              fi
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
