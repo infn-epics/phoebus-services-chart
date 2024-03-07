@@ -145,7 +145,7 @@ data:
       ldap.manager.dn=
       # password of account
       ldap.manager.password=
-      
+
       {{- if not .Values.ldap.external.enabled }}
       ############## LDAP - Embedded ##############
       embedded_ldap.enabled = true
@@ -162,7 +162,7 @@ data:
 
       ############## Demo Auth ##############
       demo_auth.enabled = true
-      {{- endif }}
+      {{- end }}
       ############## Authorization Role --> group Mapping ##############
       # Customize group names here
       admin-groups=olog-admins,sys-admins,ADMIN
