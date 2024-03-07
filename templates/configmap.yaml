@@ -36,7 +36,7 @@ data:
       spring.mvc.static-path-pattern=/**
 
       ############## AD - External ##############
-      ad.enabled = {{ .Values.ldap.external.enabled }}
+      ad.enabled = {{ .Values.ldap.external.enable }}
       ad.url = {{ .Values.ldap.external.url }}
       ad.domain = test.com
 
@@ -129,7 +129,7 @@ data:
       security.require-ssl=false
 
       ############## LDAP - External ##############
-      ldap.enabled = {{ .Values.ldap.external.enabled }}
+      ldap.enabled = {{ .Values.ldap.external.enable }}
       ldap.urls = {{ .Values.ldap.external.url }}
       ldap.base.dn = { .Values.ldap.external.base.dn }}
       ldap.user.search.base=
@@ -146,7 +146,7 @@ data:
       # password of account
       ldap.manager.password=
 
-      {{- if not .Values.ldap.external.enabled }}
+      {{- if not .Values.ldap.external.enable }}
       ############## LDAP - Embedded ##############
       embedded_ldap.enabled = true
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
