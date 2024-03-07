@@ -288,15 +288,15 @@ data:
       gidNumber: 23002
       homeDirectory: /dev/null
 
-      dn: uid=logbook,ou=People,dc=olog,dc=local
-      uid: logbook
+      dn: uid=epics,ou=People,dc=olog,dc=local
+      uid: epics
       objectClass: account
       objectClass: posixAccount
       description: User with logbook role
       cn: logbook
-      userPassword: 1234
-      uidNumber: 23003
-      gidNumber: 23003
+      userPassword: epics
+      uidNumber: 1000
+      gidNumber: 1000
       homeDirectory: /dev/null
 
       dn: uid=log,ou=People,dc=olog,dc=local
