@@ -101,3 +101,11 @@ mongo:
   database: ologAttachments
   host: mongo
   port: 27017
+
+ldap:
+  external:
+    enable: false
+    url: "ldaps://controlns02.nsls2.bnl.gov/dc=nsls2,dc=bnl,dc=gov"
+    base: 
+      dn: "dc=nsls2,dc=bnl,dc=gov"
+

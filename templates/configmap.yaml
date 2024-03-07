@@ -36,8 +36,8 @@ data:
       spring.mvc.static-path-pattern=/**
 
       ############## AD - External ##############
-      ad.enabled = false
-      ad.url = ldap://127.0.0.1
+      ad.enabled = {{ .Values.ldap.external.enabled }}
+      ad.url = {{ .Values.ldap.external.url }}
       ad.domain = test.com
 
       ############## LDAP - External ##############
@@ -75,11 +75,11 @@ data:
       spring.ldap.embedded.validation.enabled=false
 
       ############## Demo credentials ##############
-      demo.user=user
-      demo.user.password=userPass
+      demo.user=epics
+      demo.user.password=epics
       demo.admin=admin
-      demo.admin.password=adminPass
-      demo.readOnly=johndoe
+      demo.admin.password=epics
+      demo.readOnly=control
       demo.readOnly.password=1234
 
       ############## Authentication Implementation ##############
@@ -126,13 +126,12 @@ data:
       server.ssl.key-store-password=password
       server.ssl.key-alias=cf
 
-      security.require-ssl=true
+      security.require-ssl=false
 
       ############## LDAP - External ##############
-      ldap.enabled = false
-      #ldap.urls = ldaps://ldap.cs.nsls2.local/dc=nsls2,dc=bnl,dc=gov
-      ldap.urls = ldaps://controlns02.nsls2.bnl.gov/dc=nsls2,dc=bnl,dc=gov
-      ldap.base.dn = dc=nsls2,dc=bnl,dc=gov
+      ldap.enabled = {{ .Values.ldap.external.enabled }}
+      ldap.urls = {{ .Values.ldap.external.url }}
+      ldap.base.dn = { .Values.ldap.external.base.dn }}
       ldap.user.search.base=
       # User search pattern, e.g. uid={0},ou=People. No default value as LDAP environment may not
       # support user search by pattern.
@@ -146,9 +145,10 @@ data:
       ldap.manager.dn=
       # password of account
       ldap.manager.password=
-
+      
+      {{- if not .Values.ldap.external.enabled }}
       ############## LDAP - Embedded ##############
-      embedded_ldap.enabled = false
+      embedded_ldap.enabled = true
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
       embedded_ldap.base.dn = dc=olog,dc=local
       embedded_ldap.user.dn.pattern = uid={0},ou=People
@@ -162,7 +162,7 @@ data:
 
       ############## Demo Auth ##############
       demo_auth.enabled = true
-
+      {{- endif }}
       ############## Authorization Role --> group Mapping ##############
       # Customize group names here
       admin-groups=olog-admins,sys-admins,ADMIN
