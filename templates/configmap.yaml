@@ -154,7 +154,7 @@ data:
       embedded_ldap.user.dn.pattern = uid={0},ou=People
       embedded_ldap.groups.search.base = ou=Group
       embedded_ldap.groups.search.pattern = (memberUid= {1})
-      spring.ldap.embedded.ldif=classpath:/config/olog.ldif
+      spring.ldap.embedded.ldif=file:/config/olog.ldif
       spring.ldap.embedded.base-dn=dc=olog,dc=local
       spring.ldap.embedded.port=8389
       spring.ldap.embedded.validation.enabled=false
