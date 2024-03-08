@@ -107,3 +107,12 @@ ldap:
     base: 
       dn: "dc=nsls2,dc=bnl,dc=gov"
 
+kafka:
+  host: kafka-controller-headless.backend.svc.cluster.local
+  port: 9092
+
+alarm:
+  config: "Accelerator"
+  settings: "settings.xml"      # - Import preferences (PV connectivity) from property format file
+  econfig: "econfig.xml"        # - Export alarm configuration to file
+  iconfig: "config.xml"        # - Import alarm configuration from file

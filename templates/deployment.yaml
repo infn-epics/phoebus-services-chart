@@ -83,7 +83,7 @@ spec:
               fi
               if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
                 ## needs kafka
-                echo "Not yet installed"
+                java -jar -Dspring.config.location=file:/config/alarm.properties service-alarm-server.jar -server {{.Values.kafka.host}}:{{.Values.kafka.port}} 
               fi
               if [ "{{ .Values.phoebusservice }}" = "alarmlogger" ]; then
                 ## needs kafka
