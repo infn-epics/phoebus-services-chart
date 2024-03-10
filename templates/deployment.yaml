@@ -90,27 +90,30 @@ spec:
                 sleep 4
                 done
                 echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
+                cd /saveandrestore
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
-                java -jar -Dspring.config.location=file:/config/saveandrestore.properties /phoebus/service-save-and-restore.jar  
+                java -jar -Dspring.config.location=file:/config/saveandrestore.properties /saveandrestore/service-save-and-restore.jar  
               
               fi
               if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
                 ## needs kafka
-                java -jar -Dspring.config.location=file:/config/alarm.properties service-alarm-server.jar -server {{.Values.kafka.host}}:{{.Values.kafka.port}} 
+                cd /alarmserver
+                java -jar -Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -server {{.Values.kafka.host}}:{{.Values.kafka.port}} 
               fi
               if [ "{{ .Values.phoebusservice }}" = "alarmlogger" ]; then
                 ## needs kafka
-                echo "Not yet installed"
+                cd /alarmlogger
+                java -jar -Dspring.config.location=file:/config/alarmlogger.properties /alarmlogger/service-alarm-logger.jar -topis {{.Values.alarm.topics}}
               fi
               if [ "{{ .Values.phoebusservice }}" = "scanserver" ]; then
                 echo "* Starting scan server"
-
-                java -jar service-scan-server.jar -noshell 
+                cd /scanserver
+                java -jar /scanserver/service-scan-server.jar -noshell 
               fi
               if [ "{{ .Values.phoebusservice }}" = "olog" ]; then
                 echo "* Starting olog server"
-
-                java -jar -Dspring.config.location=file:/config/olog.properties service-olog.jar
+                cd /olog
+                java -jar -Dspring.config.location=file:/config/olog.properties /olog/service-olog.jar
               fi
 
       {{- with .Values.nodeSelector }}
