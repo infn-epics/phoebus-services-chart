@@ -46,6 +46,8 @@ spec:
             - name: EPICS_CA_AUTO_ADDR_LIST
               value: "NO"
             {{- end }}
+          resources:
+{{  toYaml .Values.resources | indent 10}}
           volumeMounts:
             - name: config
               mountPath: /config
