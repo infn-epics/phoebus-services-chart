@@ -28,13 +28,12 @@ spec:
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
       containers:
-      resources:
-{{  toYaml .Values.resources | indent 10}}
         - name: {{ .Chart.Name }}
           
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          
+          resources:
+{{  toYaml .Values.resources | indent 12}}
           {{- if .Values.epicsConfiguration.name }}
           envFrom:
             - configMapRef:
