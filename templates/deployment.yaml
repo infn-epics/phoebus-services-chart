@@ -28,6 +28,8 @@ spec:
       securityContext:
         {{- toYaml .Values.securityContext | nindent 8 }}
       containers:
+      resources:
+{{  toYaml .Values.resources | indent 10}}
         - name: {{ .Chart.Name }}
           
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -46,8 +48,7 @@ spec:
             - name: EPICS_CA_AUTO_ADDR_LIST
               value: "NO"
             {{- end }}
-          resources:
-{{  toYaml .Values.resources | indent 10}}
+          
           volumeMounts:
             - name: config
               mountPath: /config
