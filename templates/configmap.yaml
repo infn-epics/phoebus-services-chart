@@ -120,9 +120,9 @@ data:
       # ldap.user.dn.pattern = uid={0},ou=Group
       # ldap.groups.search.base = ou=Group
       # ldap.groups.search.pattern = (memberUid= {1})
-      # spring.ldap.embedded.ldif=classpath:sar.ldif
-      # spring.ldap.embedded.base-dn=dc=sar,dc=local
-      # spring.ldap.embedded.port=8389 
+      spring.ldap.embedded.ldif=classpath:sar.ldif
+      spring.ldap.embedded.base-dn=dc=sar,dc=local
+      spring.ldap.embedded.port=8389 
       # spring.ldap.embedded.validation.enabled=false
 
       ############## Demo credentials ##############
@@ -142,10 +142,10 @@ data:
       # ldap - Probably Open LDAP
       # ldap_embedded - Embedded LDAP. Config in sar.ldif
       # demo - Hard coded, see WebSecurityConfig class
-      auth.impl = demo
+      auth.impl = ldap_embedded
 
       ###### Bypass authorization (but not authentication!) #######
-      authorization.permitall = true
+      authorization.permitall = false
 
       ############## Authorization Roles ################
 
@@ -416,6 +416,7 @@ data:
       description: olog-admins group
       gidNumber: 24005
       memberUid: admin
+  
   alarm.properties: |
 
       # Default java.util.logging configuration for alarm server
@@ -445,6 +446,72 @@ data:
       com.cosylab.epics.caj.level = WARNING
       org.phoebus.framework.rdb.level = WARNING
       org.phoebus.pv.level = WARNING
+  sar.ldif: |
+      dn: dc=sar,dc=local
+      objectClass: dcObject
+      objectClass: organization
+      dc: sar
+      o: sar
+
+      dn: cn=sar,dc=sar,dc=local
+      objectClass: simpleSecurityObject
+      objectClass: organizationalRole
+      userPassword:: e1NIQX1jUkR0cE5DZUJpcWw1S09Rc0tWeXJBMHNBaUE9
+      cn: sar
+
+      dn: ou=Group,dc=sar,dc=local
+      objectClass: organizationalunit
+      ou: Group
+      description: groups branch
+
+      dn: cn=sar-user,ou=Group,dc=sar,dc=local
+      cn: sar-user
+      objectClass: posixGroup
+      description: save-n-restore user
+      gidNumber: 27001
+      uidNumber: 27001
+      memberUid: user
+
+      dn: cn=sar-admin,ou=Group,dc=sar,dc=local
+      cn: sar-admin
+      objectClass: posixGroup
+      description: save-n-restore admin
+      gidNumber: 27003
+      uidNumber: 27003
+      memberUid: admin
+
+      dn: uid=epics,ou=Group,dc=sar,dc=local
+      uid: epics
+      objectClass: account
+      objectClass: posixAccount
+      description: User with sar-user role
+      cn: user
+      userPassword: epics
+      uidNumber: 23004
+      gidNumber: 23004
+      homeDirectory: /dev/null
+
+      dn: uid=johndoe,ou=Group,dc=sar,dc=local
+      uid: johndoe
+      objectClass: account
+      objectClass: posixAccount
+      description: User without sar roles
+      cn: johndoe
+      userPassword: 1234
+      uidNumber: 23007
+      gidNumber: 23007
+      homeDirectory: /dev/null
+
+      dn: uid=admin,ou=Group,dc=sar,dc=local
+      uid: admin
+      objectClass: account
+      objectClass: posixAccount
+      description: User with admin role
+      cn: admin
+      userPassword: epics
+      uidNumber: 23005
+      gidNumber: 23005
+      homeDirectory: /dev/null
 
 
 
