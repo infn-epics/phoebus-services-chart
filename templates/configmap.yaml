@@ -132,7 +132,6 @@ data:
       demo.admin.password=epics
       demo.readOnly=control
       demo.readOnly.password=1234
-      auth.impl = demo
 
       ###### Bypass authorization (but not authentication!) #######
       authorization.permitall = true
@@ -145,7 +144,7 @@ data:
       auth.impl = ldap_embedded
 
       ###### Bypass authorization (but not authentication!) #######
-      authorization.permitall = false
+      authorization.permitall = true
 
       ############## Authorization Roles ################
 
