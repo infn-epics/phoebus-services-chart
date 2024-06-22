@@ -71,11 +71,11 @@ data:
       server.servlet.contextPath=/save-restore
 
       # The names of the index to use for save&restore
-      elasticsearch.tree_node.index={{ include "phoebus-services-chart.fullname" . }}_tree
-      elasticsearch.configuration_node.index={{ include "phoebus-services-chart.fullname" . }}_configuration
-      elasticsearch.snapshot_node.index:{{ include "phoebus-services-chart.fullname" . }}_snapshot
-      elasticsearch.composite_snapshot_node.index:{{ include "phoebus-services-chart.fullname" . }}_composite_snapshot
-      elasticsearch.filter.index:{{ include "phoebus-services-chart.fullname" . }}_filter
+      elasticsearch.tree_node.index={{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tree
+      elasticsearch.configuration_node.index={{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_configuration
+      elasticsearch.snapshot_node.index:{{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_snapshot
+      elasticsearch.composite_snapshot_node.index:{{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_composite_snapshot
+      elasticsearch.filter.index:{{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_filter
 
       ############################## REST Logging ###############################
       # {{ .Values.service.loglevel}} level will log all requests and responses to and from the REST end points
@@ -109,6 +109,8 @@ data:
       # ldap.manager.dn=
       # password of account
       # ldap.manager.password=
+      embedded_ldap.enabled = false
+
 
       ############## LDAP - Embedded ##############
       # If uncommenting in this section, make sure
@@ -198,7 +200,7 @@ data:
 
       {{- if not .Values.ldap.external.enable }}
       ############## LDAP - Embedded ##############
-      embedded_ldap.enabled = true
+      embedded_ldap.enabled = false
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
       embedded_ldap.base.dn = dc=olog,dc=local
       embedded_ldap.user.dn.pattern = uid={0},ou=People
@@ -240,20 +242,20 @@ data:
       elasticsearch.cluster.name: elasticsearch
 
       # The names of the index to use for olog
-      elasticsearch.tag.index: {{ include "phoebus-services-chart.fullname" . }}_tags
-      elasticsearch.tag.type: {{ include "phoebus-services-chart.fullname" . }}_tag
+      elasticsearch.tag.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tags
+      elasticsearch.tag.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tag
 
-      elasticsearch.logbook.index: {{ include "phoebus-services-chart.fullname" . }}_logbooks
-      elasticsearch.logbook.type: {{ include "phoebus-services-chart.fullname" . }}_logbook
+      elasticsearch.logbook.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logbooks
+      elasticsearch.logbook.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logbook
 
-      elasticsearch.property.index: {{ include "phoebus-services-chart.fullname" . }}_properties
-      elasticsearch.property.type: {{ include "phoebus-services-chart.fullname" . }}_property
+      elasticsearch.property.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_properties
+      elasticsearch.property.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_property
 
-      elasticsearch.log.index: {{ include "phoebus-services-chart.fullname" . }}_logs
-      elasticsearch.log.type: {{ include "phoebus-services-chart.fullname" . }}_log
+      elasticsearch.log.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logs
+      elasticsearch.log.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_log
 
-      elasticsearch.sequence.index: {{ include "phoebus-services-chart.fullname" . }}_sequence
-      elasticsearch.sequence.type: {{ include "phoebus-services-chart.fullname" . }}_sequence
+      elasticsearch.sequence.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_sequence
+      elasticsearch.sequence.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_sequence
 
       ############################## Mongo gridfs client ###############################
       mongo.database: {{ .Values.mongo.database }}
