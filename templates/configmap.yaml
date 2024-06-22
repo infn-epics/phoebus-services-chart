@@ -86,9 +86,9 @@ data:
       spring.mvc.static-path-pattern=/**
 
       ############## AD - External ##############
-      ad.enabled = {{ .Values.ldap.external.enable }}
-      ad.url = {{ .Values.ldap.external.url }}
-      ad.domain = test.com
+      # ad.enabled = {{ .Values.ldap.external.enable }}
+      # ad.url = {{ .Values.ldap.external.url }}
+      # ad.domain = test.com
 
       ############## LDAP - External ##############
       # If uncommenting in this section, make sure
@@ -106,23 +106,23 @@ data:
       #ldap.groups.search.base = ou=Groups
       #ldap.groups.search.pattern = (memberUid= {1})
       # dn of manager account, may be required for group search
-      ldap.manager.dn=
+      # ldap.manager.dn=
       # password of account
-      ldap.manager.password=
+      # ldap.manager.password=
 
       ############## LDAP - Embedded ##############
       # If uncommenting in this section, make sure
       # to comment out in LDAP - External section
       #############################################
-      ldap.urls=ldap://localhost:8389/dc=sar,dc=local
-      ldap.base.dn = dc=sar,dc=local
-      ldap.user.dn.pattern = uid={0},ou=Group
-      ldap.groups.search.base = ou=Group
-      ldap.groups.search.pattern = (memberUid= {1})
-      spring.ldap.embedded.ldif=classpath:sar.ldif
-      spring.ldap.embedded.base-dn=dc=sar,dc=local
-      spring.ldap.embedded.port=8389 
-      spring.ldap.embedded.validation.enabled=false
+      # ldap.urls=ldap://localhost:8389/dc=sar,dc=local
+      # ldap.base.dn = dc=sar,dc=local
+      # ldap.user.dn.pattern = uid={0},ou=Group
+      # ldap.groups.search.base = ou=Group
+      # ldap.groups.search.pattern = (memberUid= {1})
+      # spring.ldap.embedded.ldif=classpath:sar.ldif
+      # spring.ldap.embedded.base-dn=dc=sar,dc=local
+      # spring.ldap.embedded.port=8389 
+      # spring.ldap.embedded.validation.enabled=false
 
       ############## Demo credentials ##############
       demo.user=epics
