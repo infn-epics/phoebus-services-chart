@@ -53,18 +53,15 @@ spec:
             - name: config
               mountPath: /config
           ports:
-            
             {{- if eq .Values.phoebusservice "scanserver" }}
             - name: rest
               containerPort: 4810
               protocol: TCP
             {{- else }}
             - name: rest
-               containerPort: 8080
-               protocol: TCP
-            {{- end}}
-
-            
+              containerPort: 8080
+              protocol: TCP
+            {{- end }}
 
             
             
