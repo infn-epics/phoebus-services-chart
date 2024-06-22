@@ -133,7 +133,10 @@ data:
       demo.admin.password=epics
       demo.readOnly=control
       demo.readOnly.password=1234
+      auth.impl = demo
 
+      ###### Bypass authorization (but not authentication!) #######
+      authorization.permitall = true
       ############## Authentication Implementation ##############
       # Supported options:
       # ad - Microsoft AD
