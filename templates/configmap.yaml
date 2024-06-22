@@ -109,7 +109,6 @@ data:
       # ldap.manager.dn=
       # password of account
       # ldap.manager.password=
-      embedded_ldap.enabled = false
 
 
       ############## LDAP - Embedded ##############
@@ -203,7 +202,7 @@ data:
 
       {{- if not .Values.ldap.external.enable }}
       ############## LDAP - Embedded ##############
-      embedded_ldap.enabled = false
+      embedded_ldap.enabled = true
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
       embedded_ldap.base.dn = dc=olog,dc=local
       embedded_ldap.user.dn.pattern = uid={0},ou=People
