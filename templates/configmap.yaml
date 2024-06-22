@@ -214,6 +214,13 @@ data:
 
       ############## Demo Auth ##############
       demo_auth.enabled = true
+      ############## Demo credentials ##############
+      demo.user=epics
+      demo.user.password=epics
+      demo.admin=admin
+      demo.admin.password=epics
+      demo.readOnly=control
+      demo.readOnly.password=1234
       {{- end }}
       ############## Authorization Role --> group Mapping ##############
       # Customize group names here
