@@ -155,7 +155,7 @@ data:
       server.port: 8181
 
       # Options support for unsecure http
-      server.http.enable={{ .Values.service.http.enable }}
+      server.http.enable=true
       server.http.port=8080
 
       # Disable the spring banner
