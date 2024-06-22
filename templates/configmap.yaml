@@ -141,7 +141,7 @@ data:
       # ldap - Probably Open LDAP
       # ldap_embedded - Embedded LDAP. Config in sar.ldif
       # demo - Hard coded, see WebSecurityConfig class
-      auth.impl = ldap_embedded
+      auth.impl = demo
 
       ###### Bypass authorization (but not authentication!) #######
       authorization.permitall = true
