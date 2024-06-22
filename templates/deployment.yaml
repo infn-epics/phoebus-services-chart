@@ -53,31 +53,18 @@ spec:
             - name: config
               mountPath: /config
           ports:
-            {{- if eq .Values.phoebusservice "saveandrestore" }}
-            - name: rest
-              containerPort: 8080
-              protocol: TCP
-            {{- end}}
+            
             {{- if eq .Values.phoebusservice "scanserver" }}
             - name: rest
               containerPort: 4810
               protocol: TCP
-            {{- end }}
+            {{- else }}
             - name: rest
                containerPort: 8080
                protocol: TCP
-            # {{- if eq .Values.phoebusservice "olog" }}
+            {{- end}}
+
             
-            # {{- if .Values.service.http.enable }}
-            # - name: rest
-            #   containerPort: 8080
-            #   protocol: TCP
-            # {{- else }}
-            # - name: rest
-            #   containerPort: 8181
-            #   protocol: TCP
-            # {{- end }}
-            {{- end }}
 
             
             
