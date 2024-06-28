@@ -92,7 +92,7 @@ spec:
               if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
                 ## needs kafka
                 cd /alarmserver
-                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -settings /phoebus/phoebus_settings.ini"
+                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -config {{.Values.alarm.config}} -settings /phoebus/phoebus_settings.ini"
                 echo "starting java -jar $settings"
                 java -jar $settings
               fi
