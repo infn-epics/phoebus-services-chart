@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "phoebus-services-chart.fullname" . }}
   labels:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ include "phoebus-services-chart.fullname" . }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -140,3 +141,12 @@ spec:
             - key: phoebus_settings.ini
               path: phoebus_settings.ini # This is the path inside the mountPath where the file will be available
         {{- end }}
+
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi  # Adjust storage size as needed
