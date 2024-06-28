@@ -138,7 +138,7 @@ spec:
                 cd /alarmserver
 
                 settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -config {{.Values.alarm.config}} -settings /phoebus/phoebus_settings.ini"
-                if [ -e /gitconfig/alarm_configuration.xml ];
+                if [ -e /gitconfig/alarm_configuration.xml ];then
                   settings="$settings -import /gitconfig/alarm_configuration.xml"
                 fi
                 echo "starting java -jar $settings"
