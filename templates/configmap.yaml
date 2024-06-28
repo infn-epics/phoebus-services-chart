@@ -38,7 +38,7 @@ data:
 
     ############################## REST Logging ###############################
     # DEBUG level will log all requests and responses to and from the REST end points
-    logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=INFO
+    logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
 
     ############################## Index purge settings #######################
     # How many indices to retain (e.g. if you have selected date_span_units as M and set the retain_indices_count to 6, then indices
@@ -441,7 +441,7 @@ data:
 
       org.apache.kafka.level = WARNING
 
-      org.phoebus.applications.alarm.level = INFO
+      org.phoebus.applications.alarm.level = DEBUG
       com.cosylab.epics.caj.level = WARNING
       org.phoebus.framework.rdb.level = WARNING
       org.phoebus.pv.level = WARNING
