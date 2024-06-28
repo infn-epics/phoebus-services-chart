@@ -52,6 +52,9 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: phoebus-ini
+              mountPath: /phoebus  # Mount path inside the container
+              subPath: phoebus_settings.ini  # Optional, if you only want to mount a specific file from the ConfigMap
           ports:
             {{- if eq .Values.phoebusservice "scanserver" }}
             - name: rest
@@ -89,7 +92,9 @@ spec:
               if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
                 ## needs kafka
                 cd /alarmserver
-                java -jar -Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -server {{.Values.kafka.host}}:{{.Values.kafka.port}} 
+                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -settings /phoebus/phoebus_settings.ini"
+                echo "starting java -jar $settings"
+                java -jar $settings
               fi
               if [ "{{ .Values.phoebusservice }}" = "alarmlogger" ]; then
                 ## needs kafka
@@ -123,3 +128,12 @@ spec:
         - name: config
           configMap:
             name: {{ include "phoebus-services-chart.fullname" . }}-config
+        {{- if .Values.epicsConfiguration.name }}
+    
+        - name: phoebus-ini
+          configMap:
+            name: {{ .Values.epicsConfiguration.name }}
+            items:
+            - key: phoebus_settings.ini
+              path: phoebus_settings.ini # This is the path inside the mountPath where the file will be available
+        {{- end }}
