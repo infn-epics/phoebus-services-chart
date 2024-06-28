@@ -64,7 +64,8 @@ spec:
             {{- end }}
 
             
-            
+          stdin: true
+          tty: true  
           command: 
             - sh 
             - -c
