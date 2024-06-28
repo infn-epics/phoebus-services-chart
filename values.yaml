@@ -109,7 +109,7 @@ kafka:
 
 alarm:
   config: "Accelerator"
-  topics: Accelerator,ALARM,CONFIGS"
+  topics: Accelerator,ALARM,CONFIGS
   settings: "settings.xml"      # - Import preferences (PV connectivity) from property format file
   econfig: "econfig.xml"        # - Export alarm configuration to file
   iconfig: "config.xml"        # - Import alarm configuration from file
