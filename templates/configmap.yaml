@@ -10,7 +10,7 @@ data:
     spring.main.banner-mode=off
     spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
     logging.level.root=WARN
-    alarm_topics={{.Values.alarm.config}}
+    alarm_topics={{.Values.alarm.topics}}
     es_host={{.Values.elasticsearch.network.host}}
     es_port=9200
     # Max default size for es queries

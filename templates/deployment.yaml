@@ -99,7 +99,7 @@ spec:
               if [ "{{ .Values.phoebusservice }}" = "alarmlogger" ]; then
                 ## needs kafka
                 cd /alarmlogger
-                java -jar -Dspring.config.location=file:/config/alarmlogger.properties /alarmlogger/service-alarm-logger.jar -topis {{.Values.alarm.topics}}
+                java -jar -Dspring.config.location=file:/config/alarmlogger.properties /alarmlogger/service-alarm-logger.jar
               fi
               if [ "{{ .Values.phoebusservice }}" = "scanserver" ]; then
                 echo "* Starting scan server"
