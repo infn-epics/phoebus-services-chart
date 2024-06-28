@@ -117,3 +117,6 @@ alarm:
 epicsConfiguration:
   name:    ## load the epicsConfigurationMap
   gateway: ## if defined EPICS_CA_ADDR_LIST is overridden
+
+gitRepoConfig:
+  url:

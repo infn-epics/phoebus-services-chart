@@ -26,7 +26,47 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "phoebus-services-chart.serviceAccountName" . }}
-      
+      {{- if .Values.gitRepoConfig.url }}
+      initContainers:
+      - name: init-container-git
+        image: baltig.infn.it:4567/epics-containers/container-init
+        securityContext:
+{{ toYaml .Values.securityContext | indent 12 }}
+        command:
+        - sh
+        - -c
+        - |
+          id=`id`
+          cd /pvc
+          
+          echo "ID $id cloning: {{ .Values.gitRepoConfig.url }} {{ .Values.gitRepoConfig.path }} revision {{ .Values.gitRepoConfig.branch }} "
+          if [ -d temp-config ]; then
+            rm -rf temp-config
+          fi
+          if [ -n "{{ .Values.gitRepoConfig.branch }}" ]; then
+            git clone -b {{ .Values.gitRepoConfig.branch }} {{ .Values.gitRepoConfig.url }} --recurse-submodules temp-config
+          else
+            git clone {{ .Values.gitRepoConfig.url }} --recurse-submodules temp-config
+          fi
+
+          if [ -d temp-config/{{ .Values.gitRepoConfig.path }} ]; then
+            if [ "{{ .Values.gitRepoConfig.path }}" == "." ]; then
+              mv temp-config/* /pvc/
+            else
+              mv temp-config/{{ .Values.gitRepoConfig.path }}/* /pvc/
+              rm -rf temp-config
+            fi
+          else
+            mv temp-config/* /pvc/
+          fi
+
+          # chmod a+w,a+r -R /pvc
+          ls /pvc
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: config-volume
+          mountPath: /pvc
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           
@@ -56,6 +96,9 @@ spec:
             - name: phoebus-ini
               mountPath: /phoebus/phoebus_settings.ini  # Mount path inside the container
               subPath: phoebus_settings.ini  # Optional, if you only want to mount a specific file from the ConfigMap
+              volumeMounts:
+            - name: config-volume
+              mountPath: /gitconfig  # Adjust the mountPath as per your requirement
           ports:
             {{- if eq .Values.phoebusservice "scanserver" }}
             - name: rest
@@ -93,7 +136,11 @@ spec:
               if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
                 ## needs kafka
                 cd /alarmserver
+
                 settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -config {{.Values.alarm.config}} -settings /phoebus/phoebus_settings.ini"
+                if [ -e /gitconfig/alarm_configuration.xml ];
+                  settings="$settings -import /gitconfig/alarm_configuration.xml"
+                fi
                 echo "starting java -jar $settings"
                 java -jar $settings
               fi
@@ -102,6 +149,7 @@ spec:
                 cd /alarmlogger
                 
                 settings="-Dspring.config.location=file:/config/alarmlogger.properties /alarmlogger/service-alarm-logger.jar  -noshell -bootstrap.servers {{.Values.kafka.host}}:{{.Values.kafka.port}} -es_host {{ .Values.elasticsearch.network.host }} -es_port {{ .Values.elasticsearch.http.port }} -topics {{.Values.alarm.topics}}"
+                
                 echo "starting java -jar $settings"
                 java -jar $settings
               fi
@@ -144,7 +192,7 @@ spec:
 
   volumeClaimTemplates:
   - metadata:
-      name: data
+      name: config-volume
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
