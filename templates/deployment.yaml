@@ -53,7 +53,7 @@ spec:
             - name: config
               mountPath: /config
             - name: phoebus-ini
-              mountPath: /phoebus  # Mount path inside the container
+              mountPath: /phoebus/phoebus_settings.ini  # Mount path inside the container
               subPath: phoebus_settings.ini  # Optional, if you only want to mount a specific file from the ConfigMap
           ports:
             {{- if eq .Values.phoebusservice "scanserver" }}
