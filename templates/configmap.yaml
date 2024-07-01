@@ -445,7 +445,7 @@ data:
       com.cosylab.epics.caj.level = DEBUG
       org.phoebus.framework.rdb.level = DEBUG
       org.phoebus.pv.level = DEBUG
-      
+
   sar.ldif: |
       dn: dc=sar,dc=local
       objectClass: dcObject
