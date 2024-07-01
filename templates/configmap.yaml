@@ -415,7 +415,9 @@ data:
       description: olog-admins group
       gidNumber: 24005
       memberUid: admin
-  
+  kafka.properties: |
+      security.protocol=PLAINTEXT
+      
   alarm.properties: |
 
       # Default java.util.logging configuration for alarm server
