@@ -138,7 +138,8 @@ spec:
                 cd /alarmserver
                 echo "org.phoebus.pv.ca/addr_list=gateway.{{.Values.beamline}}" > phoebus.ini
                 echo "org.phoebus.pv.ca/auto_addr_list=false" >> phoebus.ini 
-                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}}  -settings phoebus.ini"
+                # -Dspring.config.location=file:/config/alarm.properties
+                settings="/alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}}  -settings phoebus.ini"
                 {{- if .Values.alarm.config }}
                 settings="$settings -config {{.Values.alarm.config}}"
                 {{- end }}

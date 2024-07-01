@@ -439,12 +439,13 @@ data:
       javax.mail.level = WARNING
       com.sun.mail.smtp.level = WARNING
 
-      org.apache.kafka.level = WARNING
+      org.apache.kafka.level = DEBUG
 
       org.phoebus.applications.alarm.level = DEBUG
-      com.cosylab.epics.caj.level = WARNING
-      org.phoebus.framework.rdb.level = WARNING
-      org.phoebus.pv.level = WARNING
+      com.cosylab.epics.caj.level = DEBUG
+      org.phoebus.framework.rdb.level = DEBUG
+      org.phoebus.pv.level = DEBUG
+      
   sar.ldif: |
       dn: dc=sar,dc=local
       objectClass: dcObject
