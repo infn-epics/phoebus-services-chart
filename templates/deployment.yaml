@@ -117,6 +117,7 @@ spec:
             - sh 
             - -c
             - |
+              echo "EPICS_CA_ADDR_LIST=$EPICS_CA_ADDR_LIST"
               if [ "{{ .Values.phoebusservice }}" = "saveandrestore" ]; then
                 elastic={{ .Values.elasticsearch.network.host }}
                 elastichttpport={{ .Values.elasticsearch.http.port }}
@@ -138,8 +139,8 @@ spec:
                 cd /alarmserver
                 echo "org.phoebus.pv.ca/addr_list=gateway.{{.Values.beamline}}" > phoebus.ini
                 echo "org.phoebus.pv.ca/auto_addr_list=false" >> phoebus.ini 
-                # {{.Values.kafka.host}}:{{.Values.kafka.port}} 
-                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server 192.168.36.205:9092 -settings /phoebus/phoebus_settings.ini"
+                # 
+                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -settings /phoebus/phoebus_settings.ini"
                 {{- if .Values.alarm.config }}
                 settings="$settings -config {{.Values.alarm.config}}"
                 {{- end }}
