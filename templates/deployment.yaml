@@ -144,9 +144,9 @@ spec:
                 {{- if .Values.alarm.config }}
                 settings="$settings -config {{.Values.alarm.config}}"
                 {{- end }}
-                # if [ -e /gitconfig/alarm_configuration.xml ];then
-                #   java -jar $settings -import /gitconfig/alarm_configuration.xml
-                # fi
+                if [ -e /gitconfig/alarm_configuration.xml ];then
+                   java -jar $settings -import /gitconfig/alarm_configuration.xml
+                fi
                 echo "starting java -jar $settings"
                 java -jar $settings
               fi

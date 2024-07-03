@@ -417,7 +417,7 @@ data:
       memberUid: admin
   kafka.properties: |
       security.protocol=PLAINTEXT
-      
+
   alarm.properties: |
 
       # Default java.util.logging configuration for alarm server
@@ -441,9 +441,9 @@ data:
       javax.mail.level = WARNING
       com.sun.mail.smtp.level = WARNING
 
-      org.apache.kafka.level = DEBUG
+      org.apache.kafka.level = INFO
 
-      org.phoebus.applications.alarm.level = DEBUG
+      org.phoebus.applications.alarm.level = INFO
       com.cosylab.epics.caj.level = DEBUG
       org.phoebus.framework.rdb.level = DEBUG
       org.phoebus.pv.level = DEBUG
