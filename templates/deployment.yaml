@@ -191,6 +191,7 @@ spec:
                 cd /olog
                 java -jar -Dspring.config.location=file:/config/olog.properties /olog/service-olog.jar
               fi
+              echo "%% END {{ .Values.phoebusservice }}"
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
