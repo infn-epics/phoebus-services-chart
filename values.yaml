@@ -81,7 +81,7 @@ tolerations: []
 
 affinity: {}
 
-#alarmserver alarmlogger saveandrestore scanserver olog
+#alarmserver alarmlogger saveandrestore scanserver olog "webalarm"
 phoebusservice: "saveandrestore"
 
 elasticsearch:

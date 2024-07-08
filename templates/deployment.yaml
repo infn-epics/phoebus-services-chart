@@ -118,6 +118,14 @@ spec:
             - -c
             - |
               echo "EPICS_CA_ADDR_LIST=$EPICS_CA_ADDR_LIST"
+              if [ "{{ .Values.phoebusservice }}" = "webalarm" ]; then
+              export ALARM_SERVER={{.Values.kafka.host}}:{{.Values.kafka.port}}
+              export ALARM_CONFIG={{.Values.alarm.config}}
+              echo "* Alarm WebMon"
+                cp /webapps/alrmwebmon/alarm-webmon.war /usr/local/tomcat/webapps
+                catalina.sh start
+              fi
+
               if [ "{{ .Values.phoebusservice }}" = "saveandrestore" ]; then
                 elastic={{ .Values.elasticsearch.network.host }}
                 elastichttpport={{ .Values.elasticsearch.http.port }}
