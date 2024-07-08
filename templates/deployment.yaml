@@ -118,6 +118,20 @@ spec:
             - -c
             - |
               echo "EPICS_CA_ADDR_LIST=$EPICS_CA_ADDR_LIST"
+              if [ "{{ .Values.phoebusservice }}" = "dbwr" ]; then
+                cp /webapps/dbwr/dbwr.war /usr/local/tomcat/webapps
+                export PVWS_HOST={{.Values.pws.host}}:{{.Values.pws.port}}
+                echo "* dbwr pvws $PVWS_HOST"
+
+                /opt/java/openjdk/bin/java -Djava.util.logging.config.file=/usr/local/tomcat/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djdk.tls.ephemeralDHKeySize=2048 -Djava.protocol.handler.pkgs=org.apache.catalina.webresources -Dorg.apache.catalina.security.SecurityListener.UMASK=0027 -Dignore.endorsed.dirs= -classpath /usr/local/tomcat/bin/bootstrap.jar:/usr/local/tomcat/bin/tomcat-juli.jar -Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp org.apache.catalina.startup.Bootstrap start
+              fi
+
+              if [ "{{ .Values.phoebusservice }}" = "pvws" ]; then
+              echo "* PVWS $EPICS_CA_ADDR_LIST"
+                cp /webapps/pvws/pvws.war /usr/local/tomcat/webapps
+                /opt/java/openjdk/bin/java -Djava.util.logging.config.file=/usr/local/tomcat/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djdk.tls.ephemeralDHKeySize=2048 -Djava.protocol.handler.pkgs=org.apache.catalina.webresources -Dorg.apache.catalina.security.SecurityListener.UMASK=0027 -Dignore.endorsed.dirs= -classpath /usr/local/tomcat/bin/bootstrap.jar:/usr/local/tomcat/bin/tomcat-juli.jar -Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp org.apache.catalina.startup.Bootstrap start
+              fi
+
               if [ "{{ .Values.phoebusservice }}" = "webalarm" ]; then
               export ALARM_SERVER={{.Values.kafka.host}}:{{.Values.kafka.port}}
               export ALARM_CONFIG={{.Values.alarm.config}}

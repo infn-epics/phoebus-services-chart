@@ -107,6 +107,10 @@ kafka:
   host: kafka-controller-headless.backend.svc.cluster.local
   port: 9092
 
+pvws:
+  host: pvws
+  port: 8080
+
 alarm:
   config: "Accelerator"
   topics: "Accelerator,ALARM,CONFIGS"
