@@ -122,5 +122,6 @@ epicsConfiguration:
   name:    ## load the epicsConfigurationMap
   gateway: ## if defined EPICS_CA_ADDR_LIST is overridden
 
+staticIP:
 gitRepoConfig:
   url:
