@@ -41,7 +41,7 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-        {{- if eq .Values.phoebusservice "olog" }}
+        {{- if eq $.Values.phoebusservice "olog" }}
 
           - path: /web
             pathType: Prefix
