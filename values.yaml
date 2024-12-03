@@ -9,7 +9,8 @@ image:
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
-
+  webolog: baltig.infn.it:4567/epics-containers/phoebus-olog-web
+   
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

@@ -68,6 +68,22 @@ spec:
           mountPath: /pvc
       {{- end }}
       containers:
+      {{- if eq .Values.phoebusservice "olog" }}
+        - name: {{ .Chart.Name }}-web
+          
+          image: "{{ .Values.image.webolog }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: REACT_APP_BASE_URL
+              value: "http://localhost:8080/Olog"
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          
+          resources:
+{{ toYaml .Values.resources | indent 12}}
+      {{- end }}
         - name: {{ .Chart.Name }}
           
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
@@ -118,29 +134,29 @@ spec:
             - -c
             - |
               echo "EPICS_CA_ADDR_LIST=$EPICS_CA_ADDR_LIST"
-              if [ "{{ .Values.phoebusservice }}" = "dbwr" ]; then
+              {{- if eq .Values.phoebusservice "dbwr" }}
                 cp /webapps/dbwr/dbwr.war /usr/local/tomcat/webapps
                 export PVWS_HOST={{.Values.pvws.host}}:{{.Values.pvws.port}}
                 echo "* dbwr pvws $PVWS_HOST"
 
                 /opt/java/openjdk/bin/java -Djava.util.logging.config.file=/usr/local/tomcat/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djdk.tls.ephemeralDHKeySize=2048 -Djava.protocol.handler.pkgs=org.apache.catalina.webresources -Dorg.apache.catalina.security.SecurityListener.UMASK=0027 -Dignore.endorsed.dirs= -classpath /usr/local/tomcat/bin/bootstrap.jar:/usr/local/tomcat/bin/tomcat-juli.jar -Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp org.apache.catalina.startup.Bootstrap start
-              fi
+              {{- end }}
 
-              if [ "{{ .Values.phoebusservice }}" = "pvws" ]; then
+              {{- if eq .Values.phoebusservice "pvws" }}
               echo "* PVWS $EPICS_CA_ADDR_LIST"
                 cp /webapps/pvws/pvws.war /usr/local/tomcat/webapps
                 /opt/java/openjdk/bin/java -Djava.util.logging.config.file=/usr/local/tomcat/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djdk.tls.ephemeralDHKeySize=2048 -Djava.protocol.handler.pkgs=org.apache.catalina.webresources -Dorg.apache.catalina.security.SecurityListener.UMASK=0027 -Dignore.endorsed.dirs= -classpath /usr/local/tomcat/bin/bootstrap.jar:/usr/local/tomcat/bin/tomcat-juli.jar -Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp org.apache.catalina.startup.Bootstrap start
-              fi
+              {{- end }}
 
-              if [ "{{ .Values.phoebusservice }}" = "webalarm" ]; then
+              {{- if eq .Values.phoebusservice "webalarm" }}
               export ALARM_SERVER={{.Values.kafka.host}}:{{.Values.kafka.port}}
               export ALARM_CONFIG={{.Values.alarm.config}}
               echo "* Alarm WebMon"
                 cp /webapps/alrmwebmon/alarm-webmon.war /usr/local/tomcat/webapps
                 /opt/java/openjdk/bin/java -Djava.util.logging.config.file=/usr/local/tomcat/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djdk.tls.ephemeralDHKeySize=2048 -Djava.protocol.handler.pkgs=org.apache.catalina.webresources -Dorg.apache.catalina.security.SecurityListener.UMASK=0027 -Dignore.endorsed.dirs= -classpath /usr/local/tomcat/bin/bootstrap.jar:/usr/local/tomcat/bin/tomcat-juli.jar -Dcatalina.base=/usr/local/tomcat -Dcatalina.home=/usr/local/tomcat -Djava.io.tmpdir=/usr/local/tomcat/temp org.apache.catalina.startup.Bootstrap start
-              fi
+              {{- end }}
 
-              if [ "{{ .Values.phoebusservice }}" = "saveandrestore" ]; then
+              {{- if eq .Values.phoebusservice "saveandrestore" }}
                 elastic={{ .Values.elasticsearch.network.host }}
                 elastichttpport={{ .Values.elasticsearch.http.port }}
                 elasticport={{ .Values.elasticsearch.network.port }}
@@ -154,9 +170,8 @@ spec:
                 cd /saveandrestore
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
                 java -jar -Dspring.config.location=file:/config/saveandrestore.properties /saveandrestore/service-save-and-restore.jar  
-              
-              fi
-              if [ "{{ .Values.phoebusservice }}" = "alarmserver" ]; then
+              {{- end }}
+              {{- if eq .Values.phoebusservice "alarmserver" }}
                 ## needs kafka
                 cd /alarmserver
                 echo "org.phoebus.pv.ca/addr_list=gateway.{{.Values.beamline}}" > phoebus.ini
@@ -171,8 +186,9 @@ spec:
                 fi
                 echo "starting java -jar $settings"
                 java -jar $settings
-              fi
-              if [ "{{ .Values.phoebusservice }}" = "alarmlogger" ]; then
+              {{- end }}
+
+              {{- if eq .Values.phoebusservice "alarmlogger" }}
                 ## needs kafka
                 cd /alarmlogger
                 
@@ -180,17 +196,18 @@ spec:
                 
                 echo "starting java -jar $settings"
                 java -jar $settings
-              fi
-              if [ "{{ .Values.phoebusservice }}" = "scanserver" ]; then
+              {{- end }}
+              {{- if eq .Values.phoebusservice "scanserver" }}
                 echo "* Starting scan server"
                 cd /scanserver
                 java -jar /scanserver/service-scan-server.jar -noshell 
-              fi
-              if [ "{{ .Values.phoebusservice }}" = "olog" ]; then
+              {{- end }}
+
+              {{- if eq .Values.phoebusservice "olog" }}
                 echo "* Starting olog server"
                 cd /olog
                 java -jar -Dspring.config.location=file:/config/olog.properties /olog/service-olog.jar
-              fi
+              {{- end }}
               echo "%% END {{ .Values.phoebusservice }}"
 
       {{- with .Values.nodeSelector }}
