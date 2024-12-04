@@ -57,6 +57,13 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: 80
+          - path: /ologrest
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: 8181
         {{- else }}
           {{- range .paths }}
           - path: {{ .path }}

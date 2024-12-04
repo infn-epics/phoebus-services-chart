@@ -127,7 +127,11 @@ spec:
               containerPort: 8080
               protocol: TCP
             {{- end }}
-
+          {{- if eq .Values.phoebusservice "olog" }}
+            - name: ologrest
+              containerPort: 8181
+              protocol: TCP
+          {{- end }}
             
           stdin: true
           tty: true  
