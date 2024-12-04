@@ -75,7 +75,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: REACT_APP_BASE_URL
-              value: "http://{{.Values.ingress.hosts[0].host}}/Olog"
+              value: {{quote (printf "http://%s/Olog" (index .Values.ingress.hosts 0).host) }}
             - name: PUBLIC_URL
               value: "/web"
           ports:
