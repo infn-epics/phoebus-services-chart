@@ -85,7 +85,7 @@ spec:
             - name: WDS_SOCKET_PATH
               value: "/web/ws"
             - name: WDS_SOCKET_PORT
-              value: ""
+              value: "0"
           ports:
             - name: http
               containerPort: 3000
