@@ -80,7 +80,12 @@ spec:
               value: {{quote (printf "http://%s/web" (index .Values.ingress.hosts 0).host) }}
             - name: REACT_APP_WS_URL
               value: {{quote (printf "ws://%s/web" (index .Values.ingress.hosts 0).host) }}
-
+            - name: WDS_SOCKET_HOST
+              value: {{quote (printf "%s" (index .Values.ingress.hosts 0).host) }}
+            - name: WDS_SOCKET_PATH
+              value: "/web/ws"
+            - name: WDS_SOCKET_PORT
+              value: ""
           ports:
             - name: http
               containerPort: 3000
