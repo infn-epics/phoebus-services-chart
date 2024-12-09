@@ -86,6 +86,10 @@ spec:
               value: "/web/ws"
             - name: WDS_SOCKET_PORT
               value: "0"
+            - name: REACT_APP_LEVEL_VALUES
+              value: "Urgent,Suggestion,Info,Request,Problem"
+            - name: REACT_APP_DEFAULT_LEVEL
+              value: "Info"
           ports:
             - name: http
               containerPort: 3000
