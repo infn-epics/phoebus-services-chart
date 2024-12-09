@@ -83,7 +83,7 @@ spec:
             - name: WDS_SOCKET_HOST
               value: {{quote (printf "%s" (index .Values.ingress.hosts 0).host) }}
             - name: WDS_SOCKET_PATH
-              value: "/web/ws"
+              value: "/web"
             - name: WDS_SOCKET_PORT
               value: "0"
             - name: REACT_APP_LEVEL_VALUES
