@@ -78,6 +78,9 @@ spec:
               value: {{quote (printf "http://%s/Olog" (index .Values.ingress.hosts 0).host) }}
             - name: PUBLIC_URL
               value: "/web"
+            - name: REACT_APP_WS_URL
+              value: {{quote (printf "ws://%s/web" (index .Values.ingress.hosts 0).host) }}
+
           ports:
             - name: http
               containerPort: 3000
