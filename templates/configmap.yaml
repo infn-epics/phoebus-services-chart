@@ -182,24 +182,15 @@ data:
       security.require-ssl=false
 
       ############## LDAP - External ##############
-      ldap.enabled = {{ .Values.ldap.external.enable }}
-      ldap.urls = {{ .Values.ldap.external.url }}
-      ldap.base.dn = { .Values.ldap.external.base.dn }}
+      ldap.enabled = {{ .Values.ldap.enable }}
+      ldap.urls = {{ .Values.ldap.url }}
+      ldap.base.dn = {{ .Values.ldap.base.dn }}
       ldap.user.search.base=
       # User search pattern, e.g. uid={0},ou=People. No default value as LDAP environment may not
       # support user search by pattern.
-      ldap.user.dn.pattern=
-      # User search filter, e.g. (&(objectClass=person)(SAMAccountName={0})). No default value as LDAP environment
-      # may not support user search by filter.
-      ldap.user.search.filter=
-      ldap.groups.search.base = ou=Group
-      ldap.groups.search.pattern = (memberUid= {1})
-      # dn of manager account, may be required for group search
-      ldap.manager.dn=
-      # password of account
-      ldap.manager.password=
+      ldap.user.dn.pattern={{ .Values.ldap.user.dn.pattern }}
 
-      {{- if not .Values.ldap.external.enable }}
+      {{- if not .Values.ldap.enable }}
       ############## LDAP - Embedded ##############
       embedded_ldap.enabled = true
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
