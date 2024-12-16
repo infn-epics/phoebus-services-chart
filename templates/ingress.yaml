@@ -43,20 +43,7 @@ spec:
         paths:
         {{- if eq $.Values.phoebusservice "olog" }}
 
-          - path: /web
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: 3000
-          - path: /ws
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: 3000
+          
           - path: /
             pathType: Prefix
             backend:
@@ -64,13 +51,7 @@ spec:
                 name: {{ $fullName }}
                 port:
                   number: 80
-          - path: /ologrest
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: 8181
+          
         {{- else }}
           {{- range .paths }}
           - path: {{ .path }}

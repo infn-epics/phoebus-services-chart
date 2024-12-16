@@ -16,16 +16,7 @@ spec:
       targetPort: rest
       protocol: TCP
       name: rest
-    {{- if eq .Values.phoebusservice "olog" }}
-    - port: 3000
-      targetPort: http
-      protocol: TCP
-      name: http
-    - port: 8181
-      targetPort: ologrest
-      protocol: TCP
-      name: ologrest 
-    {{- end }}
+    
     # {{- if .Values.service.http.enable }}
     # - port: {{ .Values.service.http.port }}
     #   targetPort: http

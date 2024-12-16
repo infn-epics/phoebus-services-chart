@@ -68,36 +68,7 @@ spec:
           mountPath: /pvc
       {{- end }}
       containers:
-      {{- if eq .Values.phoebusservice "olog" }}
-        - name: {{ .Chart.Name }}-web
-          
-          image: "{{ .Values.image.webolog }}"
-          imagePullPolicy: Always #{{ .Values.image.pullPolicy }}
-          env:
-            - name: REACT_APP_BASE_URL
-              value: {{quote (printf "http://%s/Olog" (index .Values.ingress.hosts 0).host) }}
-            - name: PUBLIC_URL
-              value: {{quote (printf "http://%s/web" (index .Values.ingress.hosts 0).host) }}
-            - name: REACT_APP_WS_URL
-              value: {{quote (printf "ws://%s/web" (index .Values.ingress.hosts 0).host) }}
-            - name: WDS_SOCKET_HOST
-              value: {{quote (printf "%s" (index .Values.ingress.hosts 0).host) }}
-            - name: WDS_SOCKET_PATH
-              value: "/ws"
-            - name: WDS_SOCKET_PORT
-              value: "0"
-            - name: REACT_APP_LEVEL_VALUES
-              value: "[\"Urgent\",\"Suggestion\",\"Info\",\"Request\",\"Problem\"]"
-            - name: REACT_APP_DEFAULT_LEVEL
-              value: "Info"
-          ports:
-            - name: http
-              containerPort: 3000
-              protocol: TCP
-          
-          resources:
-{{ toYaml .Values.resources | indent 12}}
-      {{- end }}
+      
         - name: {{ .Chart.Name }}
           
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
