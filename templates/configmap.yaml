@@ -280,7 +280,7 @@ data:
       # Defaults to http://localhost:3000 (NodeJS development), but must be augmented
       # with the origin(s) on which the web front-end is deployed.
       
-    {{- if .Values.cors.origins }}
+    {{- if and .Values.cors .Values.cors.origins }}
       cors.allowed.origins={{.Values.cors.origins}}
     {{- end }}
     
