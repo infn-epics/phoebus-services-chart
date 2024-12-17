@@ -180,6 +180,7 @@ data:
       server.ssl.key-alias=cf
 
       security.require-ssl=false
+      {{- if and .Values.ldap .Values.ldap.enable }}
 
       ############## LDAP - External ##############
       ldap.enabled = {{ .Values.ldap.enable }}
@@ -189,8 +190,7 @@ data:
       # User search pattern, e.g. uid={0},ou=People. No default value as LDAP environment may not
       # support user search by pattern.
       ldap.user.dn.pattern={{ .Values.ldap.user.dn.pattern }}
-
-      {{- if not .Values.ldap.enable }}
+      {{- else }}
       ############## LDAP - Embedded ##############
       embedded_ldap.enabled = true
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
