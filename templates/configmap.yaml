@@ -60,7 +60,7 @@ data:
 
       # The server port for the rest service
       server.port=8080
-      org.phoebus.pv.ca/addr_list={{.Values.epicsConfiguration.gateway}}
+      jca.use_env=true
       # Elasticsearch connection parameters
       elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
       elasticsearch.http.port={{ .Values.elasticsearch.http.port }}
