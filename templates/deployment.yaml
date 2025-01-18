@@ -158,7 +158,7 @@ spec:
                 echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
                 cd /saveandrestore
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
-                java -jar -Dspring.config.location=file:/config/saveandrestore.properties /saveandrestore/service-save-and-restore.jar  
+                java -jar -Dca.use_env=true -Dspring.config.location=file:/config/saveandrestore.properties /saveandrestore/service-save-and-restore.jar  
               {{- end }}
               {{- if eq .Values.phoebusservice "alarmserver" }}
                 ## needs kafka
