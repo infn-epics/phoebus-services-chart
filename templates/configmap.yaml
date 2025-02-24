@@ -240,6 +240,8 @@ data:
       # Set the name of the elastic cluster
       elasticsearch.cluster.name: elasticsearch
 
+      elasticsearch.result.size.tags: 10000
+
       # The names of the index to use for olog
       elasticsearch.tag.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tags
       elasticsearch.tag.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tag
