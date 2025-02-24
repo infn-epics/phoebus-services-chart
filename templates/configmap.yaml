@@ -239,9 +239,6 @@ data:
 
       # Set the name of the elastic cluster
       elasticsearch.cluster.name: elasticsearch
-
-      elasticsearch.result.size.tags: 10000
-
       # The names of the index to use for olog
       elasticsearch.tag.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tags
       elasticsearch.tag.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tag
@@ -296,9 +293,9 @@ data:
       ########### Elasticsearch "result set" sizes ##########
       # By default Elasticsearch will return 10 items matching a query.
       # This may bee too limiting, e.g. when client requests all tags.
-      elasticsearch.result.size.logbooks=10
-      elasticsearch.result.size.tags=10
-      elasticsearch.result.size.properties=10
+      elasticsearch.result.size.logbooks=1000
+      elasticsearch.result.size.tags=10000
+      elasticsearch.result.size.properties=10000
   olog.ldif: |
       dn: dc=olog,dc=local
       objectClass: dcObject
