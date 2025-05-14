@@ -5,9 +5,10 @@ metadata:
   labels:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
 spec:
+
   type: {{ .Values.service.type }}
   {{- if .Values.staticIP }}
-  clusterIP: {{.Values.staticIP}}
+  clusterIP: {{ .Values.staticIP }}
   {{- else }}
   clusterIP: None
   {{- end }}
@@ -16,12 +17,11 @@ spec:
       targetPort: rest
       protocol: TCP
       name: rest
-    
-    # {{- if .Values.service.http.enable }}
-    # - port: {{ .Values.service.http.port }}
-    #   targetPort: http
-    #   protocol: TCP
-    #   name: http
+    {{- if .Values.service.http.enable }}
+    - port: {{ .Values.service.http.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
     {{- end }}
   selector:
     {{- include "phoebus-services-chart.selectorLabels" . | nindent 4 }}
