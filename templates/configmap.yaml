@@ -435,10 +435,10 @@ data:
       com.sun.mail.smtp.level = WARNING
 
       org.apache.kafka.level = INFO
-      org.phoebus.email/mailhost={{.Values.email.host}}
-      org.phoebus.email/mailport={{.Values.email.port}}
-      org.phoebus.email/username={{.Values.email.username}}
-      org.phoebus.email/password={{.Values.email.password}}
+      org.phoebus.email/mailhost={{.Values.email.smtp.host}}
+      org.phoebus.email/mailport={{.Values.email.smtp.port}}
+      org.phoebus.email/username={{.Values.email.smtp.username}}
+      org.phoebus.email/password={{.Values.email.smtp.password}}
       org.phoebus.applications.alarm/automated_email_sender={{.Release.Namespace}} Alarm Notifier
 
       org.phoebus.applications.alarm.level = INFO
