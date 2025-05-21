@@ -127,14 +127,3 @@ staticIP:
 gitRepoConfig:
   url:
 
-email:
-  from: "phoebus@localhost"
-  to: "phoebus@localhost"
-  smtp:
-    host: smtp.lnf.infn.it
-    port: 25
-    user: ""
-    password: ""
-    tls: false
-    starttls: false
-    auth: false
