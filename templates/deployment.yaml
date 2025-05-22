@@ -84,6 +84,7 @@ spec:
           {{- end }}
 
           env:
+            
             {{- if .Values.epicsConfiguration.gateway }}
             - name: EPICS_CA_ADDR_LIST
               value: {{ .Values.epicsConfiguration.gateway | quote }}
