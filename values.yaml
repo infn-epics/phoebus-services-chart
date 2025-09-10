@@ -127,3 +127,8 @@ staticIP:
 gitRepoConfig:
   url:
 
+oauth2:
+  enabled: true
+  issueUri: "https://localhost:8443/oauth2/issue"
+  claimsName: "name"
+

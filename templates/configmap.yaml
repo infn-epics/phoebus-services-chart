@@ -167,6 +167,11 @@ data:
 
       # Disable the spring banner
       #spring.main.banner-mode=off
+      ## oauth2 
+      oauth2.enabled = {{ .Values.oauth2.enabled}}
+      oauth2.issueUri = {{ .Values.oauth2.issueUri}}
+      oauth2.claimsName = {{ .Values.oauth2.claimsName }}
+      
 
       # suppress the logging from spring boot
       # during {{ .Values.service.loglevel}}ging this should be set to {{ .Values.service.loglevel}}
