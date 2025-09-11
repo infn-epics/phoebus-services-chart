@@ -93,7 +93,7 @@ spec:
             {{- end }}
           
           volumeMounts:
-            
+            - name: config
               mountPath: /config
             - name: phoebus-ini
               mountPath: /phoebus/phoebus_settings.ini  # Mount path inside the container
@@ -217,7 +217,7 @@ spec:
           configMap:
             name: {{ include "phoebus-services-chart.fullname" . }}-config
         {{- if .Values.epicsConfiguration.name }}
-        
+    
         - name: phoebus-ini
           configMap:
             name: {{ .Values.epicsConfiguration.name }}
