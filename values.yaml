@@ -129,6 +129,6 @@ gitRepoConfig:
 
 oauth2:
   enabled: true
-  issueUri: "https://localhost:8443/oauth2/issue"
+  issueUri: "https://idp-test.app.infn.it/auth/realms/aai"
   claimsName: "name"
 
