@@ -191,6 +191,7 @@ data:
       server.ssl.key-alias=cf
 
       security.require-ssl=false
+      {{- if and .Values.ldap .Values.ldap.enable }}
 
       ############## LDAP - External ##############
       ldap.enabled = {{ .Values.ldap.enable }}
@@ -200,6 +201,7 @@ data:
       # User search pattern, e.g. uid={0},ou=People. No default value as LDAP environment may not
       # support user search by pattern.
       ldap.user.dn.pattern={{ .Values.ldap.user.dn.pattern }}
+      {{- else }}
       ############## LDAP - Embedded ##############
       embedded_ldap.enabled = true
       embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
@@ -216,12 +218,13 @@ data:
       ############## Demo Auth ##############
       demo_auth.enabled = true
       ############## Demo credentials ##############
-      demo.user=epics
-      demo.user.password=epics
+      demo.user={{.Values.user | default "epics"  }}
+      demo.user.password={{.Values.password | default "epics"  }}
       demo.admin=admin
       demo.admin.password=epics
       demo.readOnly=control
       demo.readOnly.password=1234
+      {{- end }}
       ############## Authorization Role --> group Mapping ##############
       # Customize group names here
       admin-groups=olog-admins,sys-admins,ADMIN
@@ -286,10 +289,10 @@ data:
       # Comma separated list of origins allowed to do CORS requests.
       # Defaults to http://localhost:3000 (NodeJS development), but must be augmented
       # with the origin(s) on which the web front-end is deployed.
-
-      {{- if and .Values.cors .Values.cors.origins }}
+      
+    {{- if and .Values.cors .Values.cors.origins }}
       cors.allowed.origins={{.Values.cors.origins}}
-      {{- end }}
+    {{- end }}
     
       ################## File upload and request size limits ##################
       spring.servlet.multipart.max-file-size=50MB
