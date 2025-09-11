@@ -93,7 +93,7 @@ spec:
             {{- end }}
           
           volumeMounts:
-            - name: config
+            
               mountPath: /config
             - name: phoebus-ini
               mountPath: /phoebus/phoebus_settings.ini  # Mount path inside the container
@@ -215,7 +215,8 @@ spec:
           configMap:
             name: {{ include "phoebus-services-chart.fullname" . }}-config
         {{- if .Values.epicsConfiguration.name }}
-    
+        - name: config-volume
+          emptyDir: {}
         - name: phoebus-ini
           configMap:
             name: {{ .Values.epicsConfiguration.name }}
@@ -224,11 +225,4 @@ spec:
               path: phoebus_settings.ini # This is the path inside the mountPath where the file will be available
         {{- end }}
 
-  volumeClaimTemplates:
-  - metadata:
-      name: config-volume
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi  # Adjust storage size as needed
+  
