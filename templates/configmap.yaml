@@ -191,7 +191,7 @@ data:
       server.ssl.key-alias=cf
 
       security.require-ssl=false
-      {{- if and .Values.ldap .Values.ldap.enable }}
+      ## {{- if and .Values.ldap .Values.ldap.enable }}
 
       ############## LDAP - External ##############
       ldap.enabled = {{ .Values.ldap.enable }}
@@ -224,7 +224,7 @@ data:
       demo.admin.password=epics
       demo.readOnly=control
       demo.readOnly.password=1234
-      {{- end }}
+   ##    {{- end }}
       ############## Authorization Role --> group Mapping ##############
       # Customize group names here
       admin-groups=olog-admins,sys-admins,ADMIN
