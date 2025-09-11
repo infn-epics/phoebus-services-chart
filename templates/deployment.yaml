@@ -211,12 +211,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
+        - name: config-volume
+          emptyDir: {}
         - name: config
           configMap:
             name: {{ include "phoebus-services-chart.fullname" . }}-config
         {{- if .Values.epicsConfiguration.name }}
-        - name: config-volume
-          emptyDir: {}
+        
         - name: phoebus-ini
           configMap:
             name: {{ .Values.epicsConfiguration.name }}
