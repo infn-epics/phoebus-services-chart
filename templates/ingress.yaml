@@ -18,9 +18,15 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+  {{- if .Values.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- if and .Values.secure (not (hasKey .Values.ingress.annotations "route.openshift.io/termination")) }}
+    route.openshift.io/termination: edge
+    {{- end }}
+  {{- else if .Values.secure }}
+  annotations:
+    route.openshift.io/termination: edge
   {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
