@@ -112,7 +112,7 @@ spec:
               protocol: TCP
             {{- end }}
           {{- if eq .Values.phoebusservice "olog" }}
-            - name: ologrest
+            - name: https
               containerPort: 8181
               protocol: TCP
           {{- end }}
