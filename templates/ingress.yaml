@@ -59,11 +59,16 @@ spec:
           - path: /
             pathType: Prefix
             backend:
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
                 name: {{ $fullName }}
                 port:
                   {{- /* Use HTTP port 8080 for TLS termination at ingress, HTTPS port 8181 only for end-to-end TLS */ -}}
                   number: 8080
+              {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: 8080
+              {{- end }}
         {{- else }}
           {{- range .paths }}
           - path: {{ .path }}
