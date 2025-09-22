@@ -48,7 +48,7 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  {{- if .Values.ingress.tls }}
+                  {{- if and .Values.ingress .Values.ingress.tls }}
                   number: 8181
                   {{- else }}
                   number: 8080
