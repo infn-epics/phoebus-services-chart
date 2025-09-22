@@ -1,4 +1,4 @@
-{{- if .Values.ingress.enabled -}}
+{{- if and .Values.ingress .Values.ingress.enabled -}}
 {{- $fullName := include "phoebus-services-chart.fullname" . -}}
 {{- $svcPort := .Values.service.port -}}
 {{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
@@ -48,7 +48,7 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  {{- if and .Values.ingress .Values.ingress.tls }}
+                  {{- if and $.Values.ingress $.Values.ingress.tls }}
                   number: 8181
                   {{- else }}
                   number: 8080
