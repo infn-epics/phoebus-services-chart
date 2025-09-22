@@ -13,16 +13,22 @@ spec:
   clusterIP: None
   {{- end }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: rest
-      protocol: TCP
-      name: rest
-    {{- if eq .Values.phoebusservice "olog" }}
+   
+  {{- if eq .Values.phoebusservice "olog" }}
     - port: 8181
       targetPort: https
       protocol: TCP
       name: https
-    {{- end }}
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  {{- else }}
+    - port: {{ .Values.service.port }}
+      targetPort: rest
+      protocol: TCP
+      name: rest
+  {{- end }}
     {{- if .Values.service.http.enable }}
     - port: {{ .Values.service.http.port }}
       targetPort: http

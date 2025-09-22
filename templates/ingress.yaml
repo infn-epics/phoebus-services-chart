@@ -42,16 +42,17 @@ spec:
       http:
         paths:
         {{- if eq $.Values.phoebusservice "olog" }}
-
-          
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: 80
-          
+                  {{- if .Values.ingress.tls }}
+                  number: 8181
+                  {{- else }}
+                  number: 8080
+                  {{- end }}
         {{- else }}
           {{- range .paths }}
           - path: {{ .path }}
