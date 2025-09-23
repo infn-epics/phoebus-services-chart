@@ -40,10 +40,10 @@ service:
   loglevel: "INFO"
 
 # Enable TLS termination and secure configurations
-secure: false
 
 ingress:
   enabled: false
+
   enableHttp: true  # Enable HTTP-only ingress route alongside HTTPS
   className: ""
   annotations: {}
