@@ -146,10 +146,10 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ if .Values.secure }}8080{{ else }}{{ $svcPort }}{{ end }}
+                  number: {{ if $.Values.secure }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- else }}
               serviceName: {{ $fullName }}
-              servicePort: {{ if .Values.secure }}8080{{ else }}{{ $svcPort }}{{ end }}
+              servicePort: {{ if $.Values.secure }}8080{{ else }}{{ $svcPort }}{{ end }}
               {{- end }}
         {{- else }}
           {{- range .paths }}
