@@ -43,7 +43,6 @@ service:
 
 ingress:
   enabled: false
-
   enableHttp: true  # Enable HTTP-only ingress route alongside HTTPS
   className: ""
   annotations: {}

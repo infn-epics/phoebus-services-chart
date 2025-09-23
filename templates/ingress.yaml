@@ -96,9 +96,12 @@ spec:
     {{- end }}
 {{- end }}
 
-{{- if and .Values.ingress .Values.ingress.enabled .Values.ingress.enableHttp -}}
+{{- if and .Values.ingress .Values.ingress.enabled .Values.ingress.enableHttp }}
+
+
 ---
-# HTTP-only Ingress for unencrypted traffic
+
+
 {{- $fullName := include "phoebus-services-chart.fullname" . -}}
 {{- $svcPort := .Values.service.port -}}
 {{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
