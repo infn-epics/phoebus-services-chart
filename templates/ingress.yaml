@@ -136,7 +136,7 @@ spec:
   # No TLS section for HTTP-only route
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: http-{{ .host | quote }}
+    - host: {{$.Values.beamline}}-{{ $fullName }}-http.{{ $.Values.epik8namespace }}
       http:
         paths:
         {{- if eq $.Values.phoebusservice "olog" }}
