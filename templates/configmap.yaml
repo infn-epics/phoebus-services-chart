@@ -35,12 +35,19 @@ data:
 
     # Size of the thread pool for message and command loggers. Two threads per topic/configuration are required
     thread_pool_size=4
+    {{- if .Values.epicsConfiguration.gateway }}
+      org.phoebus.pv.ca/addr_list={{ .Values.epicsConfiguration.gateway }}
+    {{- else }}
     org.phoebus.pv.ca/addr_list={{ .Values.epicsConfiguration.ca_addr_list }}
-    org.phoebus.pv.ca/auto_addr_list=false
 
-    org.phoebus.pv.pva/epics_pva_auto_addr_list=false
-    org.phoebus.pva/pva_addr_list={{ .Values.epicsConfiguration.pva_addr_list }}
-    # org.phoebus.pva/pva_auto_addr_list=false
+    {{- end}}
+    org.phoebus.pv.ca/auto_addr_list=false
+    {{- if .Values.epicsConfiguration.pvagateway }}
+      org.phoebus.pv.pva/epics_pva_name_servers={{ .Values.epicsConfiguration.pvagateway }}
+    {{- else }}
+      org.phoebus.pv.pva/epics_pva_name_servers={{ .Values.epicsConfiguration.pva_addr_list }}
+    {{- end }}
+    org.phoebus.pva/pva_auto_addr_list=false
 
     ############################## REST Logging ###############################
     # DEBUG level will log all requests and responses to and from the REST end points
@@ -450,6 +457,18 @@ data:
       com.cosylab.epics.caj.level = DEBUG
       org.phoebus.framework.rdb.level = DEBUG
       org.phoebus.pv.level = DEBUG
+      {{- if .Values.epicsConfiguration.gateway }}
+      org.phoebus.pv.ca/addr_list={{ .Values.epicsConfiguration.gateway }}
+      {{- else }}
+      org.phoebus.pv.ca/addr_list={{ .Values.epicsConfiguration.ca_addr_list }}
+
+      {{- end}}
+      org.phoebus.pv.ca/auto_addr_list=false
+      {{- if .Values.epicsConfiguration.pvagateway }}
+        org.phoebus.pv.pva/epics_pva_name_servers={{ .Values.epicsConfiguration.pva_addr_list }}
+      {{- else }}
+        org.phoebus.pv.pva/epics_pva_name_servers={{ .Values.epicsConfiguration.pva_addr_list }}
+      {{- end }}
       
   sar.ldif: |
       dn: dc=sar,dc=local
