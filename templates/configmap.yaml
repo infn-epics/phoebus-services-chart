@@ -469,6 +469,8 @@ data:
       {{- else }}
         org.phoebus.pv.pva/epics_pva_name_servers={{ .Values.epicsConfiguration.pva_addr_list }}
       {{- end }}
+      # Default PV protocol (ca for Channel Access, pva for PVAccess)
+      org.phoebus.pv/default=ca
       
   sar.ldif: |
       dn: dc=sar,dc=local
