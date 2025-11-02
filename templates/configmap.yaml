@@ -256,7 +256,11 @@ data:
       elasticsearch.http.protocol: {{ .Values.elasticsearch.protocol | default "http" }}
       elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}
       elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
+      {{- if .Values.elasticsearch.pubcertsecret }}
 
+      server.ssl.trust-store=/olog-target/truststore.jks
+      server.ssl.trust-store-password=changeit
+      {{- end }}
       # Set the name of the elastic cluster
       elasticsearch.cluster.name: elasticsearch
       # The names of the index to use for olog

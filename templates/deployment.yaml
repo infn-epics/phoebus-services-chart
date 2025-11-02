@@ -101,9 +101,14 @@ spec:
             - name: phoebus-ini
               mountPath: /phoebus/phoebus_settings.ini  # Mount path inside the container
               subPath: phoebus_settings.ini  # Optional, if you only want to mount a specific file from the ConfigMap
-              volumeMounts:
             - name: config-volume
               mountPath: /gitconfig  # Adjust the mountPath as per your requirement
+            {{- if .Values.elasticsearch.pubcertsecret }}
+            - name: elasticsearch-cert
+              mountPath: /config/elasticsearch-ca.crt
+              subPath: ca.crt
+              readOnly: true
+            {{- end }}
           ports:
             {{- if eq .Values.phoebusservice "scanserver" }}
             - name: rest
@@ -199,6 +204,9 @@ spec:
 
               {{- if eq .Values.phoebusservice "olog" }}
                 echo "* Starting olog server"
+                {{- if .Values.elasticsearch.pubcertsecret }}
+                keytool -import -alias elasticsearch -file elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
+                {{- end}}
                 cd /olog-target
                 java -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
               {{- end }}
@@ -230,6 +238,14 @@ spec:
             items:
             - key: phoebus_settings.ini
               path: phoebus_settings.ini # This is the path inside the mountPath where the file will be available
+        {{- end }}
+        {{- if .Values.elasticsearch.pubcertsecret }}
+        - name: elasticsearch-cert
+          secret:
+            secretName: {{ .Values.elasticsearch.pubcertsecret }}
+            items:
+            - key: ca.crt
+              path: ca.crt
         {{- end }}
 
   

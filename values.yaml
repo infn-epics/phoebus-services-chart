@@ -102,6 +102,10 @@ elasticsearch:
     port: 9300 
   http:
     port: 9200
+  # Name of the secret containing the Elasticsearch CA certificate
+  # If set, the certificate will be mounted at /config/elasticsearch-ca.crt
+  # The secret should contain a key named 'ca.crt'
+  pubcertsecret: ""
 
 mongo:
   database: ologAttachments
