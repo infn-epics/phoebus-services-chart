@@ -36,6 +36,8 @@ spec:
         - |
           echo "Copying Elasticsearch certificate from backend namespace..."
           kubectl get secret {{ .Values.elasticsearch.pubcertsecret }} -n backend -o jsonpath='{.data.ca\.crt}' | base64 -d > /cert/elasticsearch-ca.crt
+          kubectl get secret elasticsearch-es-elastic-user -n backend -o go-template='{{.data.elastic | base64decode}}' > /cert/elasticsearch-es-elastic-user.key
+
           echo "Certificate copied successfully"
           ls -la /cert/
         volumeMounts:
