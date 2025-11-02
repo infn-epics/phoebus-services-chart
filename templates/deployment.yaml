@@ -224,7 +224,7 @@ spec:
                 keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
                 {{- end}}
                 cd /olog-target
-                java -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
+                java -Djavax.net.ssl.trustStore=/olog-target -Djavax.net.ssl.trustStorePassword=changeit -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
               {{- end }}
               echo "%% END {{ .Values.phoebusservice }}"
 
