@@ -93,6 +93,10 @@ affinity: {}
 phoebusservice: "saveandrestore"
 
 elasticsearch:
+  authorization:
+    username: ""
+    password: ""
+  clusterName: elasticsearch
   network:
     host: localhost
     port: 9300 
