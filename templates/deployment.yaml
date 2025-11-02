@@ -26,8 +26,23 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "phoebus-services-chart.serviceAccountName" . }}
-      {{- if .Values.gitRepoConfig.url }}
       initContainers:
+      {{- if .Values.elasticsearch.pubcertsecret }}
+      - name: init-elasticsearch-cert
+        image: bitnami/kubectl:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Copying Elasticsearch certificate from backend namespace..."
+          kubectl get secret {{ .Values.elasticsearch.pubcertsecret }} -n backend -o jsonpath='{.data.ca\.crt}' | base64 -d > /config/elasticsearch-ca.crt
+          echo "Certificate copied successfully"
+          ls -la /config/
+        volumeMounts:
+        - name: elasticsearch-cert-volume
+          mountPath: /config
+      {{- end }}
+      {{- if .Values.gitRepoConfig.url }}
       - name: init-container-git
         image: baltig.infn.it:4567/epics-containers/container-init
         securityContext:
@@ -104,9 +119,8 @@ spec:
             - name: config-volume
               mountPath: /gitconfig  # Adjust the mountPath as per your requirement
             {{- if .Values.elasticsearch.pubcertsecret }}
-            - name: elasticsearch-cert
-              mountPath: /config/elasticsearch-ca.crt
-              subPath: ca.crt
+            - name: elasticsearch-cert-volume
+              mountPath: /config
               readOnly: true
             {{- end }}
           ports:
@@ -205,7 +219,8 @@ spec:
               {{- if eq .Values.phoebusservice "olog" }}
                 echo "* Starting olog server"
                 {{- if .Values.elasticsearch.pubcertsecret }}
-                keytool -import -alias elasticsearch -file elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
+                echo "Importing Elasticsearch certificate into truststore..."
+                keytool -import -noprompt -alias elasticsearch -file /config/elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
                 {{- end}}
                 cd /olog-target
                 java -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
@@ -240,12 +255,8 @@ spec:
               path: phoebus_settings.ini # This is the path inside the mountPath where the file will be available
         {{- end }}
         {{- if .Values.elasticsearch.pubcertsecret }}
-        - name: elasticsearch-cert
-          secret:
-            secretName: {{ .Values.elasticsearch.pubcertsecret }}
-            items:
-            - key: ca.crt
-              path: ca.crt
+        - name: elasticsearch-cert-volume
+          emptyDir: {}
         {{- end }}
 
   
