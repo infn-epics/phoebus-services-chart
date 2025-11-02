@@ -35,9 +35,9 @@ spec:
         - -c
         - |
           echo "Copying Elasticsearch certificate from backend namespace..."
-          kubectl get secret {{ .Values.elasticsearch.pubcertsecret }} -n backend -o jsonpath='{.data.ca\.crt}' | base64 -d > /config/elasticsearch-ca.crt
+          kubectl get secret {{ .Values.elasticsearch.pubcertsecret }} -n backend -o jsonpath='{.data.ca\.crt}' | base64 -d > /cert/elasticsearch-ca.crt
           echo "Certificate copied successfully"
-          ls -la /cert
+          ls -la /cert/
         volumeMounts:
         - name: elasticsearch-cert-volume
           mountPath: /cert
@@ -259,5 +259,34 @@ spec:
         - name: elasticsearch-cert-volume
           emptyDir: {}
         {{- end }}
+---
+{{- if .Values.elasticsearch.pubcertsecret }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}-secret-reader
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+  resourceNames: 
+  - {{ .Values.elasticsearch.pubcertsecret }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}-secret-reader-binding
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "phoebus-services-chart.fullname" . }}-secret-reader
+subjects:
+- kind: ServiceAccount
+  name: {{ include "phoebus-services-chart.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
 
-  
