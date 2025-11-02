@@ -253,7 +253,7 @@ data:
       # Set a custom port to listen for HTTP traffic:
       #
       elasticsearch.http.port: {{ .Values.elasticsearch.http.port }}
-      elasticsearch.http.protocol: {{ .Values.elasticsearch.http.protocol | default "http" }}
+      elasticsearch.http.protocol: {{ .Values.elasticsearch.protocol | default "http" }}
       elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}
       elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
 
