@@ -70,8 +70,11 @@ spec:
       containers:
       
         - name: {{ .Chart.Name }}
-          
+{{- if eq .Values.phoebusservice "olog" }}
+          image: "{{ .Values.olog.image }}"
+{{- else }}     
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+{{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
 {{  toYaml .Values.securityContext | indent 12}}
@@ -196,8 +199,8 @@ spec:
 
               {{- if eq .Values.phoebusservice "olog" }}
                 echo "* Starting olog server"
-                cd /olog
-                java -jar -Dspring.config.location=file:/config/olog.properties /olog/service-olog.jar
+                cd /olog-target
+                java -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
               {{- end }}
               echo "%% END {{ .Values.phoebusservice }}"
 
