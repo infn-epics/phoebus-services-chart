@@ -254,6 +254,8 @@ data:
       #
       elasticsearch.http.port: {{ .Values.elasticsearch.http.port }}
       elasticsearch.http.protocol: http
+      elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}
+      elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
 
       # Set the name of the elastic cluster
       elasticsearch.cluster.name: elasticsearch
