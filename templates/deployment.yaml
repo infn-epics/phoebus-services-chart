@@ -37,10 +37,11 @@ spec:
           echo "Copying Elasticsearch certificate from backend namespace..."
           kubectl get secret {{ .Values.elasticsearch.pubcertsecret }} -n backend -o jsonpath='{.data.ca\.crt}' | base64 -d > /config/elasticsearch-ca.crt
           echo "Certificate copied successfully"
-          ls -la /config/
+          ls -la /cert
         volumeMounts:
         - name: elasticsearch-cert-volume
-          mountPath: /config
+          mountPath: /cert
+       
       {{- end }}
       {{- if .Values.gitRepoConfig.url }}
       - name: init-container-git
@@ -120,7 +121,7 @@ spec:
               mountPath: /gitconfig  # Adjust the mountPath as per your requirement
             {{- if .Values.elasticsearch.pubcertsecret }}
             - name: elasticsearch-cert-volume
-              mountPath: /config
+              mountPath: /cert
               readOnly: true
             {{- end }}
           ports:
@@ -220,7 +221,7 @@ spec:
                 echo "* Starting olog server"
                 {{- if .Values.elasticsearch.pubcertsecret }}
                 echo "Importing Elasticsearch certificate into truststore..."
-                keytool -import -noprompt -alias elasticsearch -file /config/elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
+                keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
                 {{- end}}
                 cd /olog-target
                 java -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
