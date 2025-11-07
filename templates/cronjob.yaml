@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "phoebus-services-chart.fullname" . }}-olog-backup
+  name: {{ include "phoebus-services-chart.fullname" . }}-backup
   labels:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
 spec:
@@ -15,7 +15,7 @@ spec:
             {{- include "phoebus-services-chart.selectorLabels" . | nindent 12 }}
         spec:
           containers:
-          - name: olog-backup
+          - name: {{ include "phoebus-services-chart.fullname" . }}-backup
             image: {{ .Values.ologBackup.image }}
             command:
             - /bin/sh
@@ -67,4 +67,5 @@ spec:
                   server: {{ .server }}
                   path: {{ .path }}
             {{- end }}
+          restartPolicy: OnFailure
 {{- end }}
