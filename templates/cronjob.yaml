@@ -37,23 +37,23 @@ spec:
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                backup --output {{ .Values.nfsBackups.documents }}/backup_$TIMESTAMP
+                backup --output /nfs/backups/backup_$TIMESTAMP
 
               # Generate reports
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                markdown --output {{ .Values.nfsBackups.documents }}/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
+                markdown --output /nfs/documents/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
 
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                pdf --output {{ .Values.nfsBackups.documents }}/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
+                pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
 
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                html --output {{ .Values.nfsBackups.documents }}/report.html --title "Olog Report $TIMESTAMP"
+                html --output /nfs/documents/report.html --title "Olog Report $TIMESTAMP"
             volumeMounts:
             {{- range .Values.nfsBackups }}
               - name: {{ .name }}
