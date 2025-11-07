@@ -161,7 +161,7 @@ nfsBackups:
 ologBackup:
   title: Beamline Report
   enabled: true
-  schedule: "*/5 * * * *"
+  schedule: "1 0 * * *"
   image: python:3.11-slim
   ologUrl: "http://localhost:8080/Olog"
   username: "epics"
