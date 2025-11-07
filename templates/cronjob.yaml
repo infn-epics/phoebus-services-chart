@@ -28,26 +28,12 @@ spec:
               TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
               # Create backup
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
-                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
-                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                backup --output /nfs/backups/backup_$TIMESTAMP
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} backup --output /nfs/backups/backup_$TIMESTAMP
 
               # Generate reports
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
-                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
-                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                markdown --output /nfs/documents/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
-
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
-                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
-                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
-
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
-                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
-                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                html --output /nfs/documents/report.html --title "Olog Report $TIMESTAMP"
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} markdown --output /nfs/documents/report_$TIMESTAMP.md --title "{{ .Values.ologBackup.title | quote }}  $TIMESTAMP"
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "{{ .Values.ologBackup.title | quote }}  $TIMESTAMP"
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} html --output /nfs/documents/report.html --title "{{ .Values.ologBackup.title | quote }}  $TIMESTAMP"
             volumeMounts:
             {{- range .Values.nfsBackups }}
               - name: {{ .name }}

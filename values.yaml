@@ -159,6 +159,7 @@ nfsBackups:
     #   mountPath: /nfs/backups
     #   opt: "-o nolock"
 ologBackup:
+  title: "Beamline Report"
   enabled: true
   schedule: "*/5 * * * *"
   image: python:3.11-slim
