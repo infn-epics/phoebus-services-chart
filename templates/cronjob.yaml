@@ -37,31 +37,31 @@ spec:
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                backup --output {{ .Values.nfsMounts.documents }}/backup_$TIMESTAMP
+                backup --output {{ .Values.nfsBackups.documents }}/backup_$TIMESTAMP
 
               # Generate reports
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                markdown --output {{ .Values.nfsMounts.documents }}/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
+                markdown --output {{ .Values.nfsBackups.documents }}/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
 
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                pdf --output {{ .Values.nfsMounts.documents }}/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
+                pdf --output {{ .Values.nfsBackups.documents }}/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
 
               python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
-                html --output {{ .Values.nfsMounts.documents }}/report.html --title "Olog Report $TIMESTAMP"
+                html --output {{ .Values.nfsBackups.documents }}/report.html --title "Olog Report $TIMESTAMP"
             volumeMounts:
-            - name: documents
-              mountPath: {{ .Values.nfsMounts.documents }}
-            - name: backups
-              mountPath: {{ .Values.nfsMounts.backups }}
-        
+            {{- range .Values.nfsBackups }}
+              - name: {{ .name }}
+                mountPath: {{ .mountPath }}
+            {{- end }}
+
           volumes:
-            {{- range .Values.nfsMounts }}
+            {{- range .Values.nfsBackups }}
               - name: {{ .name }}
                 nfs:
                   server: {{ .server }}
