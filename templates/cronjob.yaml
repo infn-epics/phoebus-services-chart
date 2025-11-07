@@ -22,35 +22,29 @@ spec:
             - -c
             - |
               # Install dependencies if needed
-              pip install requests reportlab pillow
-
-              # Download olog-tool.py if not present
-              if [ ! -f /usr/local/bin/olog-tool.py ]; then
-                curl -o /usr/local/bin/olog-tool.py https://raw.githubusercontent.com/infn-epics/phoebus-services-tools/main/olog-tool.py
-                chmod +x /usr/local/bin/olog-tool.py
-              fi
+              pip install olog-tool
 
               # Generate timestamp for filenames
               TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
               # Create backup
-              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 backup --output /nfs/backups/backup_$TIMESTAMP
 
               # Generate reports
-              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 markdown --output /nfs/documents/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
 
-              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
 
-              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 html --output /nfs/documents/report.html --title "Olog Report $TIMESTAMP"
