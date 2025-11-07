@@ -159,7 +159,7 @@ nfsBackups:
     #   mountPath: /nfs/backups
     #   opt: "-o nolock"
 ologBackup:
-  enabled: false
+  enabled: true
   schedule: "*/5 * * * *"
   image: python:3.11-slim
   ologUrl: "http://localhost:8080/Olog"
