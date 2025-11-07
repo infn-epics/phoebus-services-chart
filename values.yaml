@@ -147,3 +147,14 @@ oauth2:
   issueUri: "https://idp-test.app.infn.it/auth/realms/aai"
   claimsName: "name"
 
+nfsMounts:
+  documents: "/documents"
+
+ologBackup:
+  enabled: false
+  schedule: "*/5 * * * *"
+  image: python:3.11-slim
+  ologUrl: "http://localhost:8080/Olog"
+  username: "epics"
+  password: "epics"
+

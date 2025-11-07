@@ -1,0 +1,70 @@
+{{- if .Values.ologBackup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}-olog-backup
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.ologBackup.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "phoebus-services-chart.selectorLabels" . | nindent 12 }}
+        spec:
+          containers:
+          - name: olog-backup
+            image: {{ .Values.ologBackup.image }}
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Install dependencies if needed
+              pip install requests reportlab pillow
+
+              # Download olog-tool.py if not present
+              if [ ! -f /usr/local/bin/olog-tool.py ]; then
+                curl -o /usr/local/bin/olog-tool.py https://raw.githubusercontent.com/infn-epics/phoebus-services-tools/main/olog-tool.py
+                chmod +x /usr/local/bin/olog-tool.py
+              fi
+
+              # Generate timestamp for filenames
+              TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+              # Create backup
+              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
+                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
+                backup --output {{ .Values.nfsMounts.documents }}/backup_$TIMESTAMP
+
+              # Generate reports
+              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
+                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
+                markdown --output {{ .Values.nfsMounts.documents }}/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
+
+              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
+                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
+                pdf --output {{ .Values.nfsMounts.documents }}/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
+
+              python /usr/local/bin/olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+                {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
+                {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
+                html --output {{ .Values.nfsMounts.documents }}/report.html --title "Olog Report $TIMESTAMP"
+            volumeMounts:
+            - name: documents
+              mountPath: {{ .Values.nfsMounts.documents }}
+            - name: backups
+              mountPath: {{ .Values.nfsMounts.backups }}
+        
+          volumes:
+            {{- range .Values.nfsMounts }}
+              - name: {{ .name }}
+                nfs:
+                  server: {{ .server }}
+                  path: {{ .path }}
+            {{- end }}
+{{- end }}
