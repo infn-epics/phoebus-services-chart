@@ -28,23 +28,23 @@ spec:
               TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
               # Create backup
-              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 backup --output /nfs/backups/backup_$TIMESTAMP
 
               # Generate reports
-              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 markdown --output /nfs/documents/report_$TIMESTAMP.md --title "Olog Report $TIMESTAMP"
 
-              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "Olog Report $TIMESTAMP"
 
-              olog-tool.py --url {{ .Values.ologBackup.ologUrl | quote }} \
+              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} \
                 {{- if .Values.ologBackup.username }} --username {{ .Values.ologBackup.username | quote }} {{- end }} \
                 {{- if .Values.ologBackup.password }} --password {{ .Values.ologBackup.password | quote }} {{- end }} \
                 html --output /nfs/documents/report.html --title "Olog Report $TIMESTAMP"
