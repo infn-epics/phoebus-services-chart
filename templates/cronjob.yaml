@@ -28,12 +28,12 @@ spec:
               TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
               # Create backup
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} backup --output /nfs/backups/backup_$TIMESTAMP
+              olog-tool --url {{ include "phoebus-services-chart.fullname" . }}.{{.Values.beamline}}.svc:8080/Olog --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} backup --output /nfs/backups/backup_$TIMESTAMP
 
               # Generate reports
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} markdown --output /nfs/documents/report_$TIMESTAMP.md --title "{{ .Values.ologBackup.title }} $TIMESTAMP"
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "{{ .Values.ologBackup.title }} $TIMESTAMP"
-              olog-tool --url {{ .Values.ologBackup.ologUrl | quote }} --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} html --output /nfs/documents/report.html --title "{{ .Values.ologBackup.title }} $TIMESTAMP"
+              olog-tool --url {{ include "phoebus-services-chart.fullname" . }}.{{.Values.beamline}}.svc:8080/Olog --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} markdown --output /nfs/documents/report_$TIMESTAMP.md --title "{{ .Values.ologBackup.title }} $TIMESTAMP"
+              olog-tool --url {{ include "phoebus-services-chart.fullname" . }}.{{.Values.beamline}}.svc:8080/Olog --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} pdf --output /nfs/documents/report_$TIMESTAMP.pdf --title "{{ .Values.ologBackup.title }} $TIMESTAMP"
+              olog-tool --url {{ include "phoebus-services-chart.fullname" . }}.{{.Values.beamline}}.svc:8080/Olog --username {{ .Values.ologBackup.username | quote }} --password {{ .Values.ologBackup.password | quote }} html --output /nfs/documents/report.html --title "{{ .Values.ologBackup.title }} $TIMESTAMP"
             volumeMounts:
             {{- range .Values.nfsBackups }}
               - name: {{ .name }}
