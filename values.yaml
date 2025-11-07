@@ -147,9 +147,17 @@ oauth2:
   issueUri: "https://idp-test.app.infn.it/auth/realms/aai"
   claimsName: "name"
 
-nfsMounts:
-  documents: "/documents"
-
+nfsBackups:
+    # - name: documents
+    #   server: 192.168.197.157
+    #   path: /sparcstorage/space2/Documents
+    #   mountPath: /nfs/documents
+    #   opt: "-o nolock"
+    # - name: backups
+    #   server: 192.168.197.157
+    #   path: /sparcstorage/space2/Backups
+    #   mountPath: /nfs/backups
+    #   opt: "-o nolock"
 ologBackup:
   enabled: false
   schedule: "*/5 * * * *"
