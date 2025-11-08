@@ -198,13 +198,12 @@ spec:
                 {{- end}}
                 SPRING_APPLICATION_JSON='{"server":{"ssl":{"trust-store":"/saveandrestore/truststore.jks","trust-store-password":"changeit"}}}'
 
-                cd /saveandrestore
+                
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
-                java -Djavax.net.ssl.trustStore=/saveandrestore/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -jar -Djca.use_env=true -Dspring.config.location=file:/config/saveandrestore.properties service-save-and-restore-*.jar
+                java -Djavax.net.ssl.trustStore=/saveandrestore/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -jar -Djca.use_env=true -Dspring.config.location=file:/config/saveandrestore.properties /saveandrestore/service-save-and-restore-*.jar
               {{- end }}
               {{- if eq .Values.phoebusservice "alarmserver" }}
                 ## needs kafka
-                cd /alarmserver
 
                 settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server-*.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -settings /phoebus/phoebus_settings.ini"
                 {{- if .Values.alarm.config }}
@@ -219,7 +218,6 @@ spec:
 
               {{- if eq .Values.phoebusservice "alarmlogger" }}
                 ## needs kafka
-                cd /alarmlogger
                 
                 settings="-Dspring.config.location=file:/config/alarmlogger.properties /alarmlogger/service-alarm-logger-*.jar  -noshell -bootstrap.servers {{.Values.kafka.host}}:{{.Values.kafka.port}} -es_host {{ .Values.elasticsearch.network.host }} -es_port {{ .Values.elasticsearch.http.port }} -topics {{.Values.alarm.topics}}"
                 
