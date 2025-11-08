@@ -47,7 +47,7 @@ spec:
       {{- end }}
       {{- if .Values.gitRepoConfig.url }}
       - name: init-container-git
-        image: baltig.infn.it:4567/epics-containers/container-init
+        image: {{ .Values.initcontainer.image }}
         securityContext:
 {{ toYaml .Values.securityContext | indent 12 }}
         command:
