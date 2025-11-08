@@ -13,6 +13,11 @@ data:
     alarm_topics={{.Values.alarm.topics}}
     es_host={{.Values.elasticsearch.network.host}}
     es_port=9200
+    elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
+    elasticsearch.http.port={{ .Values.elasticsearch.http.port }}
+    elasticsearch.http.protocol: {{ .Values.elasticsearch.protocol | default "http" }}
+    elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}
+    elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
     # Max default size for es queries
     es_max_size=1000
     # Set to 'true' if sniffing to be enabled to discover other cluster nodes
@@ -83,6 +88,9 @@ data:
       # Elasticsearch connection parameters
       elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
       elasticsearch.http.port={{ .Values.elasticsearch.http.port }}
+      elasticsearch.http.protocol: {{ .Values.elasticsearch.protocol | default "http" }}
+      elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}
+      elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
 
       # Do not change this!
       spring.jackson.serialization.write-dates-as-timestamps=false
