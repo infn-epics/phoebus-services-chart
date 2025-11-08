@@ -14,6 +14,15 @@ image:
 olog:
   image:  "ghcr.io/infn-epics/org-phoebus-service-olog:latest"
 
+saveandrestore:
+  image:  "ghcr.io/infn-epics/org-phoebus-service-save-and-restore:master"
+
+alarmserver:
+  image:  "ghcr.io/infn-epics/org-phoebus-service-alarm-server:master"
+
+alarmlogger:
+  image:  "ghcr.io/infn-epics/org-phoebus-service-alarm-logger:master"
+
 
 imagePullSecrets: []
 nameOverride: ""
