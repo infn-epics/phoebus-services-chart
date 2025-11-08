@@ -67,7 +67,13 @@ data:
     ##############################################################################
 
   saveandrestore.properties: |-
+      logging.level.root={{ .Values.service.loglevel}}
       logging.level.org.springframework={{ .Values.service.loglevel}}
+      logging.level.org.apache.catalina={{ .Values.service.loglevel}}
+      logging.level.org.apache.kafka={{ .Values.service.loglevel}}
+      logging.level.org.springframework.web={{ .Values.service.loglevel}}
+      logging.level.org.springframework.security={{ .Values.service.loglevel}}
+
       app.version=@project.version@
       app.name=@project.artifactId@
 
@@ -82,6 +88,7 @@ data:
       spring.jackson.serialization.write-dates-as-timestamps=false
 
       server.servlet.contextPath=/save-restore
+      elasticsearch.cluster.name: {{ .Values.elasticsearch.clusterName | default "elasticsearch" }}
 
       # The names of the index to use for save&restore
       elasticsearch.tree_node.index={{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tree
@@ -262,7 +269,7 @@ data:
       server.ssl.trust-store-password=changeit
       {{- end }}
       # Set the name of the elastic cluster
-      elasticsearch.cluster.name: elasticsearch
+      elasticsearch.cluster.name: {{ .Values.elasticsearch.clusterName | default "elasticsearch" }}
       # The names of the index to use for olog
       elasticsearch.tag.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tags
       elasticsearch.tag.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tag
