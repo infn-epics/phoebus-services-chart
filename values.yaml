@@ -12,16 +12,16 @@ image:
   webolog: baltig.infn.it:4567/epics-containers/phoebus-olog-web
 
 olog:
-  image:  "ghcr.io/infn-epics/org-phoebus-service-olog:latest"
+  image: "ghcr.io/infn-epics/org-phoebus-service-olog:latest"
 
 saveandrestore:
-  image:  " ghcr.io/infn-epics/phoebus/service-save-and-restore:master"
+  image: "ghcr.io/infn-epics/phoebus/service-save-and-restore:master"
 
 alarmserver:
-  image:  "ghcr.io/infn-epics/phoebus/service-alarm-server:master"
+  image: "ghcr.io/infn-epics/phoebus/service-alarm-server:master"
 
 alarmlogger:
-  image:  "ghcr.io/infn-epics/phoebus/service-alarm-logger:master"
+  image: "ghcr.io/infn-epics/phoebus/service-alarm-logger:master"
 
 
 imagePullSecrets: []
