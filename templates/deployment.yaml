@@ -181,6 +181,7 @@ spec:
               {{- end }}
 
               {{- if eq .Values.phoebusservice "saveandrestore" }}
+            
                 # elastic={{ .Values.elasticsearch.network.host }}
                 # elastichttpport={{ .Values.elasticsearch.http.port }}
                 # elasticport={{ .Values.elasticsearch.network.port }}
@@ -191,14 +192,20 @@ spec:
                 # sleep 4
                 # done
                 echo "* Starting save and restore phoebus service Elastic $elastic:$elasticport"
+                {{- if .Values.elasticsearch.pubcertsecret }}
+                echo "Importing Elasticsearch certificate into truststore..."
+                keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /saveandrestore/truststore.jks -storepass changeit
+                {{- end}}
+                SPRING_APPLICATION_JSON='{"server":{"ssl":{"trust-store":"/saveandrestore/truststore.jks","trust-store-password":"changeit"}}}'
+
                 cd /saveandrestore
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
-                java -jar -Djca.use_env=true -Dspring.config.location=file:/config/saveandrestore.properties service-save-and-restore-*.jar
+                java -Djavax.net.ssl.trustStore=/saveandrestore/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -jar -Djca.use_env=true -Dspring.config.location=file:/config/saveandrestore.properties service-save-and-restore-*.jar
               {{- end }}
               {{- if eq .Values.phoebusservice "alarmserver" }}
                 ## needs kafka
                 cd /alarmserver
-                
+
                 settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server-*.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -settings /phoebus/phoebus_settings.ini"
                 {{- if .Values.alarm.config }}
                 settings="$settings -config {{.Values.alarm.config}}"
