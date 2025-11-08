@@ -48,6 +48,12 @@ spec:
       {{- if .Values.gitRepoConfig.url }}
       - name: init-container-git
         image: {{ .Values.initcontainer.image }}
+        {{- if .Values.epicsConfiguration.name }}
+        envFrom:
+          - configMapRef:
+              name: {{ .Values.epicsConfiguration.name }}
+        {{- end }}
+
         securityContext:
 {{ toYaml .Values.securityContext | indent 12 }}
         command:
