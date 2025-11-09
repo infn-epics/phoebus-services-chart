@@ -10,8 +10,10 @@ data:
     spring.main.banner-mode=off
     spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
     logging.level.root=WARN
-    alarm_topics={{.Values.alarm.topics | default "Accelerator,AcceleratorCommand,AcceleratorTalk"}}
-    topics={{.Values.alarm.topics | default "Accelerator,AcceleratorCommand,AcceleratorTalk"}}
+    alarm_topics={{.Values.alarm.topics | default "Accelerator"}}
+    topics={{.Values.alarm.topics | default "Accelerator,"}}
+    bootstrap.servers={{.Values.kafka.host}}:{{.Values.kafka.port}}
+
     es_host={{.Values.elasticsearch.network.host}}
     es_port=9200
     es_url={{.Values.elasticsearch.http.protocol | default "http"}}://{{.Values.elasticsearch.network.host}}:{{.Values.elasticsearch.http.port}}
@@ -28,8 +30,6 @@ data:
     # When set to true, the service will automatically create the index templates needed
     es_create_templates=true
 
-    # Kafka server location
-    bootstrap.servers={{.Values.kafka.host}}:{{.Values.kafka.port}}
 
     # Kafka client properties file
     kafka_properties=
