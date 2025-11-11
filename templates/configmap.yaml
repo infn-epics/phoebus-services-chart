@@ -10,8 +10,8 @@ data:
     spring.main.banner-mode=off
     spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration
     logging.level.root=WARN
-    alarm_topics={{.Values.alarm.topics | default "Accelerator"}}
-    topics={{.Values.alarm.topics | default "Accelerator,"}}
+    alarm_topics={{.Values.alarm.config | default "Accelerator"}}
+    topics={{.Values.alarm.config | default "Accelerator"}}
     bootstrap.servers={{.Values.kafka.host}}:{{.Values.kafka.port}}
 
     es_host={{.Values.elasticsearch.network.host}}

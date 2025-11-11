@@ -230,7 +230,6 @@ spec:
                 {{- end}}
                 settings="/alarmlogger/service-alarm-logger-*.jar  -noshell"
                 
-                echo "starting java -jar $settings"
                 java -Dspring.config.location=file:/config/alarmlogger.properties -Djavax.net.ssl.trustStore=/alarmlogger/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -jar $settings
               {{- end }}
               {{- if eq .Values.phoebusservice "scanserver" }}
