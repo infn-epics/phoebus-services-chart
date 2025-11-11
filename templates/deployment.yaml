@@ -211,7 +211,7 @@ spec:
               {{- if eq .Values.phoebusservice "alarmserver" }}
                 ## needs kafka
 
-                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server-*.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} "
+                settings="-Dspring.config.location=file:/config/alarm.properties /alarmserver/service-alarm-server-*.jar -noshell -server {{.Values.kafka.host}}:{{.Values.kafka.port}} -settings /phoebus/phoebus_settings.ini"
                 {{- if .Values.alarm.config }}
                 settings="$settings -config {{.Values.alarm.config}}"
                 {{- end }}
