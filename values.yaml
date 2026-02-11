@@ -175,3 +175,24 @@ ologBackup:
   username: "epics"
   password: "epics"
 
+# CORS configuration for web front-end access
+# Configure these settings to allow cross-origin requests from web applications
+cors:
+  # Comma-separated list of allowed origins (e.g., "https://example.com,https://other.com")
+  # origins: "https://your-frontend.example.com"
+  
+  # Comma-separated list of allowed HTTP methods
+  # Default: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+  # methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+  
+  # Comma-separated list of allowed headers, or "*" for all headers
+  # Default: "*"
+  # headers: "*"
+  
+  # Allow credentials (cookies, authorization headers) in CORS requests
+  # Default: "true"
+  # credentials: "true"
+  
+  # Maximum age (in seconds) for caching preflight requests
+  # Default: "3600"
+  # maxAge: "3600"

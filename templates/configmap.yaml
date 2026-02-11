@@ -322,6 +322,10 @@ data:
       
     {{- if and .Values.cors .Values.cors.origins }}
       cors.allowed.origins={{.Values.cors.origins}}
+      cors.allowed.methods={{.Values.cors.methods | default "GET,POST,PUT,DELETE,OPTIONS,PATCH"}}
+      cors.allowed.headers={{.Values.cors.headers | default "*"}}
+      cors.allow.credentials={{.Values.cors.credentials | default "true"}}
+      cors.max.age={{.Values.cors.maxAge | default "3600"}}
     {{- end }}
     
       ################## File upload and request size limits ##################
