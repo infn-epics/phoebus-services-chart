@@ -175,6 +175,13 @@ ologBackup:
   username: "epics"
   password: "epics"
 
+# CORS configuration for Olog service
+# cors:
+#   origins: "https://example.com"
+#   methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+#   headers: "*"
+#   credentials: "true"
+#   maxAge: "3600"
 # CORS configuration for web front-end access
 # Configure these settings to allow cross-origin requests from web applications
 cors:
