@@ -242,6 +242,8 @@ spec:
                 echo "* Starting olog server"
                 {{- if .Values.elasticsearch.pubcertsecret }}
                 echo "Importing Elasticsearch certificate into truststore..."
+                cp $JAVA_HOME/lib/security/cacerts /olog-target/truststore.jks
+                chmod 644 /olog-target/truststore.jks
                 keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
                 {{- end}}
                 cd /olog-target
