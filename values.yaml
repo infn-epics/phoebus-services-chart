@@ -15,6 +15,9 @@ image:
 
 olog:
   image: "ghcr.io/infn-epics/org-phoebus-service-olog:latest"
+  # Comma-separated list of authentication providers
+  # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
+  authenticationProviders: "inMemory,jwt"
 
 saveandrestore:
   image: "ghcr.io/infn-epics/phoebus/service-save-and-restore:master"

@@ -182,6 +182,9 @@ data:
       role.admin=sar-admin
     
   olog.properties: |-
+      # retrieve the version from the pom file
+      olog.version=@project.version@
+
       # the server port for the rest service
       server.port: 8181
 
@@ -191,11 +194,14 @@ data:
 
       # Disable the spring banner
       #spring.main.banner-mode=off
-      ## oauth2 
-      oauth2.enabled = {{ .Values.oauth2.enabled}}
-      oauth2.issueUri = {{ .Values.oauth2.issueUri}}
+
+      # send the error messages along with the error code
+      server.error.include-message=always
+
+      ## oauth2/JWT
+      oauth2.enabled = {{ .Values.oauth2.enabled }}
+      oauth2.issueUri = {{ .Values.oauth2.issueUri }}
       oauth2.claimsName = {{ .Values.oauth2.claimsName }}
-      
 
       # suppress the logging from spring boot
       # during {{ .Values.service.loglevel}}ging this should be set to {{ .Values.service.loglevel}}
@@ -205,6 +211,8 @@ data:
       logging.level.org.apache.kafka={{ .Values.service.loglevel}}
       logging.level.org.springframework.web={{ .Values.service.loglevel}}
       logging.level.org.springframework.security={{ .Values.service.loglevel}}
+      logging.level.org.springframework.messaging={{ .Values.service.loglevel}}
+      logging.level.org.springframework.web.socket={{ .Values.service.loglevel}}
 
       spring.main.allow-bean-definition-overriding=true
 
@@ -215,40 +223,7 @@ data:
       server.ssl.key-alias=cf
 
       security.require-ssl=false
-      {{- if and .Values.ldap .Values.ldap.enable }}
 
-      ############## LDAP - External ##############
-      ldap.enabled = {{ .Values.ldap.enable }}
-      ldap.urls = {{ .Values.ldap.url }}
-      ldap.base.dn = {{ .Values.ldap.base.dn }}
-      ldap.user.search.base=
-      # User search pattern, e.g. uid={0},ou=People. No default value as LDAP environment may not
-      # support user search by pattern.
-      ldap.user.dn.pattern={{ .Values.ldap.user.dn.pattern }}
-      {{- else }}
-      ############## LDAP - Embedded ##############
-      embedded_ldap.enabled = true
-      embedded_ldap.urls = ldap://localhost:8389/dc=olog,dc=local
-      embedded_ldap.base.dn = dc=olog,dc=local
-      embedded_ldap.user.dn.pattern = uid={0},ou=People
-      embedded_ldap.groups.search.base = ou=Group
-      embedded_ldap.groups.search.pattern = (memberUid= {1})
-      spring.ldap.embedded.ldif=file:/config/olog.ldif
-      spring.ldap.embedded.base-dn=dc=olog,dc=local
-      spring.ldap.embedded.port=8389
-      spring.ldap.embedded.validation.enabled=false
-
-
-      ############## Demo Auth ##############
-      demo_auth.enabled = true
-      ############## Demo credentials ##############
-      demo.user={{.Values.user | default "epics"  }}
-      demo.user.password={{.Values.password | default "epics"  }}
-      demo.admin=admin
-      demo.admin.password=epics
-      demo.readOnly=control
-      demo.readOnly.password=1234
-      {{- end }}
       ############## Authorization Role --> group Mapping ##############
       # Customize group names here
       admin-groups=olog-admins,sys-admins,ADMIN
@@ -280,21 +255,27 @@ data:
       {{- end }}
       # Set the name of the elastic cluster
       elasticsearch.cluster.name: {{ .Values.elasticsearch.clusterName | default "elasticsearch" }}
+
+      # Create the Olog indices if they do not exist
+      elasticsearch.create.indices: true
+
       # The names of the index to use for olog
       elasticsearch.tag.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tags
-      elasticsearch.tag.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_tag
 
       elasticsearch.logbook.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logbooks
-      elasticsearch.logbook.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logbook
 
       elasticsearch.property.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_properties
-      elasticsearch.property.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_property
 
       elasticsearch.log.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logs
-      elasticsearch.log.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_log
 
       elasticsearch.sequence.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_sequence
-      elasticsearch.sequence.type: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_sequence
+
+      elasticsearch.template.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_templates
+
+      elasticsearch.level.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_levels
+
+      # Archive modified log entries
+      elasticsearch.log.archive.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_archived_logs
 
       ############################## Mongo gridfs client ###############################
       mongo.database: {{ .Values.mongo.database }}
@@ -341,6 +322,42 @@ data:
       elasticsearch.result.size.logbooks=1000
       elasticsearch.result.size.tags=10000
       elasticsearch.result.size.properties=10000
+      elasticsearch.result.size.levels=100
+      # Default log entry search size if client does not set "limit" request parameter
+      elasticsearch.result.size.search.default=100
+      # Max log entry search size
+      elasticsearch.result.size.search.max=1000
+
+      # Default markup scheme
+      defaultMarkup=commonmark
+
+      # Timeout in milliseconds for PropertyProviders
+      propertyProvidersTimeout=2000
+
+      # Mapping of static resources
+      spring.mvc.static-path-pattern=/Olog/**
+
+      ########### Elasticsearch Default Logbooks, Tags, and Properties ##########
+      default.logbook.url=
+      default.tags.url=
+      default.properties.url=
+      default.levels.url=
+
+      ########### OpenAPI / Swagger #############
+      springdoc.api-docs.path=${API_PATH:/api/spec}
+      springdoc.swagger-ui.path=${SWAGGER_PATH:/api/docs}
+      springdoc.swagger-ui.disable-swagger-default-url=true
+      springdoc.swagger-ui.displayOperationId=true
+
+      ########### Wanted authentication providers #############
+      # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
+      authenticationProviders={{ .Values.olog.authenticationProviders | default "inMemory,jwt" }}
+
+      # Resources for the authentication providers
+      embeddedLdapPropertySource=classpath:/security/embedded_ldap.properties
+      ldapPropertySource=classpath:/security/ldap.properties
+      activeDirectoryPropertySource=classpath:/security/active_directory.properties
+      jwtPropertySource=classpath:/security/jwt.properties
   olog.ldif: |
       dn: dc=olog,dc=local
       objectClass: dcObject
