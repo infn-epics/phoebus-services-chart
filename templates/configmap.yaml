@@ -173,6 +173,13 @@ data:
       # demo - Hard coded, see WebSecurityConfig class
       auth.impl = demo
 
+      ############## OAuth2 / JWT Authentication ##############
+      # When enabled, requests with an Authorization: Bearer <token> header
+      # are validated against the OIDC provider.
+      oauth2.enabled = {{ .Values.saveandrestore.oauth2.enabled | default false }}
+      oauth2.issueUri = {{ .Values.saveandrestore.oauth2.issueUri | default "https://localhost:8443/auth/realms/test" }}
+      oauth2.claimsName = {{ .Values.saveandrestore.oauth2.claimsName | default "name" }}
+
       ###### Bypass authorization (but not authentication!) #######
       authorization.permitall = true
 
