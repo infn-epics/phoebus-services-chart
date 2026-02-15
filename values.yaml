@@ -21,13 +21,7 @@ olog:
 
 saveandrestore:
   image: "ghcr.io/infn-epics/phoebus/service-save-and-restore:master"
-  # OAuth2/JWT authentication for save-and-restore service
-  # When enabled, requests with Authorization: Bearer <token> are validated
-  # against the OIDC provider. Non-bearer requests fall through to auth.impl.
-  oauth2:
-    enabled: false
-    issueUri: "https://localhost:8443/auth/realms/test"
-    claimsName: "name"
+  
 
 alarmserver:
   image: "ghcr.io/infn-epics/phoebus/service-alarm-server:master"
@@ -159,7 +153,9 @@ epicsConfiguration:
 staticIP:
 gitRepoConfig:
   url:
-
+# OAuth2/JWT authentication for save-and-restore service
+  # When enabled, requests with Authorization: Bearer <token> are validated
+  # against the OIDC provider. Non-bearer requests fall through to auth.impl.
 oauth2:
   enabled: true
   issueUri: "https://idp-test.app.infn.it/auth/realms/aai"
