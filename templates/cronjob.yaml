@@ -18,6 +18,12 @@ spec:
           containers:
           - name: {{ include "phoebus-services-chart.fullname" . }}-backup
             image: {{ .Values.ologBackup.image }}
+            {{- if .Values.epicsConfiguration.name }}
+            envFrom:
+              - configMapRef:
+                  name: {{ .Values.epicsConfiguration.name }}
+            {{- end }}
+            
             command:
             - /bin/sh
             - -c
