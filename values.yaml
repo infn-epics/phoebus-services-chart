@@ -19,9 +19,6 @@ olog:
   # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
   authenticationProviders: "inMemory,jwt"
 
-pvws:
-  image: "ghcr.io/infn-epics/pvws-docker:latest"
-
 saveandrestore:
   image: "ghcr.io/infn-epics/phoebus/service-save-and-restore:master"
   
@@ -139,6 +136,7 @@ kafka:
   port: 9092
 
 pvws:
+  image: "ghcr.io/infn-epics/pvws-docker:latest"
   host: pvws
   port: 8080
 
