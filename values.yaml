@@ -19,6 +19,16 @@ olog:
   # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
   authenticationProviders: "inMemory,jwt"
 
+pvws:
+  image: "ghcr.io/infn-epics/pvws-docker:latest"
+  host: pvws
+  port: 8080
+
+dbwr:
+  image: "ghcr.io/infn-epics/dbwr-docker:latest"
+  host: dbwr
+  port: 8080
+
 saveandrestore:
   image: "ghcr.io/infn-epics/phoebus/service-save-and-restore:master"
   
@@ -135,10 +145,6 @@ kafka:
   host: kafka-controller-headless.backend.svc.cluster.local
   port: 9092
 
-pvws:
-  image: "ghcr.io/infn-epics/pvws-docker:latest"
-  host: pvws
-  port: 8080
 
 alarm:
   config: "Accelerator"
