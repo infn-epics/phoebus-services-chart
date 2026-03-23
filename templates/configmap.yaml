@@ -513,7 +513,7 @@ data:
       spring.ldap.embedded.validation.enabled=false
 
       ############################## Elastic Search ###############################
-      elasticsearch.host_urls={{ .Values.elasticsearch.http.protocol | default "http" }}://{{ .Values.elasticsearch.network.host }}:{{ .Values.elasticsearch.http.port }}
+      elasticsearch.host_urls={{ coalesce .Values.elasticsearch.http.protocol .Values.elasticsearch.protocol "http" }}://{{ .Values.elasticsearch.network.host }}:{{ .Values.elasticsearch.http.port }}
       elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
       elasticsearch.http.port={{ .Values.elasticsearch.http.port }}
       elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}

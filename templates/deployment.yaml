@@ -257,7 +257,13 @@ spec:
 
               {{- if eq .Values.phoebusservice "channelfinder" }}
                 echo "* Starting ChannelFinder server"
-                java -Dspring.config.location=file:/config/channelfinder.properties -jar /app/channelfinder.jar
+                {{- if .Values.elasticsearch.pubcertsecret }}
+                echo "Importing Elasticsearch certificate into truststore..."
+                cp $JAVA_HOME/lib/security/cacerts /app/truststore.jks
+                chmod 644 /app/truststore.jks
+                keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /app/truststore.jks -storepass changeit
+                {{- end }}
+                java -Djavax.net.ssl.trustStore=/app/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Dspring.config.location=file:/config/channelfinder.properties -jar /app/channelfinder.jar
               {{- end }}
 
               {{- if eq .Values.phoebusservice "olog" }}
