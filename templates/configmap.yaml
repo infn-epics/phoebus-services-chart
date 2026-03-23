@@ -477,6 +477,60 @@ data:
       description: olog-admins group
       gidNumber: 24005
       memberUid: admin
+  channelfinder.properties: |-
+      ################## ChannelFinder Server ####################
+      server.port=8443
+
+      server.http.enable=true
+      server.http.port=8080
+
+      server.ssl.key-store-type=PKCS12
+      server.ssl.key-store=classpath:keystore/newcf.p12
+      server.ssl.key-store-password=password
+      server.ssl.key-alias=cf
+      security.require-ssl=false
+
+      logging.level.root={{ .Values.service.loglevel | default "INFO" }}
+      logging.level.org.springframework.web={{ .Values.service.loglevel | default "INFO" }}
+
+      ############## Demo Auth ##############
+      demo_auth.enabled = true
+      demo_auth.users = admin,{{ .Values.channelfinder.user | default "epics" }}
+      demo_auth.pwds = adminPass,{{ .Values.channelfinder.password | default "epics" }}
+      demo_auth.roles = ADMIN,USER
+
+      ############## Group-->Role Mapping ##############
+      admin-groups=cf-admins,sys-admins,ADMIN
+      channel-groups=cf-channels,USER
+      property-groups=cf-properties,USER
+      tag-groups=cf-tags,USER
+
+      ############## LDAP - Embedded ##############
+      embedded_ldap.enabled = false
+      spring.ldap.embedded.ldif=classpath:cf.ldif
+      spring.ldap.embedded.base-dn=dc=cf,dc=local
+      spring.ldap.embedded.port=8389
+      spring.ldap.embedded.validation.enabled=false
+
+      ############################## Elastic Search ###############################
+      elasticsearch.host_urls={{ .Values.elasticsearch.http.protocol | default "http" }}://{{ .Values.elasticsearch.network.host }}:{{ .Values.elasticsearch.http.port }}
+      elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
+      elasticsearch.http.port={{ .Values.elasticsearch.http.port }}
+      elasticsearch.authorization.username={{ .Values.elasticsearch.authorization.username | default "" }}
+      elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
+
+      elasticsearch.tag.index={{ .Release.Namespace }}-cf_tags
+      elasticsearch.property.index={{ .Release.Namespace }}-cf_properties
+      elasticsearch.channel.index={{ .Release.Namespace }}-channelfinder
+      elasticsearch.query.size=10000
+      elasticsearch.create.indices=true
+
+      ############################## Repository #################################
+      repository.chunk.size=10000
+
+      ############################## REST Logging ###############################
+      logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter={{ .Values.service.loglevel | default "INFO" }}
+
   kafka.properties: |
       security.protocol=PLAINTEXT
 

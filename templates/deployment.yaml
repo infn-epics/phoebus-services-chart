@@ -102,6 +102,8 @@ spec:
           image: "{{ .Values.alarmserver.image }}"
 {{- else if eq .Values.phoebusservice "alarmlogger" }}
           image: "{{ .Values.alarmlogger.image }}"
+{{- else if eq .Values.phoebusservice "channelfinder" }}
+          image: "{{ .Values.channelfinder.image }}"
 {{- else if eq .Values.phoebusservice "pvws" }}
           image: "{{ .Values.pvws.image }}"
 {{- else if eq .Values.phoebusservice "dbwr" }}
@@ -156,6 +158,13 @@ spec:
             {{- else if eq .Values.phoebusservice "olog" }}
             - name: https
               containerPort: 8181
+              protocol: TCP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            {{- else if eq .Values.phoebusservice "channelfinder" }}
+            - name: https
+              containerPort: 8443
               protocol: TCP
             - name: http
               containerPort: 8080
@@ -244,6 +253,11 @@ spec:
                 echo "* Starting scan server"
                 cd /scanserver
                 java -jar /scanserver/service-scan-server.jar -noshell 
+              {{- end }}
+
+              {{- if eq .Values.phoebusservice "channelfinder" }}
+                echo "* Starting ChannelFinder server"
+                java -Dspring.config.location=file:/config/channelfinder.properties -jar /channelfinder/ChannelFinderService-*.jar
               {{- end }}
 
               {{- if eq .Values.phoebusservice "olog" }}

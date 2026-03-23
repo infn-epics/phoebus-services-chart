@@ -23,6 +23,15 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+  {{- else if eq .Values.phoebusservice "channelfinder" }}
+    - port: 8443
+      targetPort: https
+      protocol: TCP
+      name: https
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
   {{- else }}
     - port: {{ .Values.service.port }}
       targetPort: rest

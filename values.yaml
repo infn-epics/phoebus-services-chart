@@ -39,6 +39,9 @@ alarmserver:
 alarmlogger:
   image: "ghcr.io/infn-epics/phoebus/service-alarm-logger:master"
 
+channelfinder:
+  image: "ghcr.io/infn-epics/channelfinderservice:latest"
+
 
 imagePullSecrets: []
 nameOverride: ""
@@ -185,8 +188,8 @@ ologBackup:
   schedule: "1 0 * * *"
   image: python:3.11-slim
   ologUrl: "http://localhost:8080/Olog"
-  username: "epics"
-  password: "epics"
+  username: ""
+  password: ""
 
 # CORS configuration for Olog service
 # cors:
