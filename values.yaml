@@ -49,7 +49,15 @@ channelfinderFeeder:
   schedule: "0 0 * * *"
   image: "ghcr.io/infn-epics/channelfinder-service-feeder:latest"
   pvlistDir: "/nfs/config"
-  noPva: true
+  noPva: false
+  gitRepoConfig:
+    url:          # optional override; falls back to top-level giturl
+    path: "deploy/values.yaml"   # path to values.yaml inside the repo
+    branch: ""    # optional override; falls back to top-level gitrev
+
+# Beamline git repo — passed by epik8s-chart, used as fallback for feeder gitRepoConfig
+giturl: ""
+gitrev: ""
 
 
 imagePullSecrets: []

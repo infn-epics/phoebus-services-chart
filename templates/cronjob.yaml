@@ -60,6 +60,9 @@ spec:
 ---
 {{- if eq .Values.phoebusservice "channelfinder" }}
 {{- if .Values.channelfinderFeeder.enabled }}
+{{- $gitUrl := .Values.channelfinderFeeder.gitRepoConfig.url | default .Values.giturl | default "" }}
+{{- $gitBranch := .Values.channelfinderFeeder.gitRepoConfig.branch | default .Values.gitrev | default "" }}
+{{- $gitPath := .Values.channelfinderFeeder.gitRepoConfig.path | default "deploy/values.yaml" }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -75,6 +78,40 @@ spec:
           labels:
             {{- include "phoebus-services-chart.selectorLabels" . | nindent 12 }}
         spec:
+          {{- if $gitUrl }}
+          initContainers:
+          - name: init-git-clone
+            image: {{ .Values.initcontainer.image | quote }}
+            imagePullPolicy: IfNotPresent
+            {{- if .Values.epicsConfiguration.name }}
+            envFrom:
+              - configMapRef:
+                  name: {{ .Values.epicsConfiguration.name }}
+            {{- end }}
+            command:
+            - sh
+            - -c
+            - |
+              set -e
+              cd /git-data
+              {{- if .Values.epik8s_secrets }}
+              git config --global credential.helper "store --file=/.ssh/git_token"
+              {{- end }}
+              if [ -n "{{ $gitBranch }}" ]; then
+                git clone --depth 1 -b {{ $gitBranch }} {{ $gitUrl }} repo
+              else
+                git clone --depth 1 {{ $gitUrl }} repo
+              fi
+              ls /git-data/repo
+            volumeMounts:
+            - name: git-data
+              mountPath: /git-data
+            {{- if .Values.epik8s_secrets }}
+            - name: secrets-volume
+              mountPath: /.ssh
+              readOnly: true
+            {{- end }}
+          {{- end }}
           containers:
           - name: {{ include "phoebus-services-chart.fullname" . }}-feeder
             image: {{ .Values.channelfinderFeeder.image }}
@@ -92,14 +129,29 @@ spec:
             {{- if .Values.channelfinderFeeder.noPva }}
             - "--no-pva"
             {{- end }}
-            {{- if .Values.channelfinderFeeder.valuesYaml }}
+            {{- if $gitUrl }}
+            - "--values-yaml"
+            - "/git-data/repo/{{ $gitPath }}"
+            {{- else if .Values.channelfinderFeeder.valuesYaml }}
             - "--values-yaml"
             - {{ .Values.channelfinderFeeder.valuesYaml | quote }}
+            {{- end }}
+            {{- if .Values.channelfinderFeeder.cleanupDays }}
+            - "--cleanup-days"
+            - {{ .Values.channelfinderFeeder.cleanupDays | quote }}
+            {{- end }}
+            {{- if .Values.channelfinderFeeder.removeNoTimestamp }}
+            - "--remove-no-timestamp"
             {{- end }}
             volumeMounts:
             {{- range .Values.nfsMounts }}
               - name: {{ .name }}
                 mountPath: {{ .mountPath }}
+            {{- end }}
+            {{- if $gitUrl }}
+              - name: git-data
+                mountPath: /git-data
+                readOnly: true
             {{- end }}
           volumes:
           {{- range .Values.nfsMounts }}
@@ -107,6 +159,23 @@ spec:
               nfs:
                 server: {{ .server }}
                 path: {{ .path }}
+          {{- end }}
+          {{- if $gitUrl }}
+            - name: git-data
+              emptyDir: {}
+          {{- end }}
+          {{- if .Values.epik8s_secrets }}
+            - name: secrets-volume
+              secret:
+                secretName: "{{ .Values.epik8s_secrets }}"
+                items:
+                - key: "id_rsa"
+                  path: "id_rsa"
+                  mode: 0400
+                - key: "id_rsa.pub"
+                  path: "id_rsa.pub"
+                - key: "git_token"
+                  path: "git_token"
           {{- end }}
           restartPolicy: OnFailure
 {{- end }}
