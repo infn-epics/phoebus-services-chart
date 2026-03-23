@@ -4,7 +4,7 @@
 
 replicaCount: 1
 initcontainer: 
-  image: " ghcr.io/infn-epics/container-init:latest"
+  image: "ghcr.io/infn-epics/container-init:latest"
 
 image:
   repository: baltig.infn.it:4567/epics-containers/phoebus-base-docker
