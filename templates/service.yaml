@@ -9,8 +9,6 @@ spec:
   type: {{ .Values.service.type }}
   {{- if .Values.staticIP }}
   clusterIP: {{ .Values.staticIP }}
-  {{- else }}
-  clusterIP: None
   {{- end }}
   ports:
    
@@ -24,6 +22,10 @@ spec:
       protocol: TCP
       name: http
   {{- else if eq .Values.phoebusservice "channelfinder" }}
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
     - port: 8443
       targetPort: https
       protocol: TCP
@@ -31,7 +33,7 @@ spec:
     - port: 8080
       targetPort: http
       protocol: TCP
-      name: http
+      name: http-direct
   {{- else }}
     - port: {{ .Values.service.port }}
       targetPort: rest
