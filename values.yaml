@@ -41,6 +41,8 @@ alarmlogger:
 
 channelfinder:
   image: "ghcr.io/infn-epics/channelfinderservice:latest"
+  user: "epics"
+  password: "epics"
 
 
 imagePullSecrets: []
@@ -188,8 +190,8 @@ ologBackup:
   schedule: "1 0 * * *"
   image: python:3.11-slim
   ologUrl: "http://localhost:8080/Olog"
-  username: ""
-  password: ""
+  username: "epics"
+  password: "epics"
 
 # CORS configuration for Olog service
 # cors:
