@@ -46,7 +46,7 @@ channelfinder:
 
 channelfinderFeeder:
   enabled: true
-  schedule: "0 * * * *"
+  schedule: "0 0 * * *"
   image: "ghcr.io/infn-epics/channelfinder-service-feeder:latest"
   pvlistDir: "/nfs/config"
   noPva: true
