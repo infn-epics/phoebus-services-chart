@@ -57,3 +57,57 @@ spec:
           restartPolicy: OnFailure
 {{- end }}
 {{- end }}
+---
+{{- if eq .Values.phoebusservice "channelfinder" }}
+{{- if .Values.channelfinderFeeder.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}-feeder
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.channelfinderFeeder.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "phoebus-services-chart.selectorLabels" . | nindent 12 }}
+        spec:
+          containers:
+          - name: {{ include "phoebus-services-chart.fullname" . }}-feeder
+            image: {{ .Values.channelfinderFeeder.image }}
+            imagePullPolicy: Always
+            {{- if .Values.epicsConfiguration.name }}
+            envFrom:
+              - configMapRef:
+                  name: {{ .Values.epicsConfiguration.name }}
+            {{- end }}
+            args:
+            - {{ .Values.channelfinderFeeder.pvlistDir | quote }}
+            - "http://{{ include "phoebus-services-chart.fullname" . }}.{{ .Values.beamline }}.svc:8080/ChannelFinder"
+            - {{ .Values.channelfinder.user | quote }}
+            - {{ .Values.channelfinder.password | quote }}
+            {{- if .Values.channelfinderFeeder.noPva }}
+            - "--no-pva"
+            {{- end }}
+            {{- if .Values.channelfinderFeeder.valuesYaml }}
+            - "--values-yaml"
+            - {{ .Values.channelfinderFeeder.valuesYaml | quote }}
+            {{- end }}
+            volumeMounts:
+            {{- range .Values.nfsMounts }}
+              - name: {{ .name }}
+                mountPath: {{ .mountPath }}
+            {{- end }}
+          volumes:
+          {{- range .Values.nfsMounts }}
+            - name: {{ .name }}
+              nfs:
+                server: {{ .server }}
+                path: {{ .path }}
+          {{- end }}
+          restartPolicy: OnFailure
+{{- end }}
+{{- end }}

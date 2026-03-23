@@ -257,7 +257,9 @@ spec:
 
               {{- if eq .Values.phoebusservice "channelfinder" }}
                 echo "* Starting ChannelFinder server"
-                java -Dspring.config.location=file:/config/channelfinder.properties -jar /channelfinder/ChannelFinderService-*.jar
+                jar=$(ls /channelfinder/ChannelFinderService*.jar 2>/dev/null | head -1)
+                echo "* Using jar: $jar"
+                java -Dspring.config.location=file:/config/channelfinder.properties -jar "$jar"
               {{- end }}
 
               {{- if eq .Values.phoebusservice "olog" }}

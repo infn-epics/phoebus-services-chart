@@ -44,6 +44,13 @@ channelfinder:
   user: "epics"
   password: "epics"
 
+channelfinderFeeder:
+  enabled: true
+  schedule: "0 * * * *"
+  image: "ghcr.io/infn-epics/channelfinder-service-feeder:latest"
+  pvlistDir: "/nfs/config"
+  noPva: true
+
 
 imagePullSecrets: []
 nameOverride: ""
