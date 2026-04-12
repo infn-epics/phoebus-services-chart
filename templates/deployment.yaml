@@ -130,6 +130,14 @@ spec:
             - name: EPICS_CA_AUTO_ADDR_LIST
               value: "NO"
             {{- end }}
+            {{- if .Values.epicsConfiguration.pvagateway }}
+            - name: EPICS_PVA_NAME_SERVERS
+              value: {{ .Values.epicsConfiguration.pvagateway | quote }}
+            - name: EPICS_PVA_ADDR_LIST
+              value: {{ .Values.epicsConfiguration.pvagateway | quote }}
+            - name: EPICS_PVA_AUTO_ADDR_LIST
+              value: "NO"
+            {{- end }}
             {{- if .Values.env }}
             {{- range $envVar := .Values.env }}
             - name: {{ $envVar.name }}
