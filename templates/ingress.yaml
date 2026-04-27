@@ -43,16 +43,14 @@ spec:
       secretName: {{ .secretName }}
     {{- end }}
     {{- else if .Values.secure }}
-    {{- range .Values.ingress.hosts }}
     - hosts:
-        - {{ .host | quote }}
+        - {{ $.Values.beamline }}-{{ $fullName }}.{{ $.Values.epik8namespace }}
       secretName: {{ $fullName }}-tls
-    {{- end }}
     {{- end }}
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    - host: {{$.Values.beamline}}-{{ $fullName }}.{{ $.Values.epik8namespace }}
       http:
         paths:
         {{- if eq $.Values.phoebusservice "olog" }}
