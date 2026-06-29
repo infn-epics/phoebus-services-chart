@@ -253,10 +253,11 @@ spec:
                 {{- if .Values.elasticsearch.pubcertsecret }}
                 echo "Importing Elasticsearch certificate into truststore..."
                 keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /alarmlogger/truststore.jks -storepass changeit
+                ES_PASSWORD=$(cat /cert/elasticsearch-es-elastic-user.key)
                 {{- end}}
                 settings="/alarmlogger/service-alarm-logger-*.jar  -noshell"
-                
-                java -Dspring.config.location=file:/config/alarmlogger.properties -Djavax.net.ssl.trustStore=/alarmlogger/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -jar $settings
+
+                java -Dspring.config.location=file:/config/alarmlogger.properties -Djavax.net.ssl.trustStore=/alarmlogger/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Delasticsearch.authorization.username=elastic -Delasticsearch.authorization.password="$ES_PASSWORD" -jar $settings
               {{- end }}
               {{- if eq .Values.phoebusservice "scanserver" }}
                 echo "* Starting scan server"
@@ -271,8 +272,9 @@ spec:
                 cp $JAVA_HOME/lib/security/cacerts /app/truststore.jks
                 chmod 644 /app/truststore.jks
                 keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /app/truststore.jks -storepass changeit
+                ES_PASSWORD=$(cat /cert/elasticsearch-es-elastic-user.key)
                 {{- end }}
-                java -Djavax.net.ssl.trustStore=/app/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Dspring.config.location=file:/config/channelfinder.properties -jar /app/channelfinder.jar
+                java -Djavax.net.ssl.trustStore=/app/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Delasticsearch.authorization.username=elastic -Delasticsearch.authorization.password="$ES_PASSWORD" -Dspring.config.location=file:/config/channelfinder.properties -jar /app/channelfinder.jar
               {{- end }}
 
               {{- if eq .Values.phoebusservice "olog" }}
@@ -282,11 +284,12 @@ spec:
                 cp $JAVA_HOME/lib/security/cacerts /olog-target/truststore.jks
                 chmod 644 /olog-target/truststore.jks
                 keytool -import -noprompt -alias elasticsearch -file /cert/elasticsearch-ca.crt -keystore /olog-target/truststore.jks -storepass changeit
+                ES_PASSWORD=$(cat /cert/elasticsearch-es-elastic-user.key)
                 {{- end}}
                 cd /olog-target
                 SPRING_APPLICATION_JSON='{"server":{"ssl":{"trust-store":"/olog-target/truststore.jks","trust-store-password":"changeit"}}}'
 
-                java -Djavax.net.ssl.trustStore=/olog-target/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
+                java -Djavax.net.ssl.trustStore=/olog-target/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Delasticsearch.authorization.username=elastic -Delasticsearch.authorization.password="$ES_PASSWORD" -Dspring.config.location=file:/config/olog.properties -jar /olog-target/service-olog*.jar
               {{- end }}
               echo "%% END {{ .Values.phoebusservice }}"
 
