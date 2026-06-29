@@ -449,6 +449,7 @@ data:
       description: olog-tags group
       gidNumber: 24001
       memberUid: tag
+      memberUid: epics
 
       dn: cn=olog-properties,ou=Group,dc=olog,dc=local
       cn: olog-properties
@@ -456,6 +457,7 @@ data:
       description: olog-properties group
       gidNumber: 24002
       memberUid: property
+      memberUid: epics
 
       dn: cn=olog-logbooks,ou=Group,dc=olog,dc=local
       cn: olog-logbooks
@@ -463,6 +465,7 @@ data:
       description: olog-logbooks group
       gidNumber: 24003
       memberUid: logbook
+      memberUid: epics
 
       dn: cn=olog-logs,ou=Group,dc=olog,dc=local
       cn: olog-logs
@@ -470,6 +473,7 @@ data:
       description: olog-logs group
       gidNumber: 24004
       memberUid: log
+      memberUid: epics
 
       dn: cn=olog-admins,ou=Group,dc=olog,dc=local
       cn: olog-admins
@@ -601,7 +605,7 @@ data:
       description: save-n-restore user
       gidNumber: 27001
       uidNumber: 27001
-      memberUid: user
+      memberUid: epics
 
       dn: cn=sar-admin,ou=Group,dc=sar,dc=local
       cn: sar-admin
