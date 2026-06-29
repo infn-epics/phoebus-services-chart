@@ -159,7 +159,7 @@ data:
       demo.user=epics
       demo.user.password=epics
       demo.admin=admin
-      demo.admin.password=epics
+      demo.admin.password=admin
       demo.readOnly=control
       demo.readOnly.password=1234
 
@@ -365,6 +365,12 @@ data:
       ldapPropertySource=classpath:/security/ldap.properties
       activeDirectoryPropertySource=classpath:/security/active_directory.properties
       jwtPropertySource=classpath:/security/jwt.properties
+
+      # Use the configmap-provided ldif so the epics user and group memberships are applied
+      spring.ldap.embedded.ldif=file:/config/olog.ldif
+      spring.ldap.embedded.base-dn=dc=olog,dc=local
+      spring.ldap.embedded.port=8389
+      spring.ldap.embedded.validation.enabled=false
   olog.ldif: |
       dn: dc=olog,dc=local
       objectClass: dcObject
