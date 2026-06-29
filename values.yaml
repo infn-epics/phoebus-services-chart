@@ -17,7 +17,7 @@ olog:
   image: "ghcr.io/infn-epics/org-phoebus-service-olog:latest"
   # Comma-separated list of authentication providers
   # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
-  authenticationProviders: "inMemory,jwt"
+  authenticationProviders: "embeddedLdap,jwt"
 
 pvws:
   image: "ghcr.io/infn-epics/pvws-docker:latest"
