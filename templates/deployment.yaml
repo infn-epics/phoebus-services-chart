@@ -260,6 +260,34 @@ spec:
                 {{- end}}
                 SPRING_APPLICATION_JSON='{"server":{"ssl":{"trust-store":"/saveandrestore/truststore.jks","trust-store-password":"changeit"}}}'
 
+                {{- if and .Values.oauth2 .Values.oauth2.enabled }}
+                # Work around a bug in org.phoebus.security.managers.OidcTrustStoreManager: when its
+                # "trust on first use" truststore (~/.phoebus/phoebus_oidc_truststore.p12) is empty, its
+                # composite TrustManager throws InvalidAlgorithmParameterException (uncaught, since it is
+                # not a CertificateException) instead of falling back to the JVM default CAs, aborting
+                # every OIDC/JWT TLS handshake. Pre-seed that truststore with the IDP's certificate chain
+                # (fetched through the outbound proxy) so it is never empty when the app starts.
+                OIDC_URL="{{ .Values.oauth2.issueUri }}"
+                OIDC_HOSTPORT="${OIDC_URL#*://}"
+                OIDC_HOSTPORT="${OIDC_HOSTPORT%%/*}"
+                OIDC_HOST="${OIDC_HOSTPORT%%:*}"
+                case "$OIDC_HOSTPORT" in
+                  *:*) OIDC_PORT="${OIDC_HOSTPORT##*:}" ;;
+                  *) OIDC_PORT=443 ;;
+                esac
+                mkdir -p "$HOME/.phoebus"
+                if [ -n "$PROXY_HOST" ]; then
+                  OIDC_PROXY_OPT="-proxy $PROXY_HOST:$PROXY_PORT"
+                else
+                  OIDC_PROXY_OPT=""
+                fi
+                if echo | openssl s_client $OIDC_PROXY_OPT -connect "$OIDC_HOST:$OIDC_PORT" -servername "$OIDC_HOST" -showcerts 2>/dev/null | openssl x509 -outform PEM > /tmp/oidc-cert.pem 2>/dev/null; then
+                  keytool -import -noprompt -alias "${OIDC_HOST}_0" -file /tmp/oidc-cert.pem -keystore "$HOME/.phoebus/phoebus_oidc_truststore.p12" -storetype PKCS12 -storepass changeit
+                  echo "* Pre-seeded OIDC truststore with certificate for $OIDC_HOST:$OIDC_PORT"
+                else
+                  echo "* WARNING: failed to pre-fetch OIDC certificate for $OIDC_HOST:$OIDC_PORT"
+                fi
+                {{- end }}
 
                 # java -jar  /phoebus/service-save-and-restore.jar -Delasticsearch.network.host={{ .Values.elasticsearch.network.host }} -Delasticsearch.http.port="{{ .Values.elasticsearch.http.port }}" -Dlogging.level.org.springframework=TRACE -Dlogging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
                 java -Djca.use_env=true -Djavax.net.ssl.trustStore=/saveandrestore/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit -Delasticsearch.authorization.username=elastic -Delasticsearch.authorization.password="$ES_PASSWORD" -Dspring.config.location=file:/config/saveandrestore.properties -jar   /saveandrestore/service-save-and-restore-*.jar
