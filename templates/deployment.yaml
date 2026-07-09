@@ -191,6 +191,36 @@ spec:
             - -c
             - |
               echo "EPICS_CA_ADDR_LIST=$EPICS_CA_ADDR_LIST"
+
+              # The JDK does not read HTTP_PROXY/HTTPS_PROXY env vars on its own, so any outbound
+              # HTTPS call made by the JVM (e.g. fetching the OIDC/JWT signing keys) bypasses the
+              # proxy and fails when there is no direct route to the internet. Translate the proxy
+              # env vars (set via epicsConfiguration) into JVM system properties via JDK_JAVA_OPTIONS,
+              # which every `java` invocation below picks up automatically.
+              PROXY_URL="${https_proxy:-$HTTPS_PROXY}"
+              if [ -n "$PROXY_URL" ]; then
+                PROXY_HOSTPORT="${PROXY_URL#*://}"
+                PROXY_HOSTPORT="${PROXY_HOSTPORT%%/*}"
+                PROXY_HOST="${PROXY_HOSTPORT%%:*}"
+                PROXY_PORT="${PROXY_HOSTPORT##*:}"
+                NON_PROXY_VAL="${no_proxy:-$NO_PROXY}"
+                NON_PROXY=""
+                OLDIFS="$IFS"
+                IFS=','
+                for h in $NON_PROXY_VAL; do
+                  case "$h" in
+                    .*) h="*$h" ;;
+                  esac
+                  if [ -z "$NON_PROXY" ]; then
+                    NON_PROXY="$h"
+                  else
+                    NON_PROXY="$NON_PROXY|$h"
+                  fi
+                done
+                IFS="$OLDIFS"
+                export JDK_JAVA_OPTIONS="-Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT -Dhttp.nonProxyHosts=$NON_PROXY"
+                echo "* JVM proxy configured: $PROXY_HOST:$PROXY_PORT (nonProxyHosts=$NON_PROXY)"
+              fi
               {{- if eq .Values.phoebusservice "dbwr" }}
                 export PVWS_HOST={{.Values.pvws.host}}:{{.Values.pvws.port}}
                 echo "* dbwr pvws $PVWS_HOST"
