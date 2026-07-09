@@ -377,12 +377,6 @@ data:
       demo.readOnly=control
       demo.readOnly.password=1234
   olog.ldif: |
-      dn: dc=olog,dc=local
-      objectClass: dcObject
-      objectClass: organization
-      dc: olog
-      o: olog
-
       dn: cn=channelfinder,dc=olog,dc=local
       objectClass: simpleSecurityObject
       objectClass: organizationalRole
