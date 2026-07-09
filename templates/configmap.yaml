@@ -367,7 +367,7 @@ data:
       jwtPropertySource=classpath:/security/jwt.properties
 
       # Override the LDIF used by the embedded LDAP to include the epics user
-      embedded_ldap_ldif=file:/config/olog.ldif
+      embedded_ldap_ldif=file:///config/olog.ldif
 
       ############## Demo credentials ##############
       demo.user=epics
