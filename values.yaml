@@ -47,6 +47,14 @@ channelfinder:
 channelfinderFeeder:
   enabled: true
   schedule: "0 0 * * *"
+  # Forbid + activeDeadlineSeconds work as a pair. With the Kubernetes default
+  # (Allow) a hung run blocked nothing, so a SPARC feeder ran for 92 days (endless
+  # PVA "no route to host" retries) alongside every nightly run. Forbid alone would
+  # be worse: that one hung run would skip every future night. The deadline kills
+  # it. Real runs take ~7-30 min (SPARC, the largest, ~28), so 4h is generous;
+  # set activeDeadlineSeconds to 0/empty to disable.
+  concurrencyPolicy: Forbid
+  activeDeadlineSeconds: 14400
   image: "ghcr.io/infn-epics/channelfinder-service-feeder:latest"
   pvlistDir: "/nfs/config"
   noPva: false

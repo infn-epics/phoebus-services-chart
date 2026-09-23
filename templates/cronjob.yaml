@@ -71,8 +71,12 @@ metadata:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
 spec:
   schedule: {{ .Values.channelfinderFeeder.schedule | quote }}
+  concurrencyPolicy: {{ .Values.channelfinderFeeder.concurrencyPolicy | default "Forbid" }}
   jobTemplate:
     spec:
+      {{- with .Values.channelfinderFeeder.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
       template:
         metadata:
           labels:
