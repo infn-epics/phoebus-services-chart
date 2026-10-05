@@ -216,6 +216,31 @@ ologBackup:
   username: "epics"
   password: "epics"
 
+# Daily upload of the Olog entries to ARGUS Knowledge Hub (olog service only).
+# Each entry becomes a Logbook Entry document in the facility's ARGUS workspace; overlapping runs and
+# retries are safe. The token is a robot token of that workspace (ARGUS: workspace administration ->
+# Robot tokens -> "Daily logbook upload"), kept in a Secret created by hand, never in git:
+#   kubectl -n <beamline> create secret generic argus-olog-upload --from-literal=token=argus_bot_...
+argusUpload:
+  enabled: false
+  schedule: "30 1 * * *"
+  image: python:3.11-slim
+  # The ARGUS API, e.g. https://argus-hub-api.example.org
+  url: ""
+  # The logbook's name in ARGUS (defaults to the beamline)
+  facility: ""
+  # Where a person opens an entry, with {id}, e.g. https://btf-webolog.example.org/logs/{id}
+  entryUrl: ""
+  # How far back each run looks: a missed night is caught by the next one
+  lookbackDays: 2
+  # true once, to send every entry already in the logbook; then back to false
+  all: false
+  tokenSecret:
+    name: argus-olog-upload
+    key: token
+  # The Olog to read; empty means this release's own service
+  ologUrl: ""
+
 # CORS configuration for Olog service
 # cors:
 #   origins: "https://example.com"

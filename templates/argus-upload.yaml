@@ -1,0 +1,82 @@
+{{- if and (eq .Values.phoebusservice "olog") .Values.argusUpload .Values.argusUpload.enabled }}
+{{- $u := .Values.argusUpload }}
+{{- $ns := .Values.beamline | default .Release.Namespace }}
+{{- $olog := $u.ologUrl | default (printf "http://%s.%s.svc:8080/Olog" (include "phoebus-services-chart.fullname" .) $ns) }}
+# The Olog entries, sent once a day to ARGUS Knowledge Hub as Logbook Entry documents
+# (argus-knowledge-hub: tools/olog-to-argus). The script is files/olog_to_argus.py, standard library only.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}-argus-upload
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+data:
+  olog_to_argus.py: |
+{{ .Files.Get "files/olog_to_argus.py" | indent 4 }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "phoebus-services-chart.fullname" . }}-argus-upload
+  labels:
+    {{- include "phoebus-services-chart.labels" . | nindent 4 }}
+spec:
+  schedule: {{ $u.schedule | default "30 1 * * *" | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      activeDeadlineSeconds: 7200
+      template:
+        metadata:
+          labels:
+            {{- include "phoebus-services-chart.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: argus-upload
+            image: {{ $u.image | default "python:3.11-slim" }}
+            {{- if .Values.epicsConfiguration.name }}
+            envFrom:
+              - configMapRef:
+                  name: {{ .Values.epicsConfiguration.name }}
+            {{- end }}
+            env:
+              - {name: OLOG_URL, value: {{ $olog | quote }}}
+              {{- with .Values.ologBackup }}
+              {{- if .username }}
+              - {name: OLOG_USERNAME, value: {{ .username | quote }}}
+              - {name: OLOG_PASSWORD, value: {{ .password | quote }}}
+              {{- end }}
+              {{- end }}
+              - {name: ARGUS_URL, value: {{ required "argusUpload.url is required" $u.url | quote }}}
+              - name: ARGUS_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $u.tokenSecret.name | default "argus-olog-upload" }}
+                    key: {{ $u.tokenSecret.key | default "token" }}
+              - {name: ARGUS_FACILITY, value: {{ $u.facility | default $ns | quote }}}
+              - {name: OLOG_ENTRY_URL, value: {{ $u.entryUrl | default "" | quote }}}
+              - {name: LOOKBACK_DAYS, value: {{ $u.lookbackDays | default 2 | quote }}}
+              - {name: OLOG_ALL, value: {{ $u.all | default false | quote }}}
+              {{- if .Values.https_proxy }}
+              - {name: HTTPS_PROXY, value: {{ .Values.https_proxy | quote }}}
+              - {name: HTTP_PROXY, value: {{ .Values.http_proxy | default .Values.https_proxy | quote }}}
+              {{- end }}
+              # The facility's own Olog is reached directly, never through the proxy.
+              - {name: NO_PROXY, value: {{ printf "%s.svc,.svc,.cluster.local,localhost,127.0.0.1%s" $ns (ternary (printf ",%s" .Values.no_proxy) "" (not (empty .Values.no_proxy))) | quote }}}
+            command: ["python", "/opt/argus/olog_to_argus.py"]
+            volumeMounts:
+              - name: script
+                mountPath: /opt/argus
+                readOnly: true
+            resources:
+              requests: {cpu: 50m, memory: 128Mi}
+              limits: {memory: 512Mi}
+          volumes:
+            - name: script
+              configMap:
+                name: {{ include "phoebus-services-chart.fullname" . }}-argus-upload
+{{- end }}
