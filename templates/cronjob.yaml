@@ -101,6 +101,10 @@ spec:
               {{- if .Values.epik8s_secrets }}
               git config --global credential.helper "store --file=/.ssh/git_token"
               {{- end }}
+              {{- if .Values.git_credentials_secret }}
+              # Per-URL-prefix tokens (gitconfig key of the git_credentials_secret Secret); ignored by git if absent
+              git config --global include.path /etc/git-credentials/gitconfig
+              {{- end }}
               if [ -n "{{ $gitBranch }}" ]; then
                 git clone --depth 1 -b {{ $gitBranch }} {{ $gitUrl }} repo
               else
@@ -113,6 +117,11 @@ spec:
             {{- if .Values.epik8s_secrets }}
             - name: secrets-volume
               mountPath: /.ssh
+              readOnly: true
+            {{- end }}
+            {{- if .Values.git_credentials_secret }}
+            - name: git-credentials
+              mountPath: /etc/git-credentials
               readOnly: true
             {{- end }}
           {{- end }}
@@ -180,6 +189,13 @@ spec:
                   path: "id_rsa.pub"
                 - key: "git_token"
                   path: "git_token"
+          {{- end }}
+          {{- if .Values.git_credentials_secret }}
+            - name: git-credentials
+              secret:
+                secretName: "{{ .Values.git_credentials_secret }}"
+                optional: true
+                defaultMode: 0444
           {{- end }}
           restartPolicy: OnFailure
 {{- end }}

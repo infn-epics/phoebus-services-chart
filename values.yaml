@@ -66,6 +66,11 @@ channelfinderFeeder:
 # Beamline git repo — passed by epik8s-chart, used as fallback for feeder gitRepoConfig
 giturl: ""
 gitrev: ""
+## Private Git: epik8s_secrets (key git_token, one token per host) and/or
+## git_credentials_secret (key "gitconfig" + one token file per URL prefix,
+## mounted at /etc/git-credentials). Both unset = unauthenticated clone.
+# epik8s_secrets: epik8s-secret
+# git_credentials_secret: epik8s-git-credentials
 
 
 imagePullSecrets: []

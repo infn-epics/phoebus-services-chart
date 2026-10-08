@@ -11,6 +11,24 @@ Chart to run phoebus services:
 - archive-engine **not yet supported**
 
 
+## Private Git repositories
+
+The clone init container of the channelfinder feeder can authenticate in two ways, which combine:
+
+| Value                    | Secret keys                                   | Tokens            |
+|--------------------------|-----------------------------------------------|-------------------|
+| `epik8s_secrets`         | `git_token` (+ `id_rsa`, `id_rsa.pub`)        | one per host      |
+| `git_credentials_secret` | `gitconfig` + one token file per key          | one per URL prefix |
+
+With `git_credentials_secret` set, the Secret is mounted (optional) at
+`/etc/git-credentials` and the clone script runs
+`git config --global include.path /etc/git-credentials/gitconfig`, so each URL
+prefix (e.g. `https://baltig.infn.it/lnf-da-control`) uses its own token,
+submodules included. URLs matching no prefix fall back to `git_token`.
+Unset, the rendered manifests are unchanged.
+
+Secret format, creation script and rollout: [epik8s-platform docs/git-credentials.md](https://github.com/infn-epics/epik8s-platform/blob/main/docs/git-credentials.md).
+
 ## Olog → ARGUS Knowledge Hub
 
 With `phoebusservice: olog` and `argusUpload.enabled: true`, the CronJob `<release>-argus-upload` sends
