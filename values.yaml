@@ -18,6 +18,9 @@ olog:
   # Comma-separated list of authentication providers
   # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
   authenticationProviders: "embeddedLdap,jwt"
+  # Permissions every logged-in user has on every logbook, e.g. "READ,WRITE" for an open logbook.
+  # Empty: only owners and collaborators (per-logbook permissions images only)
+  authenticatedPermissions: ""
 
 pvws:
   image: "ghcr.io/infn-epics/pvws-docker:latest"

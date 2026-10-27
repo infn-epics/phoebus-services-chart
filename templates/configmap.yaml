@@ -293,6 +293,8 @@ data:
       elasticsearch.logbook.member.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logbook_members
       # Accounts that read every logbook without a membership: the backup/ARGUS export account
       logbook.service-readers={{ .Values.olog.serviceReaders | default .Values.ologBackup.username | default "" }}
+      # Permissions (READ,WRITE) every logged-in user has on every logbook, besides memberships
+      logbook.authenticated-permissions={{ .Values.olog.authenticatedPermissions | default "" }}
 
       ############################## Mongo gridfs client ###############################
       mongo.database: {{ .Values.mongo.database }}
