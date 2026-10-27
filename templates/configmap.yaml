@@ -86,6 +86,8 @@ data:
 
       # The server port for the rest service
       server.port=8080
+      # OAuth2 Bearer tokens are ~8 KB, the Tomcat default limit
+      server.max-http-request-header-size=64KB
       jca.use_env=true
       # Elasticsearch connection parameters
       elasticsearch.network.host={{ .Values.elasticsearch.network.host }}
