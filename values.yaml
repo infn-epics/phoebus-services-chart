@@ -31,6 +31,8 @@ dbwr:
 
 saveandrestore:
   image: "ghcr.io/infn-epics/phoebus/service-save-and-restore:master"
+  # true for images built on Spring Boot 4 / Jackson 3 (phoebus infn/2026-10 and later)
+  jackson3: false
   
 
 alarmserver:

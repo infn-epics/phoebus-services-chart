@@ -95,7 +95,12 @@ data:
       elasticsearch.authorization.password={{ .Values.elasticsearch.authorization.password | default "" }}
 
       # Do not change this!
+      {{- if .Values.saveandrestore.jackson3 }}
+      # Spring Boot 4 / Jackson 3 (phoebus >= upstream 2026-10): the feature moved to DateTimeFeature
+      spring.jackson.datatype.datetime.write-dates-as-timestamps=false
+      {{- else }}
       spring.jackson.serialization.write-dates-as-timestamps=false
+      {{- end }}
 
       server.servlet.contextPath=/save-restore
       elasticsearch.cluster.name: {{ .Values.elasticsearch.clusterName | default "elasticsearch" }}
