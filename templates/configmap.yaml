@@ -289,6 +289,11 @@ data:
       # Archive modified log entries
       elasticsearch.log.archive.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_archived_logs
 
+      # Logbook memberships (olog with per-logbook permissions; ignored by older olog images)
+      elasticsearch.logbook.member.index: {{.Release.Namespace}}-{{ include "phoebus-services-chart.fullname" . }}_logbook_members
+      # Accounts that read every logbook without a membership: the backup/ARGUS export account
+      logbook.service-readers={{ .Values.olog.serviceReaders | default .Values.ologBackup.username | default "" }}
+
       ############################## Mongo gridfs client ###############################
       mongo.database: {{ .Values.mongo.database }}
       mongo.host: {{ .Values.mongo.host }}
