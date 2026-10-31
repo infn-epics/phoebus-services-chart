@@ -14,10 +14,12 @@ spec:
       {{- include "phoebus-services-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        # The services read their configuration only at startup: restart them when it changes
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "phoebus-services-chart.selectorLabels" . | nindent 8 }}
     spec:
