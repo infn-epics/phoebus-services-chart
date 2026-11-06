@@ -386,10 +386,11 @@ spec:
         {{- end }}
 ---
 {{- if .Values.elasticsearch.pubcertsecret }}
+{{- /* Cluster-scoped: the namespace in the name stops beamlines taking these over from each other */}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "phoebus-services-chart.fullname" . }}-secret-reader
+  name: {{ .Release.Namespace }}-{{ include "phoebus-services-chart.fullname" . }}-secret-reader
   labels:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
 rules:
@@ -403,13 +404,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "phoebus-services-chart.fullname" . }}-secret-reader-binding
+  name: {{ .Release.Namespace }}-{{ include "phoebus-services-chart.fullname" . }}-secret-reader-binding
   labels:
     {{- include "phoebus-services-chart.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "phoebus-services-chart.fullname" . }}-secret-reader
+  name: {{ .Release.Namespace }}-{{ include "phoebus-services-chart.fullname" . }}-secret-reader
 subjects:
 - kind: ServiceAccount
   name: {{ include "phoebus-services-chart.serviceAccountName" . }}
