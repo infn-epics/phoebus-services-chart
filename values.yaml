@@ -65,7 +65,8 @@ channelfinderFeeder:
   noPva: false
   gitRepoConfig:
     url:          # optional override; falls back to top-level giturl
-    path: "deploy/values.yaml"   # path to values.yaml inside the repo
+    path: "deploy/values.yaml"   # legacy single path inside the repo
+    paths: []                   # values files in Helm deployment order; overrides path
     branch: ""    # optional override; falls back to top-level gitrev
 
 # Beamline git repo — passed by epik8s-chart, used as fallback for feeder gitRepoConfig
