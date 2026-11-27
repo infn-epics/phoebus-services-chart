@@ -63,6 +63,16 @@ channelfinderFeeder:
   image: "ghcr.io/infn-epics/channelfinder-service-feeder:latest"
   pvlistDir: "/nfs/config"
   noPva: false
+  # Feed only the IOCs the values files configure (epicsConfiguration.iocs and
+  # softiocs), not every directory on the config share, which keeps the
+  # directories of removed and renamed IOCs for good. Needs the values files
+  # (gitRepoConfig or valuesYaml); ignored without them. Feeder >= 2.2.1.
+  onlyConfigured: true
+  # After feeding, delete the channels no fed IOC publishes any more (removed
+  # IOCs, renamed PVs). A prune that would delete more than pruneMaxFraction of
+  # the channels is refused, so a broken values file cannot wipe ChannelFinder.
+  prune: true
+  pruneMaxFraction: 0.5
   gitRepoConfig:
     url:          # optional override; falls back to top-level giturl
     path: "deploy/values.yaml"   # legacy single path inside the repo

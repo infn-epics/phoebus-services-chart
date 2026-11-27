@@ -159,6 +159,14 @@ spec:
             {{- if .Values.channelfinderFeeder.removeNoTimestamp }}
             - "--remove-no-timestamp"
             {{- end }}
+            {{- if and .Values.channelfinderFeeder.onlyConfigured (or $gitUrl .Values.channelfinderFeeder.valuesYaml) }}
+            - "--only-configured"
+            {{- end }}
+            {{- if .Values.channelfinderFeeder.prune }}
+            - "--prune"
+            - "--prune-max-fraction"
+            - {{ .Values.channelfinderFeeder.pruneMaxFraction | default 0.5 | quote }}
+            {{- end }}
             volumeMounts:
             {{- range .Values.nfsMounts }}
               - name: {{ .name }}
