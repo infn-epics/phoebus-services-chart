@@ -472,6 +472,19 @@ data:
       uidNumber: 23005
       gidNumber: 23005
       homeDirectory: /dev/null
+{{- range $i, $u := ($.Values.olog.extraUsers | default list) }}
+
+      dn: uid={{ $u.uid }},ou=People,dc=olog,dc=local
+      uid: {{ $u.uid }}
+      objectClass: account
+      objectClass: posixAccount
+      description: {{ $u.description | default "Additional user" }}
+      cn: {{ $u.uid }}
+      userPassword: {{ required "olog.extraUsers[].passwordHash (bcrypt) is required" $u.passwordHash }}
+      uidNumber: {{ add 23100 $i }}
+      gidNumber: {{ add 23100 $i }}
+      homeDirectory: /dev/null
+{{- end }}
 
       dn: cn=olog-tags,ou=Group,dc=olog,dc=local
       cn: olog-tags
@@ -480,6 +493,8 @@ data:
       gidNumber: 24001
       memberUid: tag
       memberUid: epics
+{{- range ($.Values.olog.extraUsers | default list) }}{{ if has "olog-tags" (.groups | default list) }}
+      memberUid: {{ .uid }}{{ end }}{{ end }}
 
       dn: cn=olog-properties,ou=Group,dc=olog,dc=local
       cn: olog-properties
@@ -488,6 +503,8 @@ data:
       gidNumber: 24002
       memberUid: property
       memberUid: epics
+{{- range ($.Values.olog.extraUsers | default list) }}{{ if has "olog-properties" (.groups | default list) }}
+      memberUid: {{ .uid }}{{ end }}{{ end }}
 
       dn: cn=olog-logbooks,ou=Group,dc=olog,dc=local
       cn: olog-logbooks
@@ -496,6 +513,8 @@ data:
       gidNumber: 24003
       memberUid: logbook
       memberUid: epics
+{{- range ($.Values.olog.extraUsers | default list) }}{{ if has "olog-logbooks" (.groups | default list) }}
+      memberUid: {{ .uid }}{{ end }}{{ end }}
 
       dn: cn=olog-logs,ou=Group,dc=olog,dc=local
       cn: olog-logs
@@ -504,6 +523,8 @@ data:
       gidNumber: 24004
       memberUid: log
       memberUid: epics
+{{- range ($.Values.olog.extraUsers | default list) }}{{ if has "olog-logs" (.groups | default list) }}
+      memberUid: {{ .uid }}{{ end }}{{ end }}
 
       dn: cn=olog-admins,ou=Group,dc=olog,dc=local
       cn: olog-admins
@@ -511,6 +532,8 @@ data:
       description: olog-admins group
       gidNumber: 24005
       memberUid: admin
+{{- range ($.Values.olog.extraUsers | default list) }}{{ if has "olog-admins" (.groups | default list) }}
+      memberUid: {{ .uid }}{{ end }}{{ end }}
   channelfinder.properties: |-
       ################## ChannelFinder Server ####################
       server.port=8443

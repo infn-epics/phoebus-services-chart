@@ -15,6 +15,12 @@ image:
 
 olog:
   image: "ghcr.io/infn-epics/org-phoebus-service-olog:latest"
+  # Extra users of Olog's embedded LDAP, e.g. a robot account for automatic logbook entries:
+  #   - uid: argus
+  #     passwordHash: "$2b$12$..."   # bcrypt; the password itself goes in a Secret, never in git
+  #     description: ARGUS reports
+  #     groups: [olog-logs]          # olog-logs = write entries; add olog-tags, olog-logbooks... as needed
+  extraUsers: []
   # Comma-separated list of authentication providers
   # Supported values: inMemory, ldap, embeddedLdap, activeDirectory, jwt
   authenticationProviders: "embeddedLdap,jwt"
